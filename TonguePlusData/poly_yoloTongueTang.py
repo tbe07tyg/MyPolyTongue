@@ -952,16 +952,17 @@ if __name__ == "__main__":
         print("current working dir:", os.getcwd())
         cwd =  os.getcwd()
         # os.chdir("E:\\Projects\\poly-yolo\\simulator_dataset")
-        print("current working dir:", os.getcwd())
-        annotation_path = 'E:\\Projects\\poly-yolo\\MyPolys\\TonguePlusData\\myTongueTrain.txt'
-        validation_path = 'E:\\Projects\\poly-yolo\\MyPolys\\TonguePlusData\\myTongueTest.txt'
+        current_file_dir_path = os.path.dirname(os.path.realpath(__file__))
+        print("current file dir:", current_file_dir_path)
+        annotation_path = current_file_dir_path+'/myTongueTrain.txt'
+        validation_path = current_file_dir_path+'/myTongueTest.txt'
 
-        log_dir = '/TongueModelsTang256x256_0.5lr_AngleStep5/'
+        log_dir = current_file_dir_path + '/TongueModelsTang256x256_0.5lr_AngleStep5_TonguePlus/'
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
 
-        classes_path = 'E:\\Projects\\poly-yolo\\MyPolys\\TonguePlusData\\yolo_classesTongue.txt'
-        anchors_path = 'E:\\Projects\\poly-yolo\\MyPolys\\TonguePlusData\\yolo_anchorsTongue.txt'
+        classes_path = current_file_dir_path+'/yolo_classesTongue.txt'
+        anchors_path = current_file_dir_path+'/yolo_anchorsTongue.txt'
         class_names = get_classes(classes_path)
         num_classes = len(class_names)
         anchors = get_anchors(anchors_path)
@@ -1009,7 +1010,7 @@ if __name__ == "__main__":
         num_train = len(lines)
 
 
-        batch_size = 3 # decrease/increase batch size according to your memory of your GPU
+        batch_size = 4 # decrease/increase batch size according to your memory of your GPU
         print('Train on {} samples, val on {} samples, with batch size {}.'.format(num_train, num_val, batch_size))
 
 
