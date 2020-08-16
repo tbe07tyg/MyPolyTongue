@@ -954,8 +954,12 @@ if __name__ == "__main__":
         # os.chdir("E:\\Projects\\poly-yolo\\simulator_dataset")
         current_file_dir_path = os.path.dirname(os.path.realpath(__file__))
         print("current file dir:", current_file_dir_path)
-        annotation_path = current_file_dir_path+'/myTongueTrain.txt'
-        validation_path = current_file_dir_path+'/myTongueTest.txt'
+        # annotation_path = current_file_dir_path+'/myTongueTrain.txt'
+        # validation_path = current_file_dir_path+'/myTongueTest.txt'
+        # for the lab
+        annotation_path = current_file_dir_path + '/myTongueTrainLab.txt'
+        validation_path = current_file_dir_path + '/myTongueTestLab.txt'
+
 
         log_dir = (current_file_dir_path + '/TongueModelsTang256x256_0.5lr_AngleStep{}_TonguePlus/').format(ANGLE_STEP)
         plot_folder = log_dir + 'Plots/'
