@@ -88,6 +88,8 @@ for i in range(0, len(text_lines)):
     print('Prediction speed: ', 1.0 / (time.time() - startx), 'fps')
 
     # example, hw to reshape reshape y1,x1,y2,x2 into x1,y1,x2,y2
+    if len(box)>0:
+        print("there is a box prediction")
     for k in range(0, len(box)):
         boxes.append((box[k][1], box[k][0], box[k][3], box[k][2]))
         scores.append(score[k])
@@ -99,6 +101,7 @@ for i in range(0, len(text_lines)):
     if len(boxes) == 0:
         continue
 
+    print("write image path")
     file.write(text_lines[i][0] + " ")
     # browse all boxes
     for b in range(0, len(boxes)):
@@ -131,17 +134,20 @@ for i in range(0, len(text_lines)):
         vertices = 0
         for dst in range(0, len(polygons[b]) // 3):  # 下取整
             if polygons[b][dst + offset * 2] > 0.2:
+
                 str_to_write += "," + str(float(polygons[b][dst])) + "," + str(float(polygons[b][dst + offset]))
                 vertices += 1
         str_to_write += " "
         if vertices < 3:
+            print("No mask found")
             print('found not correct polygon with ', vertices, ' vertices')
             continue
+        # print(str_to_write)
         file.write(str_to_write)
     file.write("\n")
 
     img = cv2.addWeighted(overlay, 0.4, img, 1 - 0.4, 0)
     cv2.imwrite(out_path + str(imgs) + '.jpg', img)
-
+file.close()
 print('total boxes: ', total_boxes)
 print('imgs: ', imgs)

@@ -88,7 +88,7 @@ def yolo_to_coco(pred_path: str, gt_path: str, classes_path: str) -> None:
 
 def coco_eval(type):
     cocoGt = COCO('TonguePlusData/tmp_coco_gt.json')
-    cocoDt = cocoGt.loadRes('tmp_coco_pred.json')
+    cocoDt = cocoGt.loadRes('TonguePlusData/tmp_coco_pred.json')
     cocoEval = COCOeval(cocoGt, cocoDt, type)
     cocoEval.evaluate()
     cocoEval.accumulate()
@@ -115,7 +115,7 @@ if __name__ == '__main__':
     pred = "E:\\Projects\\MyPolyTongue\\TonguePlusData/inference_Tongue443plusRawModel.txt"
     gt = "E:\\Projects\\MyPolyTongue\\TonguePlusData/myTongueTest.txt"
     clss =  "E:\\Projects\\MyPolyTongue\\TonguePlusData/yolo_classesTongue.txt"
-    # type = "bbox"
-    type = "segm"
+    type = "bbox"
+    # type = "segm"
     yolo_to_coco(pred, gt, clss)
     coco_eval(type)
