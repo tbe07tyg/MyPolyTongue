@@ -984,8 +984,8 @@ if __name__ == "__main__":
 
         print(model.summary())
 
-        "plot and save model"
-        plot_model(model, to_file='model.png', show_shapes= True)
+        # "plot and save model"
+        # plot_model(model, to_file='model.png', show_shapes= True)
 
 
         checkpoint = ModelCheckpoint(log_dir + 'ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5',
