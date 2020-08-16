@@ -111,10 +111,15 @@ if __name__ == '__main__':
     # clss = args.cls
     # type = args.type
 
-    # 443 plus data : -------------------------------case 1 >
-    pred = "E:\\Projects\\MyPolyTongue\\TonguePlusData/inference_Tongue443plusRawModel.txt"
-    gt = "E:\\Projects\\MyPolyTongue\\TonguePlusData/myTongueTest.txt"
-    clss =  "E:\\Projects\\MyPolyTongue\\TonguePlusData/yolo_classesTongue.txt"
+    # # 443 plus data : -------------------------------case 1 >
+    # pred = "E:\\Projects\\MyPolyTongue\\TonguePlusData/inference_Tongue443plusRawModel.txt"
+    # gt = "E:\\Projects\\MyPolyTongue\\TonguePlusData/myTongueTest.txt"
+    # clss =  "E:\\Projects\\MyPolyTongue\\TonguePlusData/yolo_classesTongue.txt"
+
+    # for lab
+    pred = "C:\\myProjects\\MyPolyTongue\\TonguePlusData/inference_Tongue443plusRawModel.txt"
+    gt = "C:\\myProjects\\MyPolyTongue\\TonguePlusData/myTongueTest.txt"
+    clss =  "C:\\myProjects\\MyPolyTongue\\TonguePlusData/yolo_classesTongue.txt"
     type = "bbox"
     # type = "segm"
     yolo_to_coco(pred, gt, clss)
