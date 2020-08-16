@@ -40,9 +40,11 @@ def translate_color(cls):
     if cls == 18: return (255, 215, 180)
     if cls == 19: return (80, 80, 128)
 
-dir_imgs_name = 'E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs' #path_where_are_images_to_clasification
-
+# dir_imgs_name = 'E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs' #path_where_are_images_to_clasification
+# dir_imgs_name = 'E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs' #path_where_are_images_to_clasification
 test_txt_path = current_file_dir_path+'/myTongueTest.txt'
+# FOR THE LAB
+# test_txt_path = current_file_dir_path+'/myTongueTestLab.txt'
 out_path       = current_file_dir_path+'/PredOut/' #path, where the images will be saved. The path must exist
 
 MAX_VERTICES = 1000 #that allows the labels to have 1000 vertices per polygon at max. They are reduced for training
@@ -71,6 +73,7 @@ cwd = os.getcwd()
 # os.chdir("E:\\Projects\\poly-yolo\\simulator_dataset\\imgs")
 total_boxes = 0
 imgs = 0
+fps_list=[]
 for i in range(0, len(text_lines)):
     print("text_lines[i][0]:", text_lines[i][0])
 
@@ -85,8 +88,9 @@ for i in range(0, len(text_lines)):
     # realize prediciction using poly-yolo
     startx = time.time()
     box, score, classs, polygons = trained_model.detect_image(img)
-    print('Prediction speed: ', 1.0 / (time.time() - startx), 'fps')
-
+    tmp_fps = 1.0 / (time.time() - startx)
+    print('Prediction speed: ', tmp_fps, 'fps')
+    fps_list.append(tmp_fps)
     # example, hw to reshape reshape y1,x1,y2,x2 into x1,y1,x2,y2
     if len(box)>0:
         print("there is a box prediction")
@@ -151,3 +155,4 @@ for i in range(0, len(text_lines)):
 file.close()
 print('total boxes: ', total_boxes)
 print('imgs: ', imgs)
+print("avg fps:", sum(fps_list)/len(fps_list))
