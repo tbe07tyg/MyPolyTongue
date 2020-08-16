@@ -8,6 +8,10 @@ print("cwd:", os.getcwd())
 current_file_dir_path = os.path.dirname(os.path.realpath(__file__))
 print("current file dir:", current_file_dir_path)
 
+# inference txt name
+inferTXTName = 'inference_Tongue443plusRawModel.txt'
+file = open(inferTXTName, "w")
+
 #if you want to detect more objects, lower the score and vice versa
 trained_model = YOLO(model_path=current_file_dir_path+'/TongueModelsTang256x256_0.5lr_AngleStep5_TonguePlus/ep051-loss18.115-val_loss20.901.h5',
                           classes_path=current_file_dir_path+'/yolo_classesTongue.txt', # this need to specified for your model used classes
@@ -80,17 +84,26 @@ for i in range(0, len(text_lines)):
 
     # realize prediciction using poly-yolo
     startx = time.time()
-    box, scores, classes, polygons = trained_model.detect_image(img)
+    box, score, classs, polygons = trained_model.detect_image(img)
     print('Prediction speed: ', 1.0 / (time.time() - startx), 'fps')
 
     # example, hw to reshape reshape y1,x1,y2,x2 into x1,y1,x2,y2
     for k in range(0, len(box)):
         boxes.append((box[k][1], box[k][0], box[k][3], box[k][2]))
+        scores.append(score[k])
+        classes.append(classs[k])
+
         cv2.rectangle(img, (box[k][1], box[k][0]), (box[k][3], box[k][2]), translate_color(classes[k]), 3, 1)
     total_boxes += len(boxes)
 
+    if len(boxes) == 0:
+        continue
+
+    file.write(text_lines[i][0] + " ")
     # browse all boxes
     for b in range(0, len(boxes)):
+
+        # draw box and masks on the raw images:-------->
         f = translate_color(classes[b])
         points_to_draw = []
         offset = len(polygons[b]) // 3
@@ -105,6 +118,27 @@ for i in range(0, len(text_lines)):
         if points_to_draw.shape[0] > 0:
             cv2.polylines(img, [points_to_draw], True, f, thickness=2)
             cv2.fillPoly(overlay, [points_to_draw], f)
+
+        # write into txt:-------->
+        str_to_write = ''
+
+        str_to_write += str(float(boxes[b][0])) + "," + str(float(boxes[b][1])) + "," + str(
+            float(boxes[b][2])) + "," + str(float(boxes[b][3])) + ","
+        str_to_write += str(scores[b]) + ","
+        str_to_write += str(int(classes[b]))
+
+        offset = len(polygons[b]) // 3  # 72 for 24 vertexes. offset = 24
+        vertices = 0
+        for dst in range(0, len(polygons[b]) // 3):  # 下取整
+            if polygons[b][dst + offset * 2] > 0.2:
+                str_to_write += "," + str(float(polygons[b][dst])) + "," + str(float(polygons[b][dst + offset]))
+                vertices += 1
+        str_to_write += " "
+        if vertices < 3:
+            print('found not correct polygon with ', vertices, ' vertices')
+            continue
+        file.write(str_to_write)
+    file.write("\n")
 
     img = cv2.addWeighted(overlay, 0.4, img, 1 - 0.4, 0)
     cv2.imwrite(out_path + str(imgs) + '.jpg', img)

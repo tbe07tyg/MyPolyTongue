@@ -544,7 +544,7 @@ def yolo_boxes_and_scores(feats, anchors, num_classes, input_shape, image_shape)
     box_scores = box_confidence * box_class_probs
     box_scores = K.reshape(box_scores, [-1, num_classes])
     polygons = yolo_correct_polygons(polygons_x, polygons_y, polygons_confidence, boxes, input_shape, image_shape)
-    polygons = K.reshape(polygons, [-1, NUM_ANGLES3])
+    polygons = K.reshape(polygons, [-1, NUM_ANGLES3]) # [[angle1, dist1, prob1], [angle2, dist2, prob2]...]
     return boxes, box_scores, polygons
 
 
