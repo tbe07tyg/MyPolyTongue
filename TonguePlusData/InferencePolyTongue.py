@@ -42,11 +42,12 @@ def translate_color(cls):
 
 # dir_imgs_name = 'E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs' #path_where_are_images_to_clasification
 # dir_imgs_name = 'E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs' #path_where_are_images_to_clasification
-test_txt_path = current_file_dir_path+'/myTongueTest.txt'
+# test_txt_path = current_file_dir_path+'/myTongueTest.txt'
 # FOR THE LAB
-# test_txt_path = current_file_dir_path+'/myTongueTestLab.txt'
+test_txt_path = current_file_dir_path+'/myTongueTestLab.txt'
 out_path       = current_file_dir_path+'/PredOut/' #path, where the images will be saved. The path must exist
-
+if not os.path.exists(out_path):
+    os.makedirs(out_path)
 MAX_VERTICES = 1000 #that allows the labels to have 1000 vertices per polygon at max. They are reduced for training
 
 # read test lines from txt file
