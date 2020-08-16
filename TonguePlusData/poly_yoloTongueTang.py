@@ -31,7 +31,7 @@ from tensorflow.keras.regularizers import l2
 from tensorflow.keras.utils import multi_gpu_model
 from matplotlib.colors import rgb_to_hsv, hsv_to_rgb
 from tensorflow.keras.utils import plot_model
-
+from TonguePlusData.MyCustomCallbacks import TrainingPlotCallback
 # os.environ["PATH"] += os.pathsep + 'C:\\Program Files (x86)\\Graphviz2.38\\bin'
 
 
@@ -957,9 +957,12 @@ if __name__ == "__main__":
         annotation_path = current_file_dir_path+'/myTongueTrain.txt'
         validation_path = current_file_dir_path+'/myTongueTest.txt'
 
-        log_dir = current_file_dir_path + '/TongueModelsTang256x256_0.5lr_AngleStep5_TonguePlus/'
+        log_dir = (current_file_dir_path + '/TongueModelsTang256x256_0.5lr_AngleStep{}_TonguePlus/').format(ANGLE_STEP)
+        plot_folder = log_dir + 'Plots/'
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
+        if not os.path.exists(plot_folder):
+            os.makedirs(plot_folder)
 
         classes_path = current_file_dir_path+'/yolo_classesTongue.txt'
         anchors_path = current_file_dir_path+'/yolo_anchorsTongue.txt'
@@ -985,6 +988,11 @@ if __name__ == "__main__":
                                      monitor='val_loss', save_weights_only=True, save_best_only=True, period=1, verbose=1)
         reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, verbose=1, delta=0.03)
         early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1)
+        # custom callback
+        plotCallBack = TrainingPlotCallback(save_path= plot_folder)
+
+
+
 
         with open(annotation_path) as f:
             lines = f.readlines()
@@ -1025,7 +1033,7 @@ if __name__ == "__main__":
                   validation_steps=max(1, num_val // batch_size),
                   epochs=epochs,
                   initial_epoch=0,
-                  callbacks=[reduce_lr, early_stopping, checkpoint])
+                  callbacks=[reduce_lr, early_stopping, checkpoint, plotCallBack])
 
 
 
