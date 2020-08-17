@@ -26,7 +26,7 @@ file = open(inferTXTName, "w")
 trained_model = YOLO(model_path=current_file_dir_path+'/TongueModelsTang256x256_0.5lr_AngleStep5_TonguePlus/ep051-loss18.115-val_loss20.901.h5',
                           classes_path=current_file_dir_path+'/yolo_classesTongue.txt', # this need to specified for your model used classes
                           anchors_path = current_file_dir_path+'/yolo_anchorsTongue.txt',
-                          iou=0.5, score=0.2)
+                          iou=0.5, score=0.5)
 
 #helper function
 def translate_color(cls):
