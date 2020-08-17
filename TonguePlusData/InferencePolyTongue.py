@@ -4,10 +4,20 @@ import os
 import time
 from TonguePlusData.poly_yoloTongueTang import YOLO #or "import poly_yolo_lite as yolo" for the lite version
 
+
+def get_classes(classes_path):
+    """loads the classes"""
+    with open(classes_path) as f:
+        class_names = f.readlines()
+    class_names = [c.strip() for c in class_names]
+    return class_names
+
 print("cwd:", os.getcwd())
 current_file_dir_path = os.path.dirname(os.path.realpath(__file__))
 print("current file dir:", current_file_dir_path)
-
+classes_path = current_file_dir_path+'/yolo_classesTongue.txt'
+class_names = get_classes(classes_path)
+print("class names:", class_names)
 # inference txt name
 inferTXTName = 'inference_Tongue443plusRawModel.txt'
 file = open(inferTXTName, "w")
@@ -42,9 +52,9 @@ def translate_color(cls):
 
 # dir_imgs_name = 'E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs' #path_where_are_images_to_clasification
 # dir_imgs_name = 'E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs' #path_where_are_images_to_clasification
-# test_txt_path = current_file_dir_path+'/myTongueTest.txt'
+test_txt_path = current_file_dir_path+'/myTongueTest.txt'
 # FOR THE LAB
-test_txt_path = current_file_dir_path+'/myTongueTestLab.txt'
+# test_txt_path = current_file_dir_path+'/myTongueTestLab.txt'
 out_path       = current_file_dir_path+'/PredOut/' #path, where the images will be saved. The path must exist
 if not os.path.exists(out_path):
     os.makedirs(out_path)
@@ -101,6 +111,9 @@ for i in range(0, len(text_lines)):
         classes.append(classs[k])
 
         cv2.rectangle(img, (box[k][1], box[k][0]), (box[k][3], box[k][2]), translate_color(classes[k]), 3, 1)
+        cv2.putText(img, "{}:{:.2f}".format(class_names[classs[k]], score[k]), (int(box[k][1]), int(box[k][0])-3 ),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                    (255, 255, 255), 1)
     total_boxes += len(boxes)
 
     if len(boxes) == 0:
