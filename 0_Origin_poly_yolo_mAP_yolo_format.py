@@ -120,6 +120,11 @@ if __name__ == '__main__':
     # pred = "C:\\myProjects\\MyPolyTongue\\TonguePlusData/inference_Tongue443plusRawModel.txt"
     # gt = "C:\\myProjects\\MyPolyTongue\\TonguePlusData/myTongueTestLab.txt"
     # clss =  "C:\\myProjects\\MyPolyTongue\\TonguePlusData/yolo_classesTongue.txt"
+
+    # for lab
+    # pred = "C:\\myProjects\\MyPolyTongue\\TonguePlusData/inference_Tongue443plusMishModel.txt"
+    # gt = "C:\\myProjects\\MyPolyTongue\\TonguePlusData/myTongueTestLab.txt"
+    # clss = "C:\\myProjects\\MyPolyTongue\\TonguePlusData/yolo_classesTongue.txt"
     type = "bbox"
     # type = "segm"
     yolo_to_coco(pred, gt, clss)

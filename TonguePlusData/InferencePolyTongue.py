@@ -2,7 +2,8 @@ import cv2
 import numpy as np
 import os
 import time
-from TonguePlusData.poly_yoloTongueTang import YOLO #or "import poly_yolo_lite as yolo" for the lite version
+# need to change
+from TonguePlusData.poly_yoloTongueTang import YOLO #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
 
 
 def get_classes(classes_path):
@@ -23,7 +24,7 @@ inferTXTName = 'inference_Tongue443plusRawModel.txt'
 file = open(inferTXTName, "w")
 
 #if you want to detect more objects, lower the score and vice versa
-trained_model = YOLO(model_path=current_file_dir_path+'/TongueModelsTang256x256_0.5lr_AngleStep5_TonguePlus/ep051-loss18.115-val_loss20.901.h5',
+trained_model = YOLO(model_path=current_file_dir_path+'/TongueModelsTang256x256_0.5lr_AngleStep5_TonguePlus/ep051-loss18.115-val_loss20.901.h5',  ## need to change
                           classes_path=current_file_dir_path+'/yolo_classesTongue.txt', # this need to specified for your model used classes
                           anchors_path = current_file_dir_path+'/yolo_anchorsTongue.txt',
                           iou=0.5, score=0.5)
@@ -54,7 +55,7 @@ def translate_color(cls):
 # dir_imgs_name = 'E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs' #path_where_are_images_to_clasification
 test_txt_path = current_file_dir_path+'/myTongueTest.txt'
 # FOR THE LAB
-# test_txt_path = current_file_dir_path+'/myTongueTestLab.txt'
+# test_txt_path = current_file_dir_path+'/myTongueTestLab.txt'   # need to change
 out_path       = current_file_dir_path+'/PredOut/' #path, where the images will be saved. The path must exist
 if not os.path.exists(out_path):
     os.makedirs(out_path)
