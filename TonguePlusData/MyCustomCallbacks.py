@@ -59,5 +59,12 @@ class TrainingPlotCallback(keras.callbacks.Callback):
             # Make sure there exists a folder called output in the current directory
             # or replace 'output' with whatever direcory you want to put in the plots
             plt.savefig(self.save_path + 'output_losses_Epoch-{}.png'.format(epoch))
+
             print("loss figure saved!")
             plt.close()
+            with open(self.save_path + 'train_losses_Epoch-{}.txt'.format(epoch), 'w') as f:
+                for item in self.losses:
+                    f.write("%s\n" % item)
+            with open(self.save_path + 'val_losses_Epoch-{}.txt'.format(epoch), 'w') as f:
+                for item in self.val_losses:
+                    f.write("%s\n" % item)
