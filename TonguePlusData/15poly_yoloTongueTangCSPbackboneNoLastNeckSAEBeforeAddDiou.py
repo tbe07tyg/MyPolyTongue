@@ -950,7 +950,7 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5):
         diou_loss = K.sum(object_mask * box_loss_scale * (1 - box_diou(pred_box, y_true[layer][..., 0:4]))) / mf
         print("finised losses for each image")
         # there is a weight for special masks losses and also weighted focal according to the confidences score in total for each image ,then * for the enirebatch
-        loss += (xy_loss + wh_loss + confidence_loss + diou_loss+ class_loss + 0.2 * polygon_loss + 0.2 * vertices_confidence_loss)/ (K.sum(object_mask) + 1)*mf
+        loss += (xy_loss + wh_loss + confidence_loss + diou_loss + class_loss + 0.2 * polygon_loss + 0.2 * vertices_confidence_loss)/ (K.sum(object_mask) + 1)*mf
     return loss
 
 
@@ -1080,7 +1080,7 @@ if __name__ == "__main__":
         # validation_path = current_file_dir_path + '/myTongueTestLab.txt'
 
 
-        log_dir = (current_file_dir_path + '/14TongueModelsTang256x256MishCSPbackboneNoLastNeckSAEBeforeAdd.py_0.5lr_AngleStep{}_TonguePlus/').format(ANGLE_STEP)
+        log_dir = (current_file_dir_path + '/14TongueModelsTang256x256MishCSPbackboneNoLastNeckSAEBeforeAddDiouLoss.py_0.5lr_AngleStep{}_TonguePlus/').format(ANGLE_STEP)
         plot_folder = log_dir + 'Plots/'
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
