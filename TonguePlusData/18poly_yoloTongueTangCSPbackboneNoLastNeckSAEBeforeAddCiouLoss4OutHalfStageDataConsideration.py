@@ -166,7 +166,7 @@ def get_random_data(line, input_shape, random=True, max_boxes=80, hue_alter=20, 
                     box[b, i] = box[b, i] * scale + dx
                     box[b, i + 1] = box[b, i + 1] * scale + dy
 
-            box_data[:, i:NUM_ANGLES3 + 5] = 0
+            # box_data[:, i:NUM_ANGLES3 + 5] = 0
 
             for i in range(0, len(box)):
                 boxes_xy = (box[i, 0:2] + box[i, 2:4]) // 2
@@ -270,11 +270,11 @@ def get_random_data(line, input_shape, random=True, max_boxes=80, hue_alter=20, 
     if len(box) > 0:
         np.random.shuffle(box)
         # rescaling separately because 5-th element is class
-        box[:, [0, 2]] = box[:, [0, 2]] * nwiw
+        box[:, [0, 2]] = box[:, [0, 2]] * nwiw  # for x
         # rescale polygon vertices
         box[:, 5::2] = box[:, 5::2] * nwiw
         # rescale polygon vertices
-        box[:, [1, 3]] = box[:, [1, 3]] * nhih
+        box[:, [1, 3]] = box[:, [1, 3]] * nhih  # for y
         box[:, 6::2] = box[:, 6::2] * nhih
 
         # # mask out boxes that lies outside of croping window ## new commit deleted
