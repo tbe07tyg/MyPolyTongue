@@ -831,7 +831,45 @@ def box_diou(b1, b2):
     diou = K.expand_dims(diou, -1)
     return diou
 
+def box_ciou(b1, b2):
+    b1_xy = b1[..., :2]
+    b1_wh = b1[..., 2:4]
+    b1_wh_half = b1_wh / 2.
+    b1_mins = b1_xy - b1_wh_half
+    b1_maxes = b1_xy + b1_wh_half
 
+    b2_xy = b2[..., :2]
+    b2_wh = b2[..., 2:4]
+    b2_wh_half = b2_wh / 2.
+    b2_mins = b2_xy - b2_wh_half
+    b2_maxes = b2_xy + b2_wh_half
+
+    intersect_mins = K.maximum(b1_mins, b2_mins)
+    intersect_maxes = K.minimum(b1_maxes, b2_maxes)
+    intersect_wh = K.maximum(intersect_maxes - intersect_mins, 0.)
+    intersect_area = intersect_wh[..., 0] * intersect_wh[..., 1]
+    b1_area = b1_wh[..., 0] * b1_wh[..., 1]
+    b2_area = b2_wh[..., 0] * b2_wh[..., 1]
+    union_area = b1_area + b2_area - intersect_area
+    iou = intersect_area / (union_area + K.epsilon())
+
+    # for diou loss
+    center_distance = K.sum(K.square(b1_xy - b2_xy), axis=-1)
+    enclose_mins = K.minimum(b1_mins, b2_mins)
+    enclose_maxes = K.maximum(b1_maxes, b2_maxes)
+    enclose_wh = K.maximum(enclose_maxes - enclose_mins, 0.0)
+    enclose_diagonal = K.sum(K.square(enclose_wh), axis=-1)
+    # diou = iou - 1.0 * (center_distance) / (enclose_diagonal + K.epsilon())
+
+    # fo ciou loss
+    atan1 = tf.atan(b1[..., 2] / (b1[..., 3] + K.epsilon()))
+    atan2 = tf.atan(b2[..., 2] / (b2[..., 3] + K.epsilon()))
+    v = 4.0 * K.pow(atan1 - atan2, 2) / (math.pi ** 2)
+    a = v / (1 - iou + v)
+
+    ciou = iou - 1.0 * (center_distance) / (enclose_diagonal + K.epsilon()) - 1.0 * a * v
+    ciou = K.expand_dims(ciou, -1)
+    return ciou
 
 def yolo_loss(args, anchors, num_classes, ignore_thresh=.5):
     """Return yolo_loss tensor
@@ -920,7 +958,7 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5):
 
         def loop_body(b, ignore_mask):
             true_box = tf.boolean_mask(y_true[layer][b, ..., 0:4], object_mask_bool[b, ..., 0])
-            iou = box_diou(pred_box[b], true_box)
+            iou = box_ciou(pred_box[b], true_box)
             best_iou = K.max(iou, axis=-1)
             ignore_mask = ignore_mask.write(b, K.cast(best_iou < ignore_thresh, K.dtype(true_box)))
             return b + 1, ignore_mask
@@ -947,10 +985,11 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5):
         vertices_confidence_loss = K.sum(vertices_confidence_loss) / mf
         polygon_loss = K.sum(polygon_loss_x) / mf + K.sum(polygon_loss_y) / mf
 
-        diou_loss = K.sum(object_mask * box_loss_scale * (1 - box_diou(pred_box, y_true[layer][..., 0:4]))) / mf
+        # diou_loss = K.sum(object_mask * box_loss_scale * (1 - box_diou(pred_box, y_true[layer][..., 0:4]))) / mf
+        ciou_loss = K.sum(object_mask * box_loss_scale * (1 - box_ciou(pred_box, y_true[layer][..., 0:4]))) / mf
         print("finised losses for each image")
         # there is a weight for special masks losses and also weighted focal according to the confidences score in total for each image ,then * for the enirebatch
-        loss += (xy_loss + wh_loss + confidence_loss + diou_loss + class_loss + 0.2 * polygon_loss + 0.2 * vertices_confidence_loss)/ (K.sum(object_mask) + 1)*mf
+        loss += (xy_loss + wh_loss + confidence_loss + ciou_loss + class_loss + 0.2 * polygon_loss + 0.2 * vertices_confidence_loss)/ (K.sum(object_mask) + 1)*mf
     return loss
 
 
@@ -1080,7 +1119,7 @@ if __name__ == "__main__":
         # validation_path = current_file_dir_path + '/myTongueTestLab.txt'
 
 
-        log_dir = (current_file_dir_path + '/15TongueModelsTang256x256MishCSPbackboneNoLastNeckSAEBeforeAddDiouLoss.py_0.5lr_AngleStep{}_TonguePlus/').format(ANGLE_STEP)
+        log_dir = (current_file_dir_path + '/16TongueModelsTang256x256MishCSPbackboneNoLastNeckSAEBeforeAddCiouLoss.py_0.5lr_AngleStep{}_TonguePlus/').format(ANGLE_STEP)
         plot_folder = log_dir + 'Plots/'
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
