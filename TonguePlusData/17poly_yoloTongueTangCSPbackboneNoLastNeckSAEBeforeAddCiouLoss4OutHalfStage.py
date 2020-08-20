@@ -1123,7 +1123,7 @@ if __name__ == "__main__":
         # validation_path = current_file_dir_path + '/myTongueTestLab.txt'
 
 
-        log_dir = (current_file_dir_path + '/16TongueModelsTang256x256MishCSPbackboneNoLastNeckSAEBeforeAddCiouLoss.py_0.5lr_AngleStep{}_TonguePlus/').format(ANGLE_STEP)
+        log_dir = (current_file_dir_path + '/17TongueModelsTang256x256MishCSPbackboneNoLastNeckSAEBeforeAddCiouLoss4HalfStage.py_0.5lr_AngleStep{}_TonguePlus/').format(ANGLE_STEP)
         plot_folder = log_dir + 'Plots/'
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
