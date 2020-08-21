@@ -62,7 +62,7 @@ class TrainingPlotCallback(keras.callbacks.Callback):
                 # plt.plot(N, self.acc, label = "train_acc")
                 plt.plot(N[30:], self.val_losses[30:], '-r', label="val_loss")
                 # plt.plot(N, self.val_acc, label = "val_acc")
-                plt.title("Training Loss and Accuracy [Epoch {}] and last 30 epochs".format(epoch))
+                # plt.title("Training Loss and Accuracy [Epoch {}] and last 30 epochs".format(epoch))
                 plt.xlabel("Last 30 Epochs #")
                 plt.ylabel("Loss/Accuracy")
                 plt.legend()

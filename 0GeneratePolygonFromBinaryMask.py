@@ -145,11 +145,17 @@ if __name__ == '__main__':
     #
     #                        output_filename="E:\\Projects\\poly-yolo\\MyPolys\\TonguePlusData\\myTongueTrain.txt")
 
-    # tonguePlus
-    writetxt_data_POLYYOLO(imgs_root="E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\inputs",
-                           label_root="E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\binary_labels",
+    # # tonguePlus
+    # writetxt_data_POLYYOLO(imgs_root="E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\inputs",
+    #                        label_root="E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\binary_labels",
+    #
+    #                        output_filename="E:\\Projects\\poly-yolo\\MyPolys\\TonguePlusData\\myTongueTrain.txt")
 
-                           output_filename="E:\\Projects\\poly-yolo\\MyPolys\\TonguePlusData\\myTongueTrain.txt")
+    # tonguePlus
+    writetxt_data_POLYYOLO(imgs_root="E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\Angumented_dataset\\rotate45_widthshift0.1_heightshift0.1_zoom0.2_num8860\\input",
+                           label_root="E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\Angumented_dataset\\rotate45_widthshift0.1_heightshift0.1_zoom0.2_num8860\\label",
+
+                           output_filename="E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\Angumented_dataset\\rotate45_widthshift0.1_heightshift0.1_zoom0.2_num8860\\myTongueTrain_rotate45_widthshift0.1_heightshift0.1_zoom0.2_num8860.txt")
     #
     # writetxt_data_POLYYOLO(imgs_root="E:\\dataset\\Tongue\\mytonguePolyYolo\\val\\VS16_new",
     #                        label_root="E:\\dataset\\Tongue\\mytonguePolyYolo\\val\\VL16_new",

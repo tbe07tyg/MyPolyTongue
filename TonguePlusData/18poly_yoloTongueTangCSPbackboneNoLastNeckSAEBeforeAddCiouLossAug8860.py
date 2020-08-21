@@ -43,7 +43,7 @@ NUM_ANGLES3  = int(360 // ANGLE_STEP * 3) #72 = (360/5)*3 =216
 print("NUM_ANGLES3:", NUM_ANGLES3)
 NUM_ANGLES  = int(360 // ANGLE_STEP) # 24
 
-grid_size_multiplier = 2 #that is resolution of the output scale compared with input. So it is 1/4
+grid_size_multiplier = 4 #that is resolution of the output scale compared with input. So it is 1/4
 anchor_mask = [[0,1,2,3,4,5,6,7,8], [0,1,2,3,4,5,6,7,8], [0,1,2,3,4,5,6,7,8]] #that should be optimized
 anchors_per_level = 9 #single scale and nine anchors
 
@@ -306,7 +306,7 @@ def get_random_data(line, input_shape, random=True, max_boxes=80, hue_alter=20, 
         for i in range(5, MAX_VERTICES * 2, 2):
             if box[b, i] == 0 and box[b, i + 1] == 0:
                 break
-            box[b, i:i+2] = box[b, i:i+2] - [crop_coords[2], crop_coords[0]] + [new_img_coords[2], new_img_coords[0]]
+            box[b, i:i+2] = box[b, i:i+2] - [crop_coords[2], crop_coords[0]] + [new_img_coords[2], new_img_coords[0]] # transform
             if flip: box[b, i] = (w - 1) - box[b, i]
             dist_x = boxes_xy[0] - box[b, i]
             dist_y = boxes_xy[1] - box[b, i + 1]
@@ -315,7 +315,9 @@ def get_random_data(line, input_shape, random=True, max_boxes=80, hue_alter=20, 
 
             angle = np.degrees(np.arctan2(dist_y, dist_x))
             if (angle < 0): angle += 360
+            # num of section it belongs to
             iangle = int(angle) // ANGLE_STEP
+
             if iangle>=NUM_ANGLES: iangle = NUM_ANGLES-1
 
             if dist > box_data[b, 5 + iangle * 3]: # check for vertex existence. only the most distant is taken
@@ -473,18 +475,18 @@ def darknet_body(x):
     # x = DarknetConv2D_BN_Leaky(base * 4, (3, 3))(x)
     x = DarknetConv2D_BN_Mish(base * 4, (3, 3))(x)
     x = resblock_body(x, base * 8, 1)  # /2   =128
-    tiny = x
-    x = resblock_body(x, base * 16, 2) # /4  =64
     # tiny = x
-    small = x
-    x = resblock_body(x, base * 32, 8) # /8 =32
+    x = resblock_body(x, base * 16, 2) # /4  =64
+    tiny = x
     # small = x
-    medium = x
-    x = resblock_body(x, base * 64, 8)  # /16 =16
+    x = resblock_body(x, base * 32, 8) # /8 =32
+    small = x
     # medium = x
-    big = x
-    x = resblock_body(x, base * 128, 8)  #/32  =8
+    x = resblock_body(x, base * 64, 8)  # /16 =16
+    medium = x
     # big = x
+    x = resblock_body(x, base * 128, 8)  #/32  =8
+    big = x
     return tiny, small, medium, big
 
 
@@ -1116,14 +1118,14 @@ if __name__ == "__main__":
         # os.chdir("E:\\Projects\\poly-yolo\\simulator_dataset")
         current_file_dir_path = os.path.dirname(os.path.realpath(__file__))
         print("current file dir:", current_file_dir_path)
-        annotation_path = current_file_dir_path+'/myTongueTrain.txt'
+        annotation_path = current_file_dir_path+'/myTongueTrain_rotate45_widthshift0.1_heightshift0.1_zoom0.2_num8860.txt'
         validation_path = current_file_dir_path+'/myTongueTest.txt'
         # # for the lab
         # annotation_path = current_file_dir_path + '/myTongueTrainLab.txt'
         # validation_path = current_file_dir_path + '/myTongueTestLab.txt'
 
 
-        log_dir = (current_file_dir_path + '/17TongueModelsTang256x256MishCSPbackboneNoLastNeckSAEBeforeAddCiouLoss4HalfStage.py_0.5lr_AngleStep{}_TonguePlus/').format(ANGLE_STEP)
+        log_dir = (current_file_dir_path + '/18TongueModelsTang256x256MishCSPbackboneNoLastNeckSAEBeforeAddCiouLossAug8860_0.5lr_AngleStep{}_TonguePlus/').format(ANGLE_STEP)
         plot_folder = log_dir + 'Plots/'
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
