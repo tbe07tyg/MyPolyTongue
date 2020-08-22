@@ -81,7 +81,7 @@ def writetxt_data_POLYYOLO(imgs_root, label_root, output_filename):
     binaryMask_paths = sorted(glob(label_root + '/*'))
     print("total {} images".format(len(imgs_paths)))
     print("total {} binary masks".format(len(binaryMask_paths)))
-
+    max_v =1000
 
     # initialize for writing strings
     # check the output file existance
@@ -109,6 +109,10 @@ def writetxt_data_POLYYOLO(imgs_root, label_root, output_filename):
             print(obj.shape)
             myPolygon = obj.reshape([-1, 2])
             print("mypolygon:", myPolygon.shape)
+            if  myPolygon.shape[0] >max_v:
+                print()
+                print("too many polygons")
+                break
 
             min_x = sys.maxsize
             max_x = 0
