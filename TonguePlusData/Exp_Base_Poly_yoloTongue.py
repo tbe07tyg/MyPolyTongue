@@ -1340,7 +1340,7 @@ if __name__ == "__main__":
         validation_path = current_file_dir_path + '/myTongueTestLab.txt'
 
 
-        log_dir = (current_file_dir_path + '/TongueModelsTang256x256_0.5lr_AngleStep{}_TonguePlus/').format(ANGLE_STEP)
+        log_dir = (current_file_dir_path + '/PolyTongueEXP_base_256x256_0.5lr_AngleStep{}_MyGen/').format(ANGLE_STEP)
         plot_folder = log_dir + 'Plots/'
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
