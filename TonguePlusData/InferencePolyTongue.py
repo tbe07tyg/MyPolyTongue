@@ -3,7 +3,7 @@ import numpy as np
 import os
 import time
 # need to change
-from TonguePlusData.poly_yoloTongueTang import YOLO #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
+from TonguePlusData.Exp_Base_Poly_yoloTongue import YOLO #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
 
 
 def get_classes(classes_path):

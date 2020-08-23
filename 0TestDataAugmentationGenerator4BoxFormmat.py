@@ -16,6 +16,13 @@ from PIL import Image
 import math
 from matplotlib.patches import Polygon
 
+MAX_VERTICES = 1000 #that allows the labels to have 1000 vertices per polygon at max. They are reduced for training
+ANGLE_STEP  = 5 #that means Poly-YOLO will detect 360/15=24 vertices per polygon at max
+NUM_ANGLES3  = int(360 // ANGLE_STEP * 3) #72 = (360/5)*3 =216
+print("NUM_ANGLES3:", NUM_ANGLES3)
+NUM_ANGLES  = int(360 // ANGLE_STEP) # 24
+grid_size_multiplier = 4 #that is resolution of the output scale compared with input. So it is 1/4
+anchor_mask = [[0,1,2,3,4,5,6,7,8], [0,1,2,3,4,5,6,7,8], [0,1,2,3,4,5,6,7,8]] #that should be optimized
 MAX_num_epochs = 4# 10 *443 =  4430 image
 seed_list= range(MAX_num_epochs)
 print(seed_list)
@@ -24,9 +31,12 @@ width_shift_range = 0.3
 height_shift_range = 0.3
 zoom_range = 0.2
 max_v= 1000
+
 root= "E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\Angumented_dataset/" + "rotate{}_widthshift{}_heightshift{}_zoom{}_num{}".format(rotation_range,width_shift_range, height_shift_range, zoom_range,MAX_num_epochs*443)
 augmentation_input_folder =root + "/input"
 augmentation_mask_folder =root + "/label"
+
+
 #
 if not os.path.exists(augmentation_input_folder):
     os.makedirs(augmentation_input_folder)
@@ -100,7 +110,15 @@ print("we need batches:", num_batches)
 
 
 
-def my_Gnearator(images_list, masks_list, batch_size, input_shape):
+def my_Gnearator(images_list, masks_list, batch_size, input_shape, anchors, num_classes,train_flag):
+    """
+    :param images_list:
+    :param masks_list:
+    :param batch_size:
+    :param input_shape:
+    :param train_flag:  STRING Train or else:
+    :return:
+    """
     n = len(images_list)
     i = 0
     img_data_gen_args = dict(rotation_range=rotation_range,
@@ -121,13 +139,13 @@ def my_Gnearator(images_list, masks_list, batch_size, input_shape):
     image_datagen = ImageDataGenerator(**img_data_gen_args)
     mask_datagen = ImageDataGenerator(**mask_data_gen_args)
     while True:
-        image_data = []
-        # box_data = []
-        mask_data = []
-        raw_img_path =[]
-        raw_mask_path = []
-        # mypolygon_data = []
-        my_annotation = []
+        image_data_list = []
+        box_data_list = []
+        # mask_data = []
+        # raw_img_path =[]
+        # raw_mask_path = []
+        # # mypolygon_data = []
+        # my_annotation = []
         # print(images_list)
         # print(masks_list)
         ziped_img_mask_list =  list(zip(images_list, masks_list))
@@ -138,22 +156,17 @@ def my_Gnearator(images_list, masks_list, batch_size, input_shape):
 
             temp_img_path = images_list[i]
             temp_mask_path =  masks_list[i]
-            image, mask, annoation_line = get_random_data(temp_img_path, temp_mask_path, input_shape, image_datagen, mask_datagen)
-            image_data.append(image)
-            # box_data.append(box)
-            mask_data.append(mask)
-            raw_img_path.append(temp_img_path)
-            raw_mask_path.append(temp_mask_path)
-            my_annotation.append(annoation_line)
+            img, box = my_get_random_data(temp_img_path, temp_mask_path, input_shape, image_datagen, mask_datagen, train_or_test=train_flag)
+            image_data_list.append(img)
+            box_data_list.append(box)
             i = (i + 1) % n
-        # image_data = np.array(image_data)
-        # print("image_data:", image_data.shape)
-        # box_data = np.array(box_data)
-        # y_true = preprocess_true_boxes(box_data, input_shape, anchors, num_classes)
-        # yield [image_data, *y_true], np.zeros(batch_size)
-        yield  np.array(image_data), np.array(mask_data), np.array(my_annotation)
+        image_batch = np.array(image_data_list)
+        box_batch = np.array(box_data_list)
+        # preprocess the bbox into the regression targets
+        y_true = preprocess_true_boxes(box_batch, input_shape, anchors, num_classes)
+        yield  [image_batch, *y_true], np.zeros(batch_size)
 
-def get_random_data(img_path, mask_path, input_shape, image_datagen, mask_datagen, random=True, max_boxes=80, hue_alter=20, sat_alter=30, val_alter=30, proc_img=True):
+def my_get_random_data(img_path, mask_path, input_shape, image_datagen, mask_datagen,  train_or_test, max_boxes=80):
     # load data ------------------------>
     # image_name = os.path.basename(img_path).replace('.JPG', '')
     # mask_name = os.path.basename(mask_path).replace('.JPG', '')
@@ -165,22 +178,24 @@ def get_random_data(img_path, mask_path, input_shape, image_datagen, mask_datage
     mask = krs_image.img_to_array(mask)
     # image = np.expand_dims(image, 0)
     # mask = np.expand_dims(mask, 0)
-    print("img shape before aug:", image.shape)
-    print("mask shape before aug:", mask.shape)
+    # print("img shape before aug:", image.shape)
+    # print("mask shape before aug:", mask.shape)
     # augment data ----------------------->
-    seed = np.random.randint(0, 2147483647)
-    # aug_image = image_datagen.random_transform(image, seed=seed)
-    #
-    # # print("img shape after aug:", image.shape)
-    # aug_mask = mask_datagen.random_transform(mask, seed=seed)
-    aug_image = image_datagen.random_transform(image, seed=seed)
+    if train_or_test == "Train":
+        print("train aug")
+        seed = np.random.randint(0, 2147483647)
 
-    # print("img shape after aug:", image.shape)
-    aug_mask = mask_datagen.random_transform(mask, seed=seed)
-    print("mask shape after aug:", aug_mask.shape)
-    copy_mask  = aug_mask.copy().astype(np.uint8)
+        aug_image = image_datagen.random_transform(image, seed=seed)
 
-    print("mask shape after aug:", np.squeeze(aug_mask).shape)
+        aug_mask = mask_datagen.random_transform(mask, seed=seed)
+
+        copy_mask  = aug_mask.copy().astype(np.uint8)
+    else:
+        print("Test no aug")
+        aug_image=image
+        copy_mask=mask.copy().astype(np.uint8)
+
+    # print("mask shape after aug:", np.squeeze(aug_mask).shape)
     # aug_image = krs_image.img_to_array(aug_image)
     # aug_mask = krs_image.img_to_array(aug_mask)
     # find polygons with augmask ------------------------------------>
@@ -193,10 +208,10 @@ def get_random_data(img_path, mask_path, input_shape, image_datagen, mask_datage
     polygons_line = ''
     c=0
     for obj in contours:
-        print(obj.shape)
+        # print(obj.shape)
         myPolygon = obj.reshape([-1, 2])
         print("mypolygon:", myPolygon.shape)
-        if myPolygon.shape[0] > max_v:
+        if myPolygon.shape[0] > MAX_VERTICES:
             print()
             print("too many polygons")
             break
@@ -222,11 +237,127 @@ def get_random_data(img_path, mask_path, input_shape, image_datagen, mask_datage
         polygons_line += ' {},{},{},{},{}'.format(min_x, min_y, max_x, max_y, c) + polygon_line
 
     annotation_line = img_path + polygons_line
+    # preprocessing of lines from string  ---> very important otherwise can not well split
+    annotation_line = annotation_line.split()
+    # print(lines[i])
+    for element in range(1, len(annotation_line)):
+        for symbol in range(annotation_line[element].count(',') - 4, MAX_VERTICES * 2, 2):
+            annotation_line[element] = annotation_line[element] + ',0,0'
 
-    #  format the dataformat as sending to the network
+    # print(annotation_line)
+    #  format the dataformat as sending to the network ----------------->
     box = np.array([np.array(list(map(float, box.split(','))))
                     for box in annotation_line[1:]])
-    return aug_image , aug_mask, annotation_line
+
+
+    # correct boxes
+    box_data = np.zeros((max_boxes, 5 + NUM_ANGLES3))
+    if len(box) > 0:
+        np.random.shuffle(box)
+        if len(box) > max_boxes:
+            box = box[:max_boxes]
+        box_data[:len(box), 0:5] = box[:, 0:5]
+    # start polygon --->
+    for b in range(0, len(box)):
+        boxes_xy = (box[b, 0:2] + box[b, 2:4]) // 2
+        for i in range(5, MAX_VERTICES * 2, 2):
+            if box[b, i] == 0 and box[b, i + 1] == 0:
+                break
+            dist_x = boxes_xy[0] - box[b, i]
+            dist_y = boxes_xy[1] - box[b, i + 1]
+            dist = np.sqrt(np.power(dist_x, 2) + np.power(dist_y, 2))
+            if (dist < 1): dist = 1
+
+            angle = np.degrees(np.arctan2(dist_y, dist_x))
+            if (angle < 0): angle += 360
+            # num of section it belongs to
+            iangle = int(angle) // ANGLE_STEP
+
+            if iangle >= NUM_ANGLES: iangle = NUM_ANGLES - 1
+
+            if dist > box_data[b, 5 + iangle * 3]:  # check for vertex existence. only the most distant is taken
+                box_data[b, 5 + iangle * 3] = dist
+                box_data[b, 5 + iangle * 3 + 1] = (angle - (
+                        iangle * int(ANGLE_STEP))) / ANGLE_STEP  # relative angle
+                box_data[b, 5 + iangle * 3 + 2] = 1
+
+
+    # normal the image ----------------->
+    aug_image = aug_image/255.0
+    # return aug_image, aug_mask, annotation_line
+    return aug_image, box_data
+
+def preprocess_true_boxes(true_boxes, input_shape, anchors, num_classes):
+    '''Preprocess true boxes to training input format
+
+    Parameters
+    ----------
+    true_boxes: array, shape=(m, T, 5+69)
+        Absolute x_min, y_min, x_max, y_max, class_id relative to input_shape
+    input_shape: array-like, hw, multiples of 32
+    anchors: array, shape=(N, 2), wh
+    num_classes: integer
+
+    Returns
+    -------
+    y_true: list of array, shape like yolo_outputs, xywh are reletive value
+
+    '''
+    assert (true_boxes[..., 4] < num_classes).all(), 'class id must be less than num_classes'
+    true_boxes = np.array(true_boxes, dtype='float32')
+    input_shape = np.array(input_shape, dtype='int32')
+    boxes_xy = (true_boxes[..., 0:2] + true_boxes[..., 2:4]) // 2
+    boxes_wh = true_boxes[..., 2:4] - true_boxes[..., 0:2]
+
+    true_boxes[:,:, 5:NUM_ANGLES3 + 5:3] /= np.clip(np.expand_dims(np.sqrt(np.power(boxes_wh[:, :, 0], 2) + np.power(boxes_wh[:, :, 1], 2)), -1), 0.0001, 9999999)
+    true_boxes[..., 0:2] = boxes_xy / input_shape[::-1]
+    true_boxes[..., 2:4] = boxes_wh / input_shape[::-1]
+
+    m = true_boxes.shape[0]
+    grid_shapes = [input_shape // {0: grid_size_multiplier}[l] for l in range(1)]
+    y_true = [np.zeros((m, grid_shapes[l][0], grid_shapes[l][1], len(anchor_mask[l]), 5 + num_classes + NUM_ANGLES3),
+                       dtype='float32') for l in range(1)]
+
+
+    # Expand dim to apply broadcasting.
+    anchors = np.expand_dims(anchors, 0)
+    anchor_maxes = anchors / 2.
+    anchor_mins = -anchor_maxes
+    valid_mask = boxes_wh[..., 0] > 0
+
+
+    for b in range(m):
+        # Discard zero rows.
+        wh = boxes_wh[b, valid_mask[b]]
+        if len(wh) == 0: continue
+        # Expand dim to apply broadcasting.
+        wh = np.expand_dims(wh, -2)
+        box_maxes = wh / 2.
+        box_mins = -box_maxes
+
+        intersect_mins = np.maximum(box_mins, anchor_mins)
+        intersect_maxes = np.minimum(box_maxes, anchor_maxes)
+        intersect_wh = np.maximum(intersect_maxes - intersect_mins, 0.)
+        intersect_area = intersect_wh[..., 0] * intersect_wh[..., 1]
+        box_area = wh[..., 0] * wh[..., 1]
+        anchor_area = anchors[..., 0] * anchors[..., 1]
+        iou = intersect_area / (box_area + anchor_area - intersect_area)
+
+        # Find best anchor for each true box
+        best_anchor = np.argmax(iou, axis=-1)
+        for t, n in enumerate(best_anchor):
+            l = 0
+            if n in anchor_mask[l]:
+                i = np.floor(true_boxes[b, t, 0] * grid_shapes[l][1]).astype('int32')
+                j = np.floor(true_boxes[b, t, 1] * grid_shapes[l][0]).astype('int32')
+                k = anchor_mask[l].index(n)
+                c = true_boxes[b, t, 4].astype('int32')
+
+                y_true[l][b, j, i, k, 0:4] = true_boxes[b, t, 0:4]
+                y_true[l][b, j, i, k, 4] = 1
+                y_true[l][b, j, i, k, 5 + c] = 1
+                y_true[l][b, j, i, k, 5 + num_classes:5 + num_classes + NUM_ANGLES3] = true_boxes[b, t, 5: 5 + NUM_ANGLES3]
+    return y_true
 
 def plot_aug_compare(image_list,name_list, batch_idx, img_idx):
     num_images_per_raw =  int(len(image_list)/2)
@@ -266,28 +397,33 @@ if __name__ == '__main__':
     raw_binary_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
     print("len of imgs:", len(raw_input_paths))
 
+    assert  len(raw_input_paths) == len(raw_binary_paths), "imgs and mask are not the same"
 
 
 
 
-    my_data =  my_Gnearator(raw_input_paths, raw_binary_paths, batch_size=4, input_shape=[256, 256])
-    print(my_data)
-
+    train_my_data =  my_Gnearator(raw_input_paths, raw_binary_paths, batch_size=4, input_shape=[256, 256], anchors= anchors, num_classes=num_classes,train_flag="Train")
+    val_my_data = my_Gnearator(raw_input_paths, raw_binary_paths, batch_size=4, input_shape=[256, 256],anchors=anchors, num_classes=num_classes,train_flag="test")
+    print(train_my_data)
+    print(val_my_data)
     save_aug_compare_folder ="E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\AugCompare"
     i=1
-    for aug_image, aug_mask,  b_annotation_strs in my_data:
-
+    for aug_image, box_data in val_my_data:
+        print("")
+        print("input aug image shape:", aug_image.shape)
+        print("input target box shape:", box_data.shape)
+        print("")
         # # fig, ax = plt.subplots(2, 2)
         # print("fetched image shape:", aug_image.shape)
         # print("fetched mask shape:", aug_mask.shape)
         # raw_im = Image.open(b_raw_input_paths[0])
-        # raw_mask = Image.open(b_raw_mask_paths[0])8
-        for idx in range(aug_image.shape[0]):
-            aug_i = aug_image[idx]
-            aug_m =  aug_mask[idx]
-            # raw_im = Image.open(b_raw_input_paths[idx])
-            # raw_mask = Image.open(b_raw_mask_paths[idx])
-            print(b_annotation_strs[idx])
+        # # raw_mask = Image.open(b_raw_mask_paths[0])8
+        # for idx in range(aug_image.shape[0]):
+        #     aug_i = aug_image[idx]
+        #     aug_m =  aug_mask[idx]
+        #     # raw_im = Image.open(b_raw_input_paths[idx])
+        #     # raw_mask = Image.open(b_raw_mask_paths[idx])
+        #     print(b_annotation_strs[idx])
             # plot_aug_compare([aug_i, aug_m], ["Aug_img", "Aug_mask"], i, idx)
 
         # ax[0, 0].imshow(raw_im)

@@ -35,6 +35,15 @@ from tensorflow.keras.utils import plot_model
 from TonguePlusData.MyCustomCallbacks import TrainingPlotCallback
 # os.environ["PATH"] += os.pathsep + 'C:\\Program Files (x86)\\Graphviz2.38\\bin'
 from tensorflow.python.keras.utils.data_utils import Sequence, get_file
+from keras_preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
+import random
+import pandas as pd
+import numpy as np
+from glob import glob
+from tensorflow.keras.preprocessing import image as krs_image
+import cv2
+
+
 
 np.set_printoptions(precision=3, suppress=True)
 MAX_VERTICES = 1000 #that allows the labels to have 1000 vertices per polygon at max. They are reduced for training
@@ -42,6 +51,16 @@ ANGLE_STEP  = 5 #that means Poly-YOLO will detect 360/15=24 vertices per polygon
 NUM_ANGLES3  = int(360 // ANGLE_STEP * 3) #72 = (360/5)*3 =216
 print("NUM_ANGLES3:", NUM_ANGLES3)
 NUM_ANGLES  = int(360 // ANGLE_STEP) # 24
+
+# for mydatagenerator aug
+rotation_range = 90
+width_shift_range = 0.3
+height_shift_range = 0.3
+zoom_range = 0.2
+shear_range=0.35
+horizontal_flip=True
+brightness_range=[0.5, 1.3]
+
 
 grid_size_multiplier = 4 #that is resolution of the output scale compared with input. So it is 1/4
 anchor_mask = [[0,1,2,3,4,5,6,7,8], [0,1,2,3,4,5,6,7,8], [0,1,2,3,4,5,6,7,8]] #that should be optimized
@@ -131,7 +150,11 @@ class MyGenerator(Sequence):
         h, w = input_shape
         box = np.array([np.array(list(map(float, box.split(','))))
                         for box in line[1:]])
-
+        box_list = []
+        for box in line[1:]:
+            # print(box)
+            box_list.append(box.split(','))
+        print(box_list)
         if not random:
             # resize image
             scale = min(w / iw, h / ih)
@@ -1440,8 +1463,8 @@ if __name__ == "__main__":
         # os.chdir("E:\\Projects\\poly-yolo\\simulator_dataset")
         current_file_dir_path = os.path.dirname(os.path.realpath(__file__))
         print("current file dir:", current_file_dir_path)
-        annotation_path = current_file_dir_path+'/myTongueTrain_rotate45_widthshift0.1_heightshift0.1_zoom0.2_num8860.txt'
-        validation_path = current_file_dir_path+'/myTongueTest.txt'
+        # annotation_path = current_file_dir_path+'/myTongueTrain_rotate45_widthshift0.1_heightshift0.1_zoom0.2_num8860.txt'
+        # validation_path = current_file_dir_path+'/myTongueTest.txt'
         # # for the lab
         # annotation_path = current_file_dir_path + '/myTongueTrainLab.txt'
         # validation_path = current_file_dir_path + '/myTongueTestLab.txt'
@@ -1481,7 +1504,28 @@ if __name__ == "__main__":
         # custom callback
         plotCallBack = TrainingPlotCallback(save_path= plot_folder)
 
+        # for my data generator
+        # for train dataset
+        train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
+        train_mask_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
+        print("len of train imgs:", len(train_input_paths))
 
+        assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
+        # for validation dataset  # we need or label and masks are the same shape
+        val_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
+        val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
+        assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
+
+        print("total {} training samples read".format(len(train_input_paths)))
+        print("total {} val samples read".format(len(val_input_paths)))
+        # create data_generator
+        # for train:
+        train_Gen = my_Gnearator(train_input_paths, train_mask_paths, batch_size=4, input_shape=[256, 256],
+                                   anchors= anchors, num_classes=num_classes,
+                                     train_flag="Train")
+        val_Gen = my_Gnearator(val_input_paths, val_mask_paths, batch_size=4, input_shape=[256, 256],
+                                   anchors= anchors, num_classes=num_classes,
+                                   train_flag="test")
 
 
         # with open(annotation_path) as f:
@@ -1490,27 +1534,27 @@ if __name__ == "__main__":
         # with open(validation_path) as f:
         #     lines_val = f.readlines()
         #     print("total {} val samples read".format(len(lines_val)))
-        lines =  tf.data.TextLineDataset(annotation_path)
-        print("lines:", lines)
-        for line in lines:
-            print(line)
-        lines_val = tf.data.TextLineDataset(validation_path)
-        for i in range (0, len(lines)):
+        # lines =  tf.data.TextLineDataset(annotation_path)
+        # print("lines:", lines)
+        # for line in lines:
+        #     print(line)
+        # lines_val = tf.data.TextLineDataset(validation_path)
+        # for i in range (0, len(lines)):
+        #
+        #     lines[i] = lines[i].split()
+        #     # print(lines[i])
+        #     for element in range(1, len(lines[i])):
+        #         for symbol in range(lines[i][element].count(',') - 4, MAX_VERTICES * 2, 2):
+        #             lines[i][element] = lines[i][element] + ',0,0'
+        #
+        # for i in range(0, len(lines_val)):
+        #     lines_val[i] = lines_val[i].split()
+        #     for element in range(1, len(lines_val[i])):
+        #         for symbol in range(lines_val[i][element].count(',') - 4, MAX_VERTICES * 2, 2):
+        #             lines_val[i][element] = lines_val[i][element] + ',0,0'
 
-            lines[i] = lines[i].split()
-            # print(lines[i])
-            for element in range(1, len(lines[i])):
-                for symbol in range(lines[i][element].count(',') - 4, MAX_VERTICES * 2, 2):
-                    lines[i][element] = lines[i][element] + ',0,0'
-
-        for i in range(0, len(lines_val)):
-            lines_val[i] = lines_val[i].split()
-            for element in range(1, len(lines_val[i])):
-                for symbol in range(lines_val[i][element].count(',') - 4, MAX_VERTICES * 2, 2):
-                    lines_val[i][element] = lines_val[i][element] + ',0,0'
-
-        num_val = int(len(lines_val))
-        num_train = len(lines)
+        num_val = int(len(val_input_paths))
+        num_train = len(train_input_paths)
 
 
         batch_size = 4 # decrease/increase batch size according to your memory of your GPU
@@ -1522,11 +1566,11 @@ if __name__ == "__main__":
         epochs = 1000
 
         # os.chdir("/simulator_dataset/imgs") # for the simulator image path
-        model.fit_generator(data_generator_wrapper(lines, batch_size, input_shape, anchors, num_classes, True),
+        model.fit_generator(train_Gen,
                   # steps_per_epoch=max(1, math.ceil(num_train/batch_size)),
-                  steps_per_epoch=max(1, 100),
-                  validation_data=data_generator_wrapper(lines_val, batch_size, input_shape, anchors, num_classes, False),
-                  validation_steps=max(1, math.ceil(num_train/batch_size)),
+                  steps_per_epoch=max(1, num_train // batch_size),
+                  validation_data=val_Gen,
+                  validation_steps=max(1, num_val // batch_size),
                   epochs=epochs,
                   initial_epoch=0,
                   callbacks=[reduce_lr, checkpoint, plotCallBack])
@@ -1598,7 +1642,182 @@ if __name__ == "__main__":
             yield [image_data, *y_true], np.zeros(batch_size)
 
 
+    def my_Gnearator(images_list, masks_list, batch_size, input_shape, anchors, num_classes, train_flag):
+        """
+        :param images_list:
+        :param masks_list:
+        :param batch_size:
+        :param input_shape:
+        :param train_flag:  STRING Train or else:
+        :return:
+        """
+        n = len(images_list)
+        i = 0
+        img_data_gen_args = dict(rotation_range=rotation_range,
+                                 width_shift_range=width_shift_range,
+                                 height_shift_range=height_shift_range,
+                                 zoom_range=zoom_range,
+                                 shear_range=shear_range,
+                                 horizontal_flip=horizontal_flip,
+                                 brightness_range=brightness_range
+                                 )
+        mask_data_gen_args = dict(rotation_range=rotation_range,
+                                  width_shift_range=width_shift_range,
+                                  height_shift_range=height_shift_range,
+                                  zoom_range=zoom_range,
+                                  shear_range=shear_range,
+                                  horizontal_flip=horizontal_flip
+                                  )
+        image_datagen = ImageDataGenerator(**img_data_gen_args)
+        mask_datagen = ImageDataGenerator(**mask_data_gen_args)
+        while True:
+            image_data_list = []
+            box_data_list = []
+            # mask_data = []
+            # raw_img_path =[]
+            # raw_mask_path = []
+            # # mypolygon_data = []
+            # my_annotation = []
+            # print(images_list)
+            # print(masks_list)
+            ziped_img_mask_list = list(zip(images_list, masks_list))
+            for b in range(batch_size):
+                if i == 0:
+                    np.random.shuffle(ziped_img_mask_list)
+                images_list, masks_list = zip(*ziped_img_mask_list)
 
+                temp_img_path = images_list[i]
+                temp_mask_path = masks_list[i]
+                img, box = my_get_random_data(temp_img_path, temp_mask_path, input_shape, image_datagen, mask_datagen,
+                                              train_or_test=train_flag)
+                image_data_list.append(img)
+                box_data_list.append(box)
+                i = (i + 1) % n
+            image_batch = np.array(image_data_list)
+            box_batch = np.array(box_data_list)
+            # preprocess the bbox into the regression targets
+            y_true = preprocess_true_boxes(box_batch, input_shape, anchors, num_classes)
+            yield [image_batch, *y_true], np.zeros(batch_size)
+
+
+    def my_get_random_data(img_path, mask_path, input_shape, image_datagen, mask_datagen, train_or_test, max_boxes=80):
+        # load data ------------------------>
+        # image_name = os.path.basename(img_path).replace('.JPG', '')
+        # mask_name = os.path.basename(mask_path).replace('.JPG', '')
+        # print("img name:", image_name)
+        # print("mask name:", mask_name)
+        image = krs_image.load_img(img_path, target_size=(input_shape[0], input_shape[1]))
+        mask = krs_image.load_img(mask_path, grayscale=True, target_size=(input_shape[0], input_shape[1]))
+        image = krs_image.img_to_array(image)
+        mask = krs_image.img_to_array(mask)
+        # image = np.expand_dims(image, 0)
+        # mask = np.expand_dims(mask, 0)
+        # print("img shape before aug:", image.shape)
+        # print("mask shape before aug:", mask.shape)
+        # augment data ----------------------->
+        if train_or_test == "Train":
+            print("train aug")
+            seed = np.random.randint(0, 2147483647)
+
+            aug_image = image_datagen.random_transform(image, seed=seed)
+
+            aug_mask = mask_datagen.random_transform(mask, seed=seed)
+
+            copy_mask = aug_mask.copy().astype(np.uint8)
+        else:
+            print("Test no aug")
+            aug_image = image
+            copy_mask = mask.copy().astype(np.uint8)
+
+        # print("mask shape after aug:", np.squeeze(aug_mask).shape)
+        # aug_image = krs_image.img_to_array(aug_image)
+        # aug_mask = krs_image.img_to_array(aug_mask)
+        # find polygons with augmask ------------------------------------>
+        # imgray = cv2.cvtColor(np.squeeze(copy_mask), cv2.COLOR_BGR2GRAY)
+        # print(copy_mask)
+        ret, thresh = cv2.threshold(copy_mask, 127, 255, 0)  # this require the numpy array has to be the uint8 type
+        image, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        # myPolygon= None
+        skipped = 0
+        polygons_line = ''
+        c = 0
+        for obj in contours:
+            # print(obj.shape)
+            myPolygon = obj.reshape([-1, 2])
+            # print("mypolygon:", myPolygon.shape)
+            if myPolygon.shape[0] > MAX_VERTICES:
+                print()
+                print("too many polygons")
+                break
+
+            min_x = sys.maxsize
+            max_x = 0
+            min_y = sys.maxsize
+            max_y = 0
+            polygon_line = ''
+
+            # for po
+            for x, y in myPolygon:
+                # print("({}, {})".format(x, y))
+                if x > max_x: max_x = x
+                if y > max_y: max_y = y
+                if x < min_x: min_x = x
+                if y < min_y: min_y = y
+                polygon_line += ',{},{}'.format(x, y)
+            if max_x - min_x <= 1.0 or max_y - min_y <= 1.0:
+                skipped += 1
+                continue
+
+            polygons_line += ' {},{},{},{},{}'.format(min_x, min_y, max_x, max_y, c) + polygon_line
+
+        annotation_line = img_path + polygons_line
+        # preprocessing of lines from string  ---> very important otherwise can not well split
+        annotation_line = annotation_line.split()
+        # print(lines[i])
+        for element in range(1, len(annotation_line)):
+            for symbol in range(annotation_line[element].count(',') - 4, MAX_VERTICES * 2, 2):
+                annotation_line[element] = annotation_line[element] + ',0,0'
+
+        # print(annotation_line)
+        #  format the dataformat as sending to the network ----------------->
+        box = np.array([np.array(list(map(float, box.split(','))))
+                        for box in annotation_line[1:]])
+
+        # correct boxes
+        box_data = np.zeros((max_boxes, 5 + NUM_ANGLES3))
+        if len(box) > 0:
+            np.random.shuffle(box)
+            if len(box) > max_boxes:
+                box = box[:max_boxes]
+            box_data[:len(box), 0:5] = box[:, 0:5]
+        # start polygon --->
+        for b in range(0, len(box)):
+            boxes_xy = (box[b, 0:2] + box[b, 2:4]) // 2
+            for i in range(5, MAX_VERTICES * 2, 2):
+                if box[b, i] == 0 and box[b, i + 1] == 0:
+                    break
+                dist_x = boxes_xy[0] - box[b, i]
+                dist_y = boxes_xy[1] - box[b, i + 1]
+                dist = np.sqrt(np.power(dist_x, 2) + np.power(dist_y, 2))
+                if (dist < 1): dist = 1
+
+                angle = np.degrees(np.arctan2(dist_y, dist_x))
+                if (angle < 0): angle += 360
+                # num of section it belongs to
+                iangle = int(angle) // ANGLE_STEP
+
+                if iangle >= NUM_ANGLES: iangle = NUM_ANGLES - 1
+
+                if dist > box_data[b, 5 + iangle * 3]:  # check for vertex existence. only the most distant is taken
+                    box_data[b, 5 + iangle * 3] = dist
+                    box_data[b, 5 + iangle * 3 + 1] = (angle - (
+                            iangle * int(ANGLE_STEP))) / ANGLE_STEP  # relative angle
+                    box_data[b, 5 + iangle * 3 + 2] = 1
+
+        # normal the image ----------------->
+        aug_image = aug_image / 255.0
+        # return aug_image, aug_mask, annotation_line
+        return aug_image, box_data
 
 
     def data_generator_wrapper(annotation_lines, batch_size, input_shape, anchors, num_classes, random):
