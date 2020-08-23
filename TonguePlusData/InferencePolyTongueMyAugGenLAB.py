@@ -3,7 +3,8 @@ import numpy as np
 import os
 import time
 # need to change
-from TonguePlusData.Exp_Base_Poly_yoloTongue import YOLO #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
+from glob import glob
+from TonguePlusData.Exp_Base_Poly_yoloTongue import YOLO, my_Gnearator, get_anchors, my_get_random_data #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
 
 
 def get_classes(classes_path):
@@ -19,12 +20,28 @@ print("current file dir:", current_file_dir_path)
 classes_path = current_file_dir_path+'/yolo_classesTongue.txt'
 class_names = get_classes(classes_path)
 print("class names:", class_names)
+
+# # EXP BASE_1
+# modelname =  "Exp_base1"
+# h5_name = "ep087-loss21.695-val_loss22.960.h5"
+# # EXP BASE_2
+# modelname =  "Exp_base2"
+# h5_name = "ep061-loss19.139-val_loss20.301.h5"
+# # EXP BASE_2
+modelname =  "Exp_base3"
+h5_name = "ep077-loss22.085-val_loss23.323.h5"
+
+saved_model_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator/" + modelname
+
+output_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults/" + modelname
+if not os.path.exists(output_root):
+    os.makedirs(output_root)
 # inference txt name
-inferTXTName = 'inference_Tongue443plusRawModel.txt'
+inferTXTName = output_root+ '/predictResult.txt'
 file = open(inferTXTName, "w")
 
 #if you want to detect more objects, lower the score and vice versa
-trained_model = YOLO(model_path=current_file_dir_path+'/Exp_base1/ep051-loss18.115-val_loss20.901.h5',  ## need to change
+trained_model = YOLO(model_path=saved_model_folder+'/'+ h5_name,  ## need to change
                           classes_path=current_file_dir_path+'/yolo_classesTongue.txt', # this need to specified for your model used classes
                           anchors_path = current_file_dir_path+'/yolo_anchorsTongue.txt',
                           iou=0.5, score=0.5)
@@ -53,44 +70,67 @@ def translate_color(cls):
 
 # dir_imgs_name = 'E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs' #path_where_are_images_to_clasification
 # dir_imgs_name = 'E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs' #path_where_are_images_to_clasification
-test_txt_path = current_file_dir_path+'/myTongueTest.txt'
+test_txt_path = current_file_dir_path+'/myTongueTestLab.txt'
 # FOR THE LAB
 # test_txt_path = current_file_dir_path+'/myTongueTestLab.txt'   # need to change
-out_path       = current_file_dir_path+'/PredOut/' #path, where the images will be saved. The path must exist
+out_path       = output_root+'/PredOut/' #path, where the images will be saved. The path must exist
 if not os.path.exists(out_path):
     os.makedirs(out_path)
 MAX_VERTICES = 1000 #that allows the labels to have 1000 vertices per polygon at max. They are reduced for training
 
-# read test lines from txt file
-with open(test_txt_path) as f:
-    text_lines = f.readlines()
-    print("total {} test samples read".format(len(text_lines)))
+# # read test lines from txt file
+# with open(test_txt_path) as f:
+#     text_lines = f.readlines()
+#     print("total {} test samples read".format(len(text_lines)))
+#
+# # print(text_)
+# for i in range(0, len(text_lines)):
+#
+#     text_lines[i] = text_lines[i].split()
+#     #     print(text_lines[i])
+#     for element in range(1, len(text_lines[i])):
+#         for symbol in range(text_lines[i][element].count(',') - 4, MAX_VERTICES * 2, 2):
+#             text_lines[i][element] = text_lines[i][element] + ',0,0'
+#         # print(text_lines)
+#
+# # %%
+#
+# # browse all images
+# print("cwd:", os.getcwd())
+# cwd = os.getcwd()
+#
+# # os.chdir("E:\\Projects\\poly-yolo\\simulator_dataset\\imgs")
+classes_path = current_file_dir_path + '/yolo_classesTongue.txt'
+anchors_path = current_file_dir_path + '/yolo_anchorsTongue.txt'
+class_names = get_classes(classes_path)
+num_classes = len(class_names)
+anchors = get_anchors(anchors_path)
 
-# print(text_)
-for i in range(0, len(text_lines)):
+# raw_input_shape = (416,832) # multiple of 32, hw
+input_shape = (256, 256)  # multiple of 32, hw
 
-    text_lines[i] = text_lines[i].split()
-    #     print(text_lines[i])
-    for element in range(1, len(text_lines[i])):
-        for symbol in range(text_lines[i][element].count(',') - 4, MAX_VERTICES * 2, 2):
-            text_lines[i][element] = text_lines[i][element] + ',0,0'
-        # print(text_lines)
-
-# %%
-
-# browse all images
-print("cwd:", os.getcwd())
-cwd = os.getcwd()
-
-# os.chdir("E:\\Projects\\poly-yolo\\simulator_dataset\\imgs")
+# for validation dataset  # we need or label and masks are the same shape
+test_input_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\test_inputs/*')
+test_mask_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
+assert len(test_input_paths) == len(test_mask_paths), "test imgs and mask are not the same"
+print("total {} testsamples read".format(len(test_input_paths)))
+# create data_generator
+#
+# test_Gen = my_Gnearator(test_input_paths, test_mask_paths, batch_size=4, input_shape=[256, 256],
+#                        anchors=anchors, num_classes=num_classes,
+#                        train_flag="test")
 total_boxes = 0
 imgs = 0
 fps_list=[]
-for i in range(0, len(text_lines)):
-    print("text_lines[i][0]:", text_lines[i][0])
-
+input_shape=[256,256]
+for test_path, mask_path in zip(test_input_paths,test_mask_paths):
+    input_img, _ = my_get_random_data(test_path, mask_path, input_shape, None, None, train_or_test="Test", max_boxes=80)
+    input_img = np.expand_dims(input_img,0)
+    print("input _img shape:", input_img.shape)
+    print("test_path:", test_path)
+    img = cv2.imread(test_path)
     imgs += 1
-    img = cv2.imread(text_lines[i][0])/255.0
+
     #     print(img)
     overlay = img.copy()
     boxes = []
@@ -99,7 +139,7 @@ for i in range(0, len(text_lines)):
 
     # realize prediciction using poly-yolo
     startx = time.time()
-    box, score, classs, polygons = trained_model.detect_image(img)
+    box, score, classs, polygons = trained_model.detect_image(input_img,[img.shape[0], img.shape[1]])
     tmp_fps = 1.0 / (time.time() - startx)
     print('Prediction speed: ', tmp_fps, 'fps')
     fps_list.append(tmp_fps)
@@ -121,7 +161,7 @@ for i in range(0, len(text_lines)):
         continue
 
     print("write image path")
-    file.write(text_lines[i][0] + " ")
+    file.write(test_path + " ")
     # browse all boxes
     for b in range(0, len(boxes)):
 

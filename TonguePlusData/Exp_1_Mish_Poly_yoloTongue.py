@@ -728,25 +728,34 @@ def DarknetConv2D(*args, **kwargs):
     return Conv2D(*args, **darknet_conv_kwargs)
 
 
-def DarknetConv2D_BN_Leaky(*args, **kwargs):
+# def DarknetConv2D_BN_Leaky(*args, **kwargs):
+#     """Darknet Convolution2D followed by BatchNormalization and LeakyReLU."""
+#     no_bias_kwargs = {'use_bias': False}
+#     no_bias_kwargs.update(kwargs)
+#     return compose(
+#         DarknetConv2D(*args, **no_bias_kwargs),
+#         BatchNormalization(),
+#         LeakyReLU(alpha=0.1))
+
+def DarknetConv2D_BN_Mish(*args, **kwargs):
     """Darknet Convolution2D followed by BatchNormalization and LeakyReLU."""
     no_bias_kwargs = {'use_bias': False}
     no_bias_kwargs.update(kwargs)
     return compose(
         DarknetConv2D(*args, **no_bias_kwargs),
         BatchNormalization(),
-        LeakyReLU(alpha=0.1))
+        Mish())
 
 
 def resblock_body(x, num_filters, num_blocks):
     '''A series of resblocks starting with a downsampling Convolution2D'''
     # Darknet uses left and top padding instead of 'same' mode
     x = ZeroPadding2D(((1, 0), (1, 0)))(x)
-    x = DarknetConv2D_BN_Leaky(num_filters, (3, 3), strides=(2, 2))(x)
+    x = DarknetConv2D_BN_Mish(num_filters, (3, 3), strides=(2, 2))(x)
     for i in range(num_blocks):
         y = compose(
-            DarknetConv2D_BN_Leaky(num_filters // 2, (1, 1)),
-            DarknetConv2D_BN_Leaky(num_filters, (3, 3)))(x)
+            DarknetConv2D_BN_Mish(num_filters // 2, (1, 1)),
+            DarknetConv2D_BN_Mish(num_filters, (3, 3)))(x)
         y = squeeze_excite_block(y)
         x = Add()([x, y])
     return x
@@ -762,7 +771,7 @@ def squeeze_excite_block(tensor, ratio=16):
     se = GlobalAveragePooling2D()(init)
     se = Reshape(se_shape)(se)
     se = Dense(filters // ratio, kernel_initializer='he_normal', use_bias=False)(se)
-    se = LeakyReLU(alpha=0.1)(se)
+    se = Mish()(se)
     se = Dense(filters, activation='sigmoid', kernel_initializer='he_normal', use_bias=False)(se)
 
     if K.image_data_format() == 'channels_first':
@@ -780,7 +789,7 @@ def _tensor_shape(tensor):
 def darknet_body(x):
     '''Darknent body having 52 Convolution2D layers'''
     base = 6  # YOLOv3 has base=8, we have less parameters
-    x = DarknetConv2D_BN_Leaky(base * 4, (3, 3))(x)
+    x = DarknetConv2D_BN_Mish(base * 4, (3, 3))(x)
     x = resblock_body(x, base * 8, 1)
     x = resblock_body(x, base * 16, 2)
     tiny = x
@@ -799,10 +808,10 @@ def yolo_body(inputs, num_anchors, num_classes):
     tiny, small, medium, big = darknet_body(inputs)
 
     base = 6
-    tiny   = DarknetConv2D_BN_Leaky(base*32, (1, 1))(tiny)
-    small  = DarknetConv2D_BN_Leaky(base*32, (1, 1))(small)
-    medium = DarknetConv2D_BN_Leaky(base*32, (1, 1))(medium)
-    big    = DarknetConv2D_BN_Leaky(base*32, (1, 1))(big)
+    tiny   = DarknetConv2D_BN_Mish(base*32, (1, 1))(tiny)
+    small  = DarknetConv2D_BN_Mish(base*32, (1, 1))(small)
+    medium = DarknetConv2D_BN_Mish(base*32, (1, 1))(medium)
+    big    = DarknetConv2D_BN_Mish(base*32, (1, 1))(big)
 
     #stairstep upsamplig
     all = Add()([medium, UpSampling2D(2,interpolation='bilinear')(big)])
@@ -814,9 +823,9 @@ def yolo_body(inputs, num_anchors, num_classes):
     num_filters = base*32
 
     x = compose(
-        DarknetConv2D_BN_Leaky(num_filters, (1, 1)),
-        DarknetConv2D_BN_Leaky(num_filters * 2, (3, 3)),
-        DarknetConv2D_BN_Leaky(num_filters, (1, 1)))(all)
+        DarknetConv2D_BN_Mish(num_filters, (1, 1)),
+        DarknetConv2D_BN_Mish(num_filters * 2, (3, 3)),
+        DarknetConv2D_BN_Mish(num_filters, (1, 1)))(all)
     print("x.shape:", x.shape)
     print()
     print("num_classes:", num_classes)
@@ -824,7 +833,7 @@ def yolo_body(inputs, num_anchors, num_classes):
     print("num_anchors:", num_anchors)
     print()
     all = compose(
-        DarknetConv2D_BN_Leaky(num_filters * 2, (3, 3)),
+        DarknetConv2D_BN_Mish(num_filters * 2, (3, 3)),
 
         DarknetConv2D(num_anchors * (num_classes + 5 + NUM_ANGLES3), (1, 1)))(x)
     print("all.shape:", all.shape)
@@ -1283,21 +1292,21 @@ class YOLO(object):
                                                      score_threshold=self.score, iou_threshold=self.iou)
         return boxes, scores, classes, polygons
 
-    def detect_image(self, image, raw_shape):
-        # if self.model_image_size != (None, None):
-        #     assert self.model_image_size[0] % 32 == 0, 'Multiples of 32 required'
-        #     assert self.model_image_size[1] % 32 == 0, 'Multiples of 32 required'
-        #     boxed_image = letterbox_image(image, tuple(reversed(self.model_image_size)))
-        # else:
-        #     print('THE functionality is not implemented!')
+    def detect_image(self, image):
+        if self.model_image_size != (None, None):
+            assert self.model_image_size[0] % 32 == 0, 'Multiples of 32 required'
+            assert self.model_image_size[1] % 32 == 0, 'Multiples of 32 required'
+            boxed_image = letterbox_image(image, tuple(reversed(self.model_image_size)))
+        else:
+            print('THE functionality is not implemented!')
 
-        #
-        # image_data = np.expand_dims(boxed_image, 0)  # Add batch dimension.
+
+        image_data = np.expand_dims(boxed_image, 0)  # Add batch dimension.
         out_boxes, out_scores, out_classes, polygons = self.sess.run(
             [self.boxes, self.scores, self.classes, self.polygons],
             feed_dict={
-                self.yolo_model.input: image,
-                self.input_image_shape: [raw_shape[0], raw_shape[1]],
+                self.yolo_model.input: image_data,
+                self.input_image_shape: [image.shape[0], image.shape[1]],
                 K.learning_phase(): 0
             })
 
@@ -1318,189 +1327,6 @@ class YOLO(object):
     def close_session(self):
         self.sess.close()
 
-def my_Gnearator(images_list, masks_list, batch_size, input_shape, anchors, num_classes, train_flag):
-    """
-    :param images_list:
-    :param masks_list:
-    :param batch_size:
-    :param input_shape:
-    :param train_flag:  STRING Train or else:
-    :return:
-    """
-    n = len(images_list)
-    i = 0
-    img_data_gen_args = dict(rotation_range=rotation_range,
-                             width_shift_range=width_shift_range,
-                             height_shift_range=height_shift_range,
-                             zoom_range=zoom_range,
-                             shear_range=shear_range,
-                             horizontal_flip=horizontal_flip,
-                             brightness_range=brightness_range
-                             )
-    mask_data_gen_args = dict(rotation_range=rotation_range,
-                              width_shift_range=width_shift_range,
-                              height_shift_range=height_shift_range,
-                              zoom_range=zoom_range,
-                              shear_range=shear_range,
-                              horizontal_flip=horizontal_flip
-                              )
-    image_datagen = ImageDataGenerator(**img_data_gen_args)
-    mask_datagen = ImageDataGenerator(**mask_data_gen_args)
-    while True:
-        image_data_list = []
-        box_data_list = []
-        # mask_data = []
-        # raw_img_path =[]
-        # raw_mask_path = []
-        # # mypolygon_data = []
-        # my_annotation = []
-        # print(images_list)
-        # print(masks_list)
-        ziped_img_mask_list = list(zip(images_list, masks_list))
-        for b in range(batch_size):
-            if i == 0:
-                np.random.shuffle(ziped_img_mask_list)
-            images_list, masks_list = zip(*ziped_img_mask_list)
-
-            temp_img_path = images_list[i]
-            temp_mask_path = masks_list[i]
-            img, box = my_get_random_data(temp_img_path, temp_mask_path, input_shape, image_datagen, mask_datagen,
-                                          train_or_test=train_flag)
-            image_data_list.append(img)
-            box_data_list.append(box)
-            i = (i + 1) % n
-        image_batch = np.array(image_data_list)
-        box_batch = np.array(box_data_list)
-        # preprocess the bbox into the regression targets
-        y_true = preprocess_true_boxes(box_batch, input_shape, anchors, num_classes)
-        yield [image_batch, *y_true], np.zeros(batch_size)
-
-
-def my_get_random_data(img_path, mask_path, input_shape, image_datagen, mask_datagen, train_or_test, max_boxes=80):
-    # load data ------------------------>
-    # image_name = os.path.basename(img_path).replace('.JPG', '')
-    # mask_name = os.path.basename(mask_path).replace('.JPG', '')
-    # print("img name:", image_name)
-    # print("mask name:", mask_name)
-    image = krs_image.load_img(img_path, target_size=(input_shape[0], input_shape[1]))
-    mask = krs_image.load_img(mask_path, grayscale=True, target_size=(input_shape[0], input_shape[1]))
-    image = krs_image.img_to_array(image)
-    mask = krs_image.img_to_array(mask)
-    # image = np.expand_dims(image, 0)
-    # mask = np.expand_dims(mask, 0)
-    # print("img shape before aug:", image.shape)
-    # print("mask shape before aug:", mask.shape)
-    # augment data ----------------------->
-    if train_or_test == "Train":
-        print("train aug")
-        seed = np.random.randint(0, 2147483647)
-
-        aug_image = image_datagen.random_transform(image, seed=seed)
-
-        aug_mask = mask_datagen.random_transform(mask, seed=seed)
-
-        copy_mask = aug_mask.copy().astype(np.uint8)
-    else:
-        print("Test no aug")
-        aug_image = image
-        copy_mask = mask.copy().astype(np.uint8)
-
-    # print("mask shape after aug:", np.squeeze(aug_mask).shape)
-    # aug_image = krs_image.img_to_array(aug_image)
-    # aug_mask = krs_image.img_to_array(aug_mask)
-    # find polygons with augmask ------------------------------------>
-    # imgray = cv2.cvtColor(np.squeeze(copy_mask), cv2.COLOR_BGR2GRAY)
-    # print(copy_mask)
-    ret, thresh = cv2.threshold(copy_mask, 127, 255, 0)  # this require the numpy array has to be the uint8 type
-    image, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    # myPolygon= None
-    skipped = 0
-    polygons_line = ''
-    c = 0
-    for obj in contours:
-        # print(obj.shape)
-        myPolygon = obj.reshape([-1, 2])
-        # print("mypolygon:", myPolygon.shape)
-        if myPolygon.shape[0] > MAX_VERTICES:
-            print()
-            print("too many polygons")
-            break
-
-        min_x = sys.maxsize
-        max_x = 0
-        min_y = sys.maxsize
-        max_y = 0
-        polygon_line = ''
-
-        # for po
-        for x, y in myPolygon:
-            # print("({}, {})".format(x, y))
-            if x > max_x: max_x = x
-            if y > max_y: max_y = y
-            if x < min_x: min_x = x
-            if y < min_y: min_y = y
-            polygon_line += ',{},{}'.format(x, y)
-        if max_x - min_x <= 1.0 or max_y - min_y <= 1.0:
-            skipped += 1
-            continue
-
-        polygons_line += ' {},{},{},{},{}'.format(min_x, min_y, max_x, max_y, c) + polygon_line
-
-    annotation_line = img_path + polygons_line
-    # preprocessing of lines from string  ---> very important otherwise can not well split
-    annotation_line = annotation_line.split()
-    # print(lines[i])
-    for element in range(1, len(annotation_line)):
-        for symbol in range(annotation_line[element].count(',') - 4, MAX_VERTICES * 2, 2):
-            annotation_line[element] = annotation_line[element] + ',0,0'
-
-    # print(annotation_line)
-    #  format the dataformat as sending to the network ----------------->
-    box = np.array([np.array(list(map(float, box.split(','))))
-                    for box in annotation_line[1:]])
-
-    # correct boxes
-    box_data = np.zeros((max_boxes, 5 + NUM_ANGLES3))
-    if len(box) > 0:
-        np.random.shuffle(box)
-        if len(box) > max_boxes:
-            box = box[:max_boxes]
-        box_data[:len(box), 0:5] = box[:, 0:5]
-    # start polygon --->
-    for b in range(0, len(box)):
-        boxes_xy = (box[b, 0:2] + box[b, 2:4]) // 2
-        for i in range(5, MAX_VERTICES * 2, 2):
-            if box[b, i] == 0 and box[b, i + 1] == 0:
-                break
-            dist_x = boxes_xy[0] - box[b, i]
-            dist_y = boxes_xy[1] - box[b, i + 1]
-            dist = np.sqrt(np.power(dist_x, 2) + np.power(dist_y, 2))
-            if (dist < 1): dist = 1
-
-            angle = np.degrees(np.arctan2(dist_y, dist_x))
-            if (angle < 0): angle += 360
-            # num of section it belongs to
-            iangle = int(angle) // ANGLE_STEP
-
-            if iangle >= NUM_ANGLES: iangle = NUM_ANGLES - 1
-
-            if dist > box_data[b, 5 + iangle * 3]:  # check for vertex existence. only the most distant is taken
-                box_data[b, 5 + iangle * 3] = dist
-                box_data[b, 5 + iangle * 3 + 1] = (angle - (
-                        iangle * int(ANGLE_STEP))) / ANGLE_STEP  # relative angle
-                box_data[b, 5 + iangle * 3 + 2] = 1
-
-    # normal the image ----------------->
-    aug_image = aug_image / 255.0
-    # return aug_image, aug_mask, annotation_line
-    return aug_image, box_data
-
-def get_anchors(anchors_path):
-    """loads the anchors from a file"""
-    with open(anchors_path) as f:
-        anchors = f.readline()
-    anchors = [float(x) for x in anchors.split(',')]
-    return np.array(anchors).reshape(-1, 2)
 
 if __name__ == "__main__":
 
@@ -1523,9 +1349,7 @@ if __name__ == "__main__":
         validation_path = current_file_dir_path + '/myTongueTestLab.txt'
 
 
-        # log_dir = (current_file_dir_path + '/TongueModelsTang256x256_0.5lr_AngleStep{}_TonguePlus/').format(ANGLE_STEP)
-        log_dir = current_file_dir_path + '/Exp_base4/'
-
+        log_dir = (current_file_dir_path + '/Exp_1_Mish_Poly_MyGen_AngleStep{}/').format(ANGLE_STEP)
         plot_folder = log_dir + 'Plots/'
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
@@ -1560,27 +1384,27 @@ if __name__ == "__main__":
         plotCallBack = TrainingPlotCallback(save_path= plot_folder)
 
         # for my data generator
-        # # for train dataset
-        # train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
-        # train_mask_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
-        # print("len of train imgs:", len(train_input_paths))
-        #
-        # assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
-        # # for validation dataset  # we need or label and masks are the same shape
-        # val_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
-        # val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
-        # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
-
-        # for train dataset for the lab
-        train_input_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\inputs/*')
-        train_mask_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\binary_labels/*.jpg')
+        # for train dataset
+        train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
+        train_mask_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
         print("len of train imgs:", len(train_input_paths))
 
         assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
         # for validation dataset  # we need or label and masks are the same shape
-        val_input_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\test_inputs/*')
-        val_mask_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
+        val_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
+        val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
         assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
+
+        # # for train dataset for the lab
+        # train_input_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\inputs/*')
+        # train_mask_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\binary_labels/*.jpg')
+        # print("len of train imgs:", len(train_input_paths))
+        #
+        # assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
+        # # for validation dataset  # we need or label and masks are the same shape
+        # val_input_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\test_inputs/*')
+        # val_mask_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
+        # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
 
         print("total {} training samples read".format(len(train_input_paths)))
         print("total {} val samples read".format(len(val_input_paths)))
@@ -1651,7 +1475,12 @@ if __name__ == "__main__":
         return class_names
 
 
-
+    def get_anchors(anchors_path):
+        """loads the anchors from a file"""
+        with open(anchors_path) as f:
+            anchors = f.readline()
+        anchors = [float(x) for x in anchors.split(',')]
+        return np.array(anchors).reshape(-1, 2)
 
 
     def create_model(input_shape, anchors, num_classes, load_pretrained=True, freeze_body=2,
@@ -1703,6 +1532,182 @@ if __name__ == "__main__":
             yield [image_data, *y_true], np.zeros(batch_size)
 
 
+    def my_Gnearator(images_list, masks_list, batch_size, input_shape, anchors, num_classes, train_flag):
+        """
+        :param images_list:
+        :param masks_list:
+        :param batch_size:
+        :param input_shape:
+        :param train_flag:  STRING Train or else:
+        :return:
+        """
+        n = len(images_list)
+        i = 0
+        img_data_gen_args = dict(rotation_range=rotation_range,
+                                 width_shift_range=width_shift_range,
+                                 height_shift_range=height_shift_range,
+                                 zoom_range=zoom_range,
+                                 shear_range=shear_range,
+                                 horizontal_flip=horizontal_flip,
+                                 brightness_range=brightness_range
+                                 )
+        mask_data_gen_args = dict(rotation_range=rotation_range,
+                                  width_shift_range=width_shift_range,
+                                  height_shift_range=height_shift_range,
+                                  zoom_range=zoom_range,
+                                  shear_range=shear_range,
+                                  horizontal_flip=horizontal_flip
+                                  )
+        image_datagen = ImageDataGenerator(**img_data_gen_args)
+        mask_datagen = ImageDataGenerator(**mask_data_gen_args)
+        while True:
+            image_data_list = []
+            box_data_list = []
+            # mask_data = []
+            # raw_img_path =[]
+            # raw_mask_path = []
+            # # mypolygon_data = []
+            # my_annotation = []
+            # print(images_list)
+            # print(masks_list)
+            ziped_img_mask_list = list(zip(images_list, masks_list))
+            for b in range(batch_size):
+                if i == 0:
+                    np.random.shuffle(ziped_img_mask_list)
+                images_list, masks_list = zip(*ziped_img_mask_list)
+
+                temp_img_path = images_list[i]
+                temp_mask_path = masks_list[i]
+                img, box = my_get_random_data(temp_img_path, temp_mask_path, input_shape, image_datagen, mask_datagen,
+                                              train_or_test=train_flag)
+                image_data_list.append(img)
+                box_data_list.append(box)
+                i = (i + 1) % n
+            image_batch = np.array(image_data_list)
+            box_batch = np.array(box_data_list)
+            # preprocess the bbox into the regression targets
+            y_true = preprocess_true_boxes(box_batch, input_shape, anchors, num_classes)
+            yield [image_batch, *y_true], np.zeros(batch_size)
+
+
+    def my_get_random_data(img_path, mask_path, input_shape, image_datagen, mask_datagen, train_or_test, max_boxes=80):
+        # load data ------------------------>
+        # image_name = os.path.basename(img_path).replace('.JPG', '')
+        # mask_name = os.path.basename(mask_path).replace('.JPG', '')
+        # print("img name:", image_name)
+        # print("mask name:", mask_name)
+        image = krs_image.load_img(img_path, target_size=(input_shape[0], input_shape[1]))
+        mask = krs_image.load_img(mask_path, grayscale=True, target_size=(input_shape[0], input_shape[1]))
+        image = krs_image.img_to_array(image)
+        mask = krs_image.img_to_array(mask)
+        # image = np.expand_dims(image, 0)
+        # mask = np.expand_dims(mask, 0)
+        # print("img shape before aug:", image.shape)
+        # print("mask shape before aug:", mask.shape)
+        # augment data ----------------------->
+        if train_or_test == "Train":
+            print("train aug")
+            seed = np.random.randint(0, 2147483647)
+
+            aug_image = image_datagen.random_transform(image, seed=seed)
+
+            aug_mask = mask_datagen.random_transform(mask, seed=seed)
+
+            copy_mask = aug_mask.copy().astype(np.uint8)
+        else:
+            print("Test no aug")
+            aug_image = image
+            copy_mask = mask.copy().astype(np.uint8)
+
+        # print("mask shape after aug:", np.squeeze(aug_mask).shape)
+        # aug_image = krs_image.img_to_array(aug_image)
+        # aug_mask = krs_image.img_to_array(aug_mask)
+        # find polygons with augmask ------------------------------------>
+        # imgray = cv2.cvtColor(np.squeeze(copy_mask), cv2.COLOR_BGR2GRAY)
+        # print(copy_mask)
+        ret, thresh = cv2.threshold(copy_mask, 127, 255, 0)  # this require the numpy array has to be the uint8 type
+        image, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        # myPolygon= None
+        skipped = 0
+        polygons_line = ''
+        c = 0
+        for obj in contours:
+            # print(obj.shape)
+            myPolygon = obj.reshape([-1, 2])
+            # print("mypolygon:", myPolygon.shape)
+            if myPolygon.shape[0] > MAX_VERTICES:
+                print()
+                print("too many polygons")
+                break
+
+            min_x = sys.maxsize
+            max_x = 0
+            min_y = sys.maxsize
+            max_y = 0
+            polygon_line = ''
+
+            # for po
+            for x, y in myPolygon:
+                # print("({}, {})".format(x, y))
+                if x > max_x: max_x = x
+                if y > max_y: max_y = y
+                if x < min_x: min_x = x
+                if y < min_y: min_y = y
+                polygon_line += ',{},{}'.format(x, y)
+            if max_x - min_x <= 1.0 or max_y - min_y <= 1.0:
+                skipped += 1
+                continue
+
+            polygons_line += ' {},{},{},{},{}'.format(min_x, min_y, max_x, max_y, c) + polygon_line
+
+        annotation_line = img_path + polygons_line
+        # preprocessing of lines from string  ---> very important otherwise can not well split
+        annotation_line = annotation_line.split()
+        # print(lines[i])
+        for element in range(1, len(annotation_line)):
+            for symbol in range(annotation_line[element].count(',') - 4, MAX_VERTICES * 2, 2):
+                annotation_line[element] = annotation_line[element] + ',0,0'
+
+        # print(annotation_line)
+        #  format the dataformat as sending to the network ----------------->
+        box = np.array([np.array(list(map(float, box.split(','))))
+                        for box in annotation_line[1:]])
+
+        # correct boxes
+        box_data = np.zeros((max_boxes, 5 + NUM_ANGLES3))
+        if len(box) > 0:
+            np.random.shuffle(box)
+            if len(box) > max_boxes:
+                box = box[:max_boxes]
+            box_data[:len(box), 0:5] = box[:, 0:5]
+        # start polygon --->
+        for b in range(0, len(box)):
+            boxes_xy = (box[b, 0:2] + box[b, 2:4]) // 2
+            for i in range(5, MAX_VERTICES * 2, 2):
+                if box[b, i] == 0 and box[b, i + 1] == 0:
+                    break
+                dist_x = boxes_xy[0] - box[b, i]
+                dist_y = boxes_xy[1] - box[b, i + 1]
+                dist = np.sqrt(np.power(dist_x, 2) + np.power(dist_y, 2))
+                if (dist < 1): dist = 1
+
+                angle = np.degrees(np.arctan2(dist_y, dist_x))
+                if (angle < 0): angle += 360
+                # num of section it belongs to
+                iangle = int(angle) // ANGLE_STEP
+
+                if iangle >= NUM_ANGLES: iangle = NUM_ANGLES - 1
+
+                if dist > box_data[b, 5 + iangle * 3]:  # check for vertex existence. only the most distant is taken
+                    box_data[b, 5 + iangle * 3] = dist
+                    box_data[b, 5 + iangle * 3 + 1] = (angle - (
+                            iangle * int(ANGLE_STEP))) / ANGLE_STEP  # relative angle
+                    box_data[b, 5 + iangle * 3 + 2] = 1
+
+        # normal the image ----------------->
+        aug_image = aug_image / 255.0
+        # return aug_image, aug_mask, annotation_line
+        return aug_image, box_data
 
 
     def data_generator_wrapper(annotation_lines, batch_size, input_shape, anchors, num_classes, random):
