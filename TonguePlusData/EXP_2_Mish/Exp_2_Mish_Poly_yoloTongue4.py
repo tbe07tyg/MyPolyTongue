@@ -32,7 +32,7 @@ from tensorflow.keras.regularizers import l2
 from tensorflow.keras.utils import multi_gpu_model
 from matplotlib.colors import rgb_to_hsv, hsv_to_rgb
 from tensorflow.keras.utils import plot_model
-from TonguePlusData.MyCustomCallbacks import TrainingPlotCallback
+from TonguePlusData.MyCustomCallbacks import TrainingPlotCallback, DeleteEarlySavedH5models
 # os.environ["PATH"] += os.pathsep + 'C:\\Program Files (x86)\\Graphviz2.38\\bin'
 from tensorflow.python.keras.utils.data_utils import Sequence, get_file
 from keras_preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
@@ -1568,29 +1568,31 @@ if __name__ == "__main__":
         early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1)
         # custom callback
         plotCallBack = TrainingPlotCallback(save_path= plot_folder)
+        # delete old h5 cashes:
+        deleteOldH5 =  DeleteEarlySavedH5models(modelSavedPath = log_dir)
 
         # for my data generator
-        # for train dataset
-        train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
-        train_mask_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
-        print("len of train imgs:", len(train_input_paths))
-
-        assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
-        # for validation dataset  # we need or label and masks are the same shape
-        val_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
-        val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
-        assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
-
-        # # for train dataset for the lab
-        # train_input_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\inputs/*')
-        # train_mask_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\binary_labels/*.jpg')
+        # # for train dataset
+        # train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
+        # train_mask_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
         # print("len of train imgs:", len(train_input_paths))
         #
         # assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
         # # for validation dataset  # we need or label and masks are the same shape
-        # val_input_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\test_inputs/*')
-        # val_mask_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
+        # val_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
+        # val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
         # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
+
+        # # for train dataset for the lab
+        train_input_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\inputs/*')
+        train_mask_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\binary_labels/*.jpg')
+        print("len of train imgs:", len(train_input_paths))
+
+        assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
+        # for validation dataset  # we need or label and masks are the same shape
+        val_input_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\test_inputs/*')
+        val_mask_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
+        assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
 
         print("total {} training samples read".format(len(train_input_paths)))
         print("total {} val samples read".format(len(val_input_paths)))
@@ -1639,7 +1641,7 @@ if __name__ == "__main__":
 
 
         model.compile(optimizer=Adadelta(0.5), loss={'yolo_loss': lambda y_true, y_pred: y_pred})
-        epochs = 1
+        epochs = 100
 
         # os.chdir("/simulator_dataset/imgs") # for the simulator image path
         model.fit_generator(train_Gen,
@@ -1649,7 +1651,7 @@ if __name__ == "__main__":
                   validation_steps=max(1, num_val // batch_size),
                   epochs=epochs,
                   initial_epoch=0,
-                  callbacks=[reduce_lr, checkpoint, plotCallBack])
+                  callbacks=[reduce_lr, checkpoint, plotCallBack, deleteOldH5])
 
 
 
