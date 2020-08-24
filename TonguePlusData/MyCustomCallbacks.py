@@ -5,6 +5,9 @@ matplotlib.use('agg')
 import matplotlib.pyplot as plt
 from tensorflow import keras
 import numpy as np
+import os
+from pathlib import Path
+from glob import glob
 
 class TrainingPlotCallback(keras.callbacks.Callback):
     """
@@ -91,3 +94,30 @@ class TrainingPlotCallback(keras.callbacks.Callback):
             with open(self.save_path + 'val_losses_Epoch-{}.txt'.format(epoch), 'w') as f:
                 for item in self.val_losses:
                     f.write("%s\n" % item)
+
+class DeleteEarlySavedH5models(keras.callbacks.Callback):
+    """
+      A Logger that log average performance per `display` steps.
+      """
+
+    def __init__(self, modelSavedPath):
+        # self.step = 0
+        self.modelSavedPath = modelSavedPath
+        # self.metric_cache = {}
+
+
+    # This function is called at the end of each epoch
+    def on_epoch_end(self, epoch, logs={}):
+        print("end epoch logs:", logs)
+        print("save path:", self.modelSavedPath)
+        saved_model_files =  glob(self.modelSavedPath + '/*.h5')
+        if len(saved_model_files) >2:
+            saved_model_files.sort(key=os.path.getctime)
+            print("all the files:", saved_model_files)
+            old_files =  saved_model_files[0:len(saved_model_files)-1]
+            print("files to be deleted:", old_files)
+
+            for file in old_files:
+                os.remove(file)
+
+

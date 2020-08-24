@@ -65,7 +65,8 @@ brightness_range=[0.5, 1.3]
 grid_size_multiplier = 4 #that is resolution of the output scale compared with input. So it is 1/4
 anchor_mask = [[0,1,2,3,4,5,6,7,8], [0,1,2,3,4,5,6,7,8], [0,1,2,3,4,5,6,7,8]] #that should be optimized
 anchors_per_level = 9 #single scale and nine anchors
-
+# for running the script
+model_index =  sys.argv[1]
 
 # def mish(x):
 #     return x * tf.math.tanh(tf.math.softplus(x))
@@ -1524,7 +1525,7 @@ if __name__ == "__main__":
 
 
         # log_dir = (current_file_dir_path + '/TongueModelsTang256x256_0.5lr_AngleStep{}_TonguePlus/').format(ANGLE_STEP)
-        log_dir = current_file_dir_path + '/Exp_base2/'
+        log_dir = current_file_dir_path + '/Exp_base{}/'.format(model_index)
 
         plot_folder = log_dir + 'Plots/'
         if not os.path.exists(log_dir):
@@ -1560,7 +1561,7 @@ if __name__ == "__main__":
         plotCallBack = TrainingPlotCallback(save_path= plot_folder)
 
         # for my data generator
-        # # for train dataset
+        # for train dataset
         train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
         train_mask_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
         print("len of train imgs:", len(train_input_paths))

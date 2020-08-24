@@ -32,7 +32,7 @@ from tensorflow.keras.regularizers import l2
 from tensorflow.keras.utils import multi_gpu_model
 from matplotlib.colors import rgb_to_hsv, hsv_to_rgb
 from tensorflow.keras.utils import plot_model
-from TonguePlusData.MyCustomCallbacks import TrainingPlotCallback
+from TonguePlusData.MyCustomCallbacks import TrainingPlotCallback, DeleteEarlySavedH5models
 # os.environ["PATH"] += os.pathsep + 'C:\\Program Files (x86)\\Graphviz2.38\\bin'
 from tensorflow.python.keras.utils.data_utils import Sequence, get_file
 from keras_preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
@@ -729,25 +729,34 @@ def DarknetConv2D(*args, **kwargs):
     return Conv2D(*args, **darknet_conv_kwargs)
 
 
-def DarknetConv2D_BN_Leaky(*args, **kwargs):
+# def DarknetConv2D_BN_Leaky(*args, **kwargs):
+#     """Darknet Convolution2D followed by BatchNormalization and LeakyReLU."""
+#     no_bias_kwargs = {'use_bias': False}
+#     no_bias_kwargs.update(kwargs)
+#     return compose(
+#         DarknetConv2D(*args, **no_bias_kwargs),
+#         BatchNormalization(),
+#         LeakyReLU(alpha=0.1))
+
+def DarknetConv2D_BN_Mish(*args, **kwargs):
     """Darknet Convolution2D followed by BatchNormalization and LeakyReLU."""
     no_bias_kwargs = {'use_bias': False}
     no_bias_kwargs.update(kwargs)
     return compose(
         DarknetConv2D(*args, **no_bias_kwargs),
         BatchNormalization(),
-        LeakyReLU(alpha=0.1))
+        Mish())
 
 
 def resblock_body(x, num_filters, num_blocks):
     '''A series of resblocks starting with a downsampling Convolution2D'''
     # Darknet uses left and top padding instead of 'same' mode
     x = ZeroPadding2D(((1, 0), (1, 0)))(x)
-    x = DarknetConv2D_BN_Leaky(num_filters, (3, 3), strides=(2, 2))(x)
+    x = DarknetConv2D_BN_Mish(num_filters, (3, 3), strides=(2, 2))(x)
     for i in range(num_blocks):
         y = compose(
-            DarknetConv2D_BN_Leaky(num_filters // 2, (1, 1)),
-            DarknetConv2D_BN_Leaky(num_filters, (3, 3)))(x)
+            DarknetConv2D_BN_Mish(num_filters // 2, (1, 1)),
+            DarknetConv2D_BN_Mish(num_filters, (3, 3)))(x)
         y = squeeze_excite_block(y)
         x = Add()([x, y])
     return x
@@ -763,7 +772,7 @@ def squeeze_excite_block(tensor, ratio=16):
     se = GlobalAveragePooling2D()(init)
     se = Reshape(se_shape)(se)
     se = Dense(filters // ratio, kernel_initializer='he_normal', use_bias=False)(se)
-    se = LeakyReLU(alpha=0.1)(se)
+    se = Mish()(se)
     se = Dense(filters, activation='sigmoid', kernel_initializer='he_normal', use_bias=False)(se)
 
     if K.image_data_format() == 'channels_first':
@@ -781,7 +790,7 @@ def _tensor_shape(tensor):
 def darknet_body(x):
     '''Darknent body having 52 Convolution2D layers'''
     base = 6  # YOLOv3 has base=8, we have less parameters
-    x = DarknetConv2D_BN_Leaky(base * 4, (3, 3))(x)
+    x = DarknetConv2D_BN_Mish(base * 4, (3, 3))(x)
     x = resblock_body(x, base * 8, 1)
     x = resblock_body(x, base * 16, 2)
     tiny = x
@@ -800,10 +809,10 @@ def yolo_body(inputs, num_anchors, num_classes):
     tiny, small, medium, big = darknet_body(inputs)
 
     base = 6
-    tiny   = DarknetConv2D_BN_Leaky(base*32, (1, 1))(tiny)
-    small  = DarknetConv2D_BN_Leaky(base*32, (1, 1))(small)
-    medium = DarknetConv2D_BN_Leaky(base*32, (1, 1))(medium)
-    big    = DarknetConv2D_BN_Leaky(base*32, (1, 1))(big)
+    tiny   = DarknetConv2D_BN_Mish(base*32, (1, 1))(tiny)
+    small  = DarknetConv2D_BN_Mish(base*32, (1, 1))(small)
+    medium = DarknetConv2D_BN_Mish(base*32, (1, 1))(medium)
+    big    = DarknetConv2D_BN_Mish(base*32, (1, 1))(big)
 
     #stairstep upsamplig
     all = Add()([medium, UpSampling2D(2,interpolation='bilinear')(big)])
@@ -815,9 +824,9 @@ def yolo_body(inputs, num_anchors, num_classes):
     num_filters = base*32
 
     x = compose(
-        DarknetConv2D_BN_Leaky(num_filters, (1, 1)),
-        DarknetConv2D_BN_Leaky(num_filters * 2, (3, 3)),
-        DarknetConv2D_BN_Leaky(num_filters, (1, 1)))(all)
+        DarknetConv2D_BN_Mish(num_filters, (1, 1)),
+        DarknetConv2D_BN_Mish(num_filters * 2, (3, 3)),
+        DarknetConv2D_BN_Mish(num_filters, (1, 1)))(all)
     print("x.shape:", x.shape)
     print()
     print("num_classes:", num_classes)
@@ -825,7 +834,7 @@ def yolo_body(inputs, num_anchors, num_classes):
     print("num_anchors:", num_anchors)
     print()
     all = compose(
-        DarknetConv2D_BN_Leaky(num_filters * 2, (3, 3)),
+        DarknetConv2D_BN_Mish(num_filters * 2, (3, 3)),
 
         DarknetConv2D(num_anchors * (num_classes + 5 + NUM_ANGLES3), (1, 1)))(x)
     print("all.shape:", all.shape)
@@ -1525,7 +1534,7 @@ if __name__ == "__main__":
 
 
         # log_dir = (current_file_dir_path + '/TongueModelsTang256x256_0.5lr_AngleStep{}_TonguePlus/').format(ANGLE_STEP)
-        log_dir = current_file_dir_path + '/Exp_base{}/'.format(model_index)
+        log_dir = current_file_dir_path + '/Exp_2_Mish{}/'.format(model_index)
 
         plot_folder = log_dir + 'Plots/'
         if not os.path.exists(log_dir):
@@ -1559,6 +1568,8 @@ if __name__ == "__main__":
         early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1)
         # custom callback
         plotCallBack = TrainingPlotCallback(save_path= plot_folder)
+        # delete old h5 cashes:
+        deleteOldH5 =  DeleteEarlySavedH5models(modelSavedPath = log_dir)
 
         # for my data generator
         # for train dataset
@@ -1630,7 +1641,7 @@ if __name__ == "__main__":
 
 
         model.compile(optimizer=Adadelta(0.5), loss={'yolo_loss': lambda y_true, y_pred: y_pred})
-        epochs = 1
+        epochs = 100
 
         # os.chdir("/simulator_dataset/imgs") # for the simulator image path
         model.fit_generator(train_Gen,
@@ -1640,7 +1651,7 @@ if __name__ == "__main__":
                   validation_steps=max(1, num_val // batch_size),
                   epochs=epochs,
                   initial_epoch=0,
-                  callbacks=[reduce_lr, checkpoint, plotCallBack])
+                  callbacks=[reduce_lr, checkpoint, plotCallBack, deleteOldH5])
 
 
 
