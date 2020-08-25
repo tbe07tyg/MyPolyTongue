@@ -36,32 +36,36 @@ try:
         print("class_file:", class_file)
         # start to parsing the inference-->
         fileIdx =1
-        model_saved_name_idx = os.path.basename(Saved_model_file_root)
-        print("model_saved_name:", model_saved_name_idx )
-        print(model_saved_name_idx)
+        # model_saved_name_idx = os.path.basename(Saved_model_file_root)
+
+
         all_files = glob(Saved_model_file_root + '/*')
+        all_dirs = [path for path in all_files if os.path.isdir(path)]
         print("allfiles:", all_files)
+        print("all_dirs:", all_dirs)
         print()
         model_folder_names_list =[]
         best_h5_list = []
         # found saved_folder_name and h5 path ----------------->
-        for dir in all_files:
-            # found the model saved path and the best h5 file
-            if dir.endswith(model_saved_name_idx+"{}".format(fileIdx)):
-                print("model saved dir:", dir)
-                output_folder_name =  os.path.basename(dir)
-                print("output_foldername:", output_folder_name)
-                model_folder_names_list.append(output_folder_name)
-                fileIdx += 1
+        for dir in all_dirs:
+            # model_saved_name_idx = os.path.basename(dir)
+            # print("model_saved_name:", model_saved_name_idx )
+            # # found the model saved path and the best h5 file
+            # if dir.endswith(model_saved_name_idx+"{}".format(fileIdx)):
+            print("model saved dir:", dir)
+            output_folder_name =  os.path.basename(dir)
+            print("output_foldername:", output_folder_name)
+            model_folder_names_list.append(output_folder_name)
+            fileIdx += 1
 
-                all_h5_files =  glob(dir + '/*.h5')
-                print()
-                print("all_h5_files:", all_h5_files)
-                if len(all_h5_files) > 1:
-                    all_h5_files.sort(key=os.path.getctime)
-                best_h5 = all_h5_files[-1]
-                best_h5_list.append(best_h5)
-                print("best h5:", best_h5)
+            all_h5_files =  glob(dir + '/*.h5')
+            print()
+            print("all_h5_files:", all_h5_files)
+            if len(all_h5_files) > 1:
+                all_h5_files.sort(key=os.path.getctime)
+            best_h5 = all_h5_files[-1]
+            best_h5_list.append(best_h5)
+            print("best h5:", best_h5)
 
                     # for root, dirs, _ in os.walk(file_dir):
         print("found total {} cases need to be infrerence:".format(len(best_h5_list)))
@@ -125,7 +129,7 @@ try:
             for pred  in pred_txt_list:
                 print("pred:", pred)
                 # this neeed to be changed for the lab computer gt:
-                gt = "E:\\Projects\\MyPolyTongue\\TonguePlusData/myTongueTest.txt"
+                gt = os.path.dirname(os.path.realpath(__file__)) + "/myTongueTestLab.txt"
                 print("cwd", os.path.dirname(os.path.realpath(__file__)))
 
                 yolo_to_coco(pred, gt, class_file)
@@ -264,12 +268,40 @@ except Exception as e:
 
 if __name__ == '__main__':
 
-    # Case 2  Exp Mish inference
-    # Codes and logs folder
-    Saved_model_file_root =  "E:\\MyWritings\\Tongue\\2020IEEE\\traindCodesAndLogs\\EXP_2_Mish"
-    Inference_scripts_root = "E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_2_Mish"
+    # #CASE 1: base
+    # Saved_model_file_root =  "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\Exp_1_Base"
+    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_1_base_RunningScripts"
+    #
+    # output_folder =  "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\exp1"
+    # infer_case(Inference_scripts_root= Inference_scripts_root,
+    #        Saved_model_file_root=Saved_model_file_root,
+    #        output_folder= output_folder)
 
-    output_folder =  "E:\\MyWritings\\Tongue\\2020IEEE\\Inferenced_Results\\Exp2"
-    infer_case(Inference_scripts_root= Inference_scripts_root,
-           Saved_model_file_root=Saved_model_file_root,
-           output_folder= output_folder)
+    #
+    # #CASE 2: Mish
+    # Saved_model_file_root =  "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\Exp_2_Mish"
+    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_2_Mish"
+    #
+    # output_folder =  "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\exp2"
+    # infer_case(Inference_scripts_root= Inference_scripts_root,
+    #        Saved_model_file_root=Saved_model_file_root,
+    #        output_folder= output_folder)
+
+    # CASE 3: SAE FRONT NECK
+    Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\Exp_3_SAE_FrontNeck"
+    Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_3_SAE_FrontNeck"
+
+    output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\exp3"
+    infer_case(Inference_scripts_root=Inference_scripts_root,
+               Saved_model_file_root=Saved_model_file_root,
+               output_folder=output_folder)
+
+    # # Case1  Exp Mish inference
+    # # Codes and logs folder
+    # Saved_model_file_root =  "E:\\MyWritings\\Tongue\\2020IEEE\\traindCodesAndLogs\\EXP_2_Mish"
+    # Inference_scripts_root = "E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_2_Mish"
+    #
+    # output_folder =  "E:\\MyWritings\\Tongue\\2020IEEE\\Inferenced_Results\\Exp2"
+    # infer_case(Inference_scripts_root= Inference_scripts_root,
+    #        Saved_model_file_root=Saved_model_file_root,
+    #        output_folder= output_folder)
