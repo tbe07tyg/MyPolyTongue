@@ -92,7 +92,8 @@ def coco_eval(type):
     cocoEval = COCOeval(cocoGt, cocoDt, type)
     cocoEval.evaluate()
     cocoEval.accumulate()
-    cocoEval.summarize()
+    mean_s = cocoEval.summarize()
+    print(mean_s)
 
 
 def str_list_to_float_list(string):
