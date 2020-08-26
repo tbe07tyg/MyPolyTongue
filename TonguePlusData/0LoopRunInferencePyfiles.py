@@ -314,11 +314,20 @@ if __name__ == '__main__':
     #            Saved_model_file_root=Saved_model_file_root,
     #            output_folder=output_folder)
 
-    # CASE 4: SAE mid NECK
-    Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\EXP_5_CSP_SAE_FrontNeck"
-    Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_5_CSP_SAE_FrontNeck"
+    # # CASE 4: SAE mid NECK
+    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\EXP_5_CSP_SAE_FrontNeck"
+    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_5_CSP_SAE_FrontNeck"
+    #
+    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\exp5"
+    # infer_case(Inference_scripts_root=Inference_scripts_root,
+    #            Saved_model_file_root=Saved_model_file_root,
+    #            output_folder=output_folder)
 
-    output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\exp5"
+    # CASE 6: EXP_6_CSP_SAE_MidNeck
+    Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\EXP_6_CSP_SAE_MidNeck"
+    Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_6_CSP_SAE_MidNeck"
+
+    output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\exp6"
     infer_case(Inference_scripts_root=Inference_scripts_root,
                Saved_model_file_root=Saved_model_file_root,
                output_folder=output_folder)

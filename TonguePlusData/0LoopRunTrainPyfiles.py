@@ -32,6 +32,10 @@ except Exception as e:
 # # Case 4  EXP_4_SAE_MidNeck
 # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_4_SAE_MidNeck')
 
+#
+# # Case 5  EXP_4_SAE_FrontNeck
+# run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_5_CSP_SAE_FrontNeck')
 
-# Case 5  EXP_4_SAE_MidNeck
-run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_5_CSP_SAE_FrontNeck')
+
+# Case 6  EXP_4_SAE_MidNeck
+run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_6_CSP_SAE_MidNeck')
