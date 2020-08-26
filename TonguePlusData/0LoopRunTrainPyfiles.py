@@ -22,8 +22,8 @@ try:
 except Exception as e:
     print("Has some error", e)
 #
-# Case 1  BaseExp
-run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_5_CSP_SAE_FrontNeck')
+# # Case 1  BaseExp
+# run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_5_CSP_SAE_FrontNeck')
 
 # # Case 2  Exp Mish
 # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_2_Mish')
@@ -31,3 +31,7 @@ run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_5_CSP_SAE_FrontNeck')
 
 # # Case 4  EXP_4_SAE_MidNeck
 # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_4_SAE_MidNeck')
+
+
+# Case 5  EXP_4_SAE_MidNeck
+run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_5_CSP_SAE_FrontNeck')
