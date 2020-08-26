@@ -4,7 +4,7 @@ import os
 import time
 # need to change
 from glob import glob
-from TonguePlusData.EXP_1_2_base_noSAE.Exp_BaseNoSAE_Poly_yoloTongue import YOLO, my_Gnearator, get_anchors, my_get_random_data #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
+from TonguePlusData.EXP_1_2_base_noSAE.Exp_BaseNoSAE_Poly_yoloTongue_Train import YOLO, my_Gnearator, get_anchors, my_get_random_data #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
 import sys
 
 

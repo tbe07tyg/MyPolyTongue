@@ -1630,7 +1630,7 @@ if __name__ == "__main__":
 
 
         model.compile(optimizer=Adadelta(0.5), loss={'yolo_loss': lambda y_true, y_pred: y_pred})
-        epochs = 1
+        epochs = 100
 
         # os.chdir("/simulator_dataset/imgs") # for the simulator image path
         model.fit_generator(train_Gen,
