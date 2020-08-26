@@ -4,7 +4,7 @@ import os
 import time
 # need to change
 from glob import glob
-from TonguePlusData.EXP_4_SAE_MidNeck.Exp_4_SAE_FrontNeck_Poly_yoloTongue1 import YOLO, my_Gnearator, get_anchors, my_get_random_data #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
+from TonguePlusData.EXP_5_CSP_SAE_FrontNeck.Exp_5_CSP_SAE_FrontNeck_Poly_Tongue_Train import YOLO, my_Gnearator, get_anchors, my_get_random_data #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
 import sys
 
 

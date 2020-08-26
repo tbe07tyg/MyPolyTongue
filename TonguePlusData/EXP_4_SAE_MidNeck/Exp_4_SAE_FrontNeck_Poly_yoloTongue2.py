@@ -816,7 +816,7 @@ def yolo_body(inputs, num_anchors, num_classes):
     medium = DarknetConv2D_BN_Mish(base*32, (1, 1))(medium)
     big    = DarknetConv2D_BN_Mish(base*32, (1, 1))(big)
 
-    # front SAE
+    # mid SAE
     tiny = squeeze_excite_block(tiny)
     small = squeeze_excite_block(small)
     medium = squeeze_excite_block(medium)
