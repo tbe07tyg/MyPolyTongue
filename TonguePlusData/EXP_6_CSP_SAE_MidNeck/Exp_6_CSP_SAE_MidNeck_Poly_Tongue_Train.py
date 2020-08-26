@@ -832,16 +832,18 @@ def yolo_body(inputs, num_anchors, num_classes):
     tiny, small, medium, big = darknet_body(inputs)
 
     base = 6
-    # front SAE
-    tiny = squeeze_excite_block(tiny)
-    small = squeeze_excite_block(small)
-    medium = squeeze_excite_block(medium)
-    big = squeeze_excite_block(big)
+
 
     tiny   = DarknetConv2D_BN_Mish(base*32, (1, 1))(tiny)
     small  = DarknetConv2D_BN_Mish(base*32, (1, 1))(small)
     medium = DarknetConv2D_BN_Mish(base*32, (1, 1))(medium)
     big    = DarknetConv2D_BN_Mish(base*32, (1, 1))(big)
+
+    # Mid SAE
+    tiny = squeeze_excite_block(tiny)
+    small = squeeze_excite_block(small)
+    medium = squeeze_excite_block(medium)
+    big = squeeze_excite_block(big)
 
     #stairstep upsamplig
     all = Add()([medium, UpSampling2D(2,interpolation='bilinear')(big)])
@@ -1563,7 +1565,7 @@ if __name__ == "__main__":
 
 
         # log_dir = (current_file_dir_path + '/TongueModelsTang256x256_0.5lr_AngleStep{}_TonguePlus/').format(ANGLE_STEP)
-        log_dir = current_file_dir_path + '/EXP_5_CSP_SAE_FrontNeck{}/'.format(model_index)
+        log_dir = current_file_dir_path + '/EXP_6_CSP_SAE_MidNeck{}/'.format(model_index)
 
         plot_folder = log_dir + 'Plots/'
         if not os.path.exists(log_dir):
