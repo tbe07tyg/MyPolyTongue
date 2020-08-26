@@ -32,7 +32,7 @@ from tensorflow.keras.regularizers import l2
 from tensorflow.keras.utils import multi_gpu_model
 from matplotlib.colors import rgb_to_hsv, hsv_to_rgb
 from tensorflow.keras.utils import plot_model
-from TonguePlusData.MyCustomCallbacks import TrainingPlotCallback
+from TonguePlusData.MyCustomCallbacks import TrainingPlotCallback, DeleteEarlySavedH5models
 # os.environ["PATH"] += os.pathsep + 'C:\\Program Files (x86)\\Graphviz2.38\\bin'
 from tensorflow.python.keras.utils.data_utils import Sequence, get_file
 from keras_preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
@@ -1559,7 +1559,8 @@ if __name__ == "__main__":
         early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1)
         # custom callback
         plotCallBack = TrainingPlotCallback(save_path= plot_folder)
-
+        # delete old h5 cashes:
+        deleteOldH5 = DeleteEarlySavedH5models(modelSavedPath=log_dir)
         # for my data generator
         # # for train dataset
         # train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
@@ -1640,7 +1641,7 @@ if __name__ == "__main__":
                   validation_steps=max(1, num_val // batch_size),
                   epochs=epochs,
                   initial_epoch=0,
-                  callbacks=[reduce_lr, checkpoint, plotCallBack])
+                  callbacks=[reduce_lr, checkpoint, plotCallBack, deleteOldH5])
 
 
 
