@@ -2,6 +2,19 @@ import os
 from glob import glob
 try:
     def run_case(file_dir, max_run=5):
+        """
+        # rotation_range = 45
+        # width_shift_range = 0.3
+        # height_shift_range = 0.3
+        # zoom_range = 0.2
+        # shear_range=0.35
+        # horizontal_flip=True
+        # brightness_range=[0.5, 1.3]
+
+        :param file_dir:
+        :param rotation_rangemax_run:
+        :return:
+        """
         fileIdx =1
         # for root, dirs, files in os.walk(file_dir):
         #     print(files, "to be run")
@@ -25,8 +38,8 @@ except Exception as e:
 # # Case 1  BaseExp
 # run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_5_CSP_SAE_FrontNeck')
 
-# Case 1_2 BASE NO SAE
-run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_1_2_base_noSAE')
+# # Case 1_2 BASE NO SAE
+# run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_1_2_base_noSAE')
 
 # # Case 2  Exp Mish
 # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_2_Mish')
@@ -41,4 +54,15 @@ run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_1_2_base_noSAE')
 
 
 # # Case 6  EXP_4_SAE_MidNeck
+# run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_6_CSP_SAE_MidNeck')
+
+# # Case 7  best randomness Checking
+
+# rotation_range = sys.argv[2]
+# width_shift_range = sys.argv[3]
+# height_shift_range = sys.argv[4]
+# zoom_range = sys.argv[5]
+# shear_range=sys.argv[6]
+# horizontal_flip=True
+# brightness_range=sys.argv[7]
 # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_6_CSP_SAE_MidNeck')

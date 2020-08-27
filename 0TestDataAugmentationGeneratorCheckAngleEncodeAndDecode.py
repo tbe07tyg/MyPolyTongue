@@ -205,6 +205,10 @@ def get_random_data(img_path, mask_path, input_shape, image_datagen, mask_datage
 
     return aug_image , aug_mask, myPolygon
 
+def encode_polygone():
+    "give polygons and encode as angle, ditance , probability"
+
+
 def plot_aug_compare(image_list,name_list, batch_idx, img_idx):
     num_images_per_raw =  int(len(image_list)/2)
     fig, ax = plt.subplots(num_images_per_raw, 2)
