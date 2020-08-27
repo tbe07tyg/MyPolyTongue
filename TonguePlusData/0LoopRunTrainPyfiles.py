@@ -25,6 +25,9 @@ except Exception as e:
 # # Case 1  BaseExp
 # run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_5_CSP_SAE_FrontNeck')
 
+# Case 1_2 BASE NO SAE
+run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_1_2_base_noSAE')
+
 # # Case 2  Exp Mish
 # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_2_Mish')
 
@@ -37,5 +40,5 @@ except Exception as e:
 # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_5_CSP_SAE_FrontNeck')
 
 
-# Case 6  EXP_4_SAE_MidNeck
-run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_6_CSP_SAE_MidNeck')
+# # Case 6  EXP_4_SAE_MidNeck
+# run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_6_CSP_SAE_MidNeck')

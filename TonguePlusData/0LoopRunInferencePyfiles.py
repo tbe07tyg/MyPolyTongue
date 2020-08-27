@@ -286,6 +286,15 @@ if __name__ == '__main__':
     #        Saved_model_file_root=Saved_model_file_root,
     #        output_folder= output_folder)
 
+    # CASE 2: 1_2 base
+    Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\EXP_1_2_base_noSAE"
+    Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_1_2_base_noSAE"
+
+    output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\exp1_2"
+    infer_case(Inference_scripts_root=Inference_scripts_root,
+               Saved_model_file_root=Saved_model_file_root,
+               output_folder=output_folder)
+
     #
     # #CASE 2: Mish
     # Saved_model_file_root =  "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\Exp_2_Mish"
@@ -323,14 +332,14 @@ if __name__ == '__main__':
     #            Saved_model_file_root=Saved_model_file_root,
     #            output_folder=output_folder)
 
-    # CASE 6: EXP_6_CSP_SAE_MidNeck
-    Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\EXP_6_CSP_SAE_MidNeck"
-    Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_6_CSP_SAE_MidNeck"
-
-    output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\exp6"
-    infer_case(Inference_scripts_root=Inference_scripts_root,
-               Saved_model_file_root=Saved_model_file_root,
-               output_folder=output_folder)
+    # # CASE 6: EXP_6_CSP_SAE_MidNeck
+    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\EXP_6_CSP_SAE_MidNeck"
+    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_6_CSP_SAE_MidNeck"
+    #
+    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\exp6"
+    # infer_case(Inference_scripts_root=Inference_scripts_root,
+    #            Saved_model_file_root=Saved_model_file_root,
+    #            output_folder=output_folder)
 
     # # Case1  Exp Mish inference
     # # Codes and logs folder
