@@ -52,14 +52,14 @@ NUM_ANGLES3  = int(360 // ANGLE_STEP * 3) #72 = (360/15)*3
 print("NUM_ANGLES3:", NUM_ANGLES3)
 NUM_ANGLES  = int(360 // ANGLE_STEP) # 24
 
-# for mydatagenerator aug
-rotation_range = 90
-width_shift_range = 0.3
-height_shift_range = 0.3
-zoom_range = 0.2
-shear_range=0.35
-horizontal_flip=True
-brightness_range=[0.5, 1.3]
+# # for mydatagenerator aug
+# rotation_range = 90
+# width_shift_range = 0.3
+# height_shift_range = 0.3
+# zoom_range = 0.2
+# shear_range=0.35
+# horizontal_flip=True
+# brightness_range=[0.5, 1.3]
 
 
 grid_size_multiplier = 4 #that is resolution of the output scale compared with input. So it is 1/4
@@ -68,6 +68,24 @@ anchors_per_level = 9 #single scale and nine anchors
 # for running the script
 model_index =  sys.argv[1]
 
+
+rotation_range = int(float(sys.argv[2]))
+width_shift_range = float(sys.argv[3])
+height_shift_range = float(sys.argv[4])
+zoom_range = float(sys.argv[5])
+shear_range= float(sys.argv[6])
+brightness_range_start =float(sys.argv[7]) # sys.argv can not pass list
+brightness_range_stop =float(sys.argv[8])
+brightness_range = [float(brightness_range_start), float(brightness_range_stop)]
+print("input AUG----------------------->")
+print("rotation_range:", rotation_range)
+print("width_shift_range:", width_shift_range)
+print("height_shift_range:", height_shift_range)
+print("zoom_range:", zoom_range)
+print("shear_range:", shear_range)
+print("brightness_range_start:", brightness_range)
+print("input AUG----------------------->")
+horizontal_flip=True
 # def mish(x):
 #     return x * tf.math.tanh(tf.math.softplus(x))
 class Mish(Layer):
@@ -747,20 +765,43 @@ def DarknetConv2D_BN_Mish(*args, **kwargs):
         BatchNormalization(),
         Mish())
 
+#
+# def resblock_body(x, num_filters, num_blocks):
+#     '''A series of resblocks starting with a downsampling Convolution2D'''
+#     # Darknet uses left and top padding instead of 'same' mode
+#     x = ZeroPadding2D(((1, 0), (1, 0)))(x)
+#     x = DarknetConv2D_BN_Mish(num_filters, (3, 3), strides=(2, 2))(x)
+#     for i in range(num_blocks):
+#         y = compose(
+#             DarknetConv2D_BN_Mish(num_filters // 2, (1, 1)),
+#             DarknetConv2D_BN_Mish(num_filters, (3, 3)))(x)
+#         # y = squeeze_excite_block(y)
+#         x = Add()([x, y])
+#     return x
 
-def resblock_body(x, num_filters, num_blocks):
+def resblock_body(x, num_filters, num_blocks, all_narrow=True):  # csp reblock
     '''A series of resblocks starting with a downsampling Convolution2D'''
     # Darknet uses left and top padding instead of 'same' mode
-    x = ZeroPadding2D(((1, 0), (1, 0)))(x)
-    x = DarknetConv2D_BN_Mish(num_filters, (3, 3), strides=(2, 2))(x)
+    # CSP----------------------------》
+    preconv1 = ZeroPadding2D(((1, 0), (1, 0)))(x)
+    preconv1 = DarknetConv2D_BN_Mish(num_filters, (3, 3), strides=(2, 2))(preconv1)
+    shortconv = DarknetConv2D_BN_Mish(num_filters // 2 if all_narrow else num_filters, (1, 1))(preconv1)
+    mainconv = DarknetConv2D_BN_Mish(num_filters // 2 if all_narrow else num_filters, (1, 1))(preconv1)
+    # for i in range(num_blocks):
+    #     y = compose(
+    #         DarknetConv2D_BN_Mish(num_filters // 2, (1, 1)),
+    #         DarknetConv2D_BN_Mish(num_filters // 2 if all_narrow else num_filters, (3, 3)))(mainconv)
+    #     # y = squeeze_excite_block(y)  # NO SAE
+    #     mainconv = Add()([mainconv, y])
     for i in range(num_blocks):
         y = compose(
             DarknetConv2D_BN_Mish(num_filters // 2, (1, 1)),
-            DarknetConv2D_BN_Mish(num_filters, (3, 3)))(x)
-        y = squeeze_excite_block(y)
-        x = Add()([x, y])
-    return x
-
+            DarknetConv2D_BN_Mish(num_filters // 2 if all_narrow else num_filters, (3, 3)))(mainconv)
+        # y = squeeze_excite_block(y)  # NoSAE
+        mainconv = Add()([mainconv, y])
+    postconv = DarknetConv2D_BN_Mish(num_filters // 2 if all_narrow else num_filters, (1, 1))(mainconv)
+    route = Concatenate()([postconv, shortconv])
+    return route  # No last
 
 #taken from https://github.com/titu1994/keras-squeeze-excite-network/blob/master/keras_squeeze_excite_network/se_resnet.py
 def squeeze_excite_block(tensor, ratio=16):
@@ -809,10 +850,18 @@ def yolo_body(inputs, num_anchors, num_classes):
     tiny, small, medium, big = darknet_body(inputs)
 
     base = 6
+
+
     tiny   = DarknetConv2D_BN_Mish(base*32, (1, 1))(tiny)
     small  = DarknetConv2D_BN_Mish(base*32, (1, 1))(small)
     medium = DarknetConv2D_BN_Mish(base*32, (1, 1))(medium)
     big    = DarknetConv2D_BN_Mish(base*32, (1, 1))(big)
+
+    # Mid SAE
+    tiny = squeeze_excite_block(tiny)
+    small = squeeze_excite_block(small)
+    medium = squeeze_excite_block(medium)
+    big = squeeze_excite_block(big)
 
     #stairstep upsamplig
     all = Add()([medium, UpSampling2D(2,interpolation='bilinear')(big)])
@@ -1534,7 +1583,27 @@ if __name__ == "__main__":
 
 
         # log_dir = (current_file_dir_path + '/TongueModelsTang256x256_0.5lr_AngleStep{}_TonguePlus/').format(ANGLE_STEP)
-        log_dir = current_file_dir_path + '/Exp_2_Mish{}/'.format(model_index)
+        # rr = sys.argv[2]
+        # wsr = sys.argv[3]
+        # hsr = sys.argv[4]
+        # zr = sys.argv[5]
+        # sr = sys.argv[6]
+        # br = sys.argv[7]
+        # rotation_range = sys.argv[2]
+        # width_shift_range = sys.argv[3]
+        # height_shift_range = sys.argv[4]
+        # zoom_range = sys.argv[5]
+        # shear_range = sys.argv[6]
+        # brightness_range = sys.argv[7]
+        log_dir = current_file_dir_path + '/Exp_2_worst_time{}_Aug_rr{}_wsr{:.2f}_hsr{:.2f}_zr{:.2f}_sr{:.2f}_br{:.2f}_{:.2f}/'.format(model_index,
+                                                                                                       rotation_range,
+                                                                                                  width_shift_range,
+                                                                                                       height_shift_range,
+                                                                                                  zoom_range,
+                                                                                                  shear_range ,
+                                                                                                  brightness_range[0],
+                                                                                                         brightness_range[1]
+                                                                                                         )
 
         plot_folder = log_dir + 'Plots/'
         if not os.path.exists(log_dir):
@@ -1572,7 +1641,7 @@ if __name__ == "__main__":
         deleteOldH5 =  DeleteEarlySavedH5models(modelSavedPath = log_dir)
 
         # for my data generator
-        # # for train dataset
+        # for train dataset
         # train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
         # train_mask_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
         # print("len of train imgs:", len(train_input_paths))
@@ -1583,7 +1652,7 @@ if __name__ == "__main__":
         # val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
         # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
 
-        # # for train dataset for the lab
+        # # # # # for train dataset for the lab
         train_input_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\inputs/*')
         train_mask_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\binary_labels/*.jpg')
         print("len of train imgs:", len(train_input_paths))

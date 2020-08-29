@@ -4,7 +4,7 @@ import os
 import time
 # need to change
 from glob import glob
-from TonguePlusData.EXP_2_Mish.Exp_2_Mish_Poly_yoloTongue1 import YOLO, my_Gnearator, get_anchors, my_get_random_data #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
+from TonguePlusData.EXP_2_Mish.Exp_2_Mish_Poly_yoloTongue_Train import YOLO, my_Gnearator, get_anchors, my_get_random_data #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
 import sys
 
 
@@ -220,7 +220,7 @@ for test_path, mask_path in zip(test_input_paths,test_mask_paths):
     img = cv2.addWeighted(overlay, 0.4, img, 1 - 0.4, 0)
     cv2.imwrite(out_path + str(imgs) + '.jpg', img)
 file.close()
-print('total boxes: ', total_boxes)
+print('total detected boxes: ', total_boxes)
 print('imgs: ', imgs)
 print("avg fps:", sum(fps_list)/len(fps_list))
 with open(FPS_txt, 'a') as f:

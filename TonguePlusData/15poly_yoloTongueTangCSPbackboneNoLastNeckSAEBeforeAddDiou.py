@@ -423,7 +423,7 @@ def resblock_body(x, num_filters, num_blocks, all_narrow=True):
     mainconv = DarknetConv2D_BN_Mish(num_filters // 2 if all_narrow else num_filters, (1, 1))(preconv1)
     # for i in range(num_blocks):
     #     y = compose(
-    #         DarknetConv2D_BN_Mish(num_filters // 2, (1, 1)),
+    #         Darkconfidence_lossnetConv2D_BN_Mish(num_filters // 2, (1, 1)),
     #         DarknetConv2D_BN_Mish(num_filters // 2 if all_narrow else num_filters, (3, 3)))(mainconv)
     #     # y = squeeze_excite_block(y)  # NO SAE
     #     mainconv = Add()([mainconv, y])

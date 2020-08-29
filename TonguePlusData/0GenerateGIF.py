@@ -4,7 +4,7 @@ from glob import glob
 
 root_read = "E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\AugCompare"
 root_write = "E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\AugCompare\\GIF"
-anim_file = root_write +'/DataAugmentationPolygons.gif'
+anim_file = root_write +'/AngleStep20.gif'
 
 
 with imageio.get_writer(anim_file, mode='I') as writer:

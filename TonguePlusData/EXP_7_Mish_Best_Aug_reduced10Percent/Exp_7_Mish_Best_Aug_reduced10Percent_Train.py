@@ -52,8 +52,8 @@ NUM_ANGLES3  = int(360 // ANGLE_STEP * 3) #72 = (360/15)*3
 print("NUM_ANGLES3:", NUM_ANGLES3)
 NUM_ANGLES  = int(360 // ANGLE_STEP) # 24
 
-# for mydatagenerator aug
-# rotation_range = 45
+# # for mydatagenerator aug
+# rotation_range = 90
 # width_shift_range = 0.3
 # height_shift_range = 0.3
 # zoom_range = 0.2
@@ -1679,7 +1679,7 @@ if __name__ == "__main__":
 
 
         model.compile(optimizer=Adadelta(0.5), loss={'yolo_loss': lambda y_true, y_pred: y_pred})
-        epochs = 1
+        epochs = 100
 
         # os.chdir("/simulator_dataset/imgs") # for the simulator image path
         model.fit_generator(train_Gen,

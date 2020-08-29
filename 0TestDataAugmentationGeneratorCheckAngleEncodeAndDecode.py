@@ -15,7 +15,9 @@ from PIL import Image
 # plt.figure()
 import math
 from matplotlib.patches import Polygon
-
+ANGLE_STEP = 20
+NUM_ANGLES3 = int(360 // ANGLE_STEP * 3)  # 72 = (360/15)*3
+NUM_ANGLES = int(360 // ANGLE_STEP)
 MAX_num_epochs = 4# 10 *443 =  4430 image
 seed_list= range(MAX_num_epochs)
 print(seed_list)
@@ -71,7 +73,7 @@ print("seed:", seed)
 # numble of sumples
 i=1
 # number of batches needd
-batchsize = 32
+batchsize = 4
 
 num_batches = math.ceil(443/batchsize)
 print("we need batches:", num_batches)
@@ -127,6 +129,8 @@ def my_Gnearator(images_list, masks_list, batch_size, input_shape):
         raw_img_path =[]
         raw_mask_path = []
         mypolygon_data = []
+        depolygon_data = []
+        empty_count_data = []
         # my_annotation = []
         # print(images_list)
         # print(masks_list)
@@ -138,20 +142,22 @@ def my_Gnearator(images_list, masks_list, batch_size, input_shape):
 
             temp_img_path = images_list[i]
             temp_mask_path =  masks_list[i]
-            image, mask, annoation_line = get_random_data(temp_img_path, temp_mask_path, input_shape, image_datagen, mask_datagen)
-            image_data.append(image)
+            aug_image , aug_mask, myPolygon, decoded_polys, count_emptys= get_random_data(temp_img_path, temp_mask_path, input_shape, image_datagen, mask_datagen)
+            image_data.append(aug_image)
             # box_data.append(box)
-            mask_data.append(mask)
+            mask_data.append(aug_mask)
             raw_img_path.append(temp_img_path)
             raw_mask_path.append(temp_mask_path)
-            mypolygon_data.append(annoation_line)
+            mypolygon_data.append(myPolygon)
+            depolygon_data.append(decoded_polys)
+            empty_count_data.append(count_emptys)
             i = (i + 1) % n
         # image_data = np.array(image_data)
         # print("image_data:", image_data.shape)
         # box_data = np.array(box_data)
         # y_true = preprocess_true_boxes(box_data, input_shape, anchors, num_classes)
         # yield [image_data, *y_true], np.zeros(batch_size)
-        yield  np.array(image_data), np.array(mask_data), np.array(raw_img_path), np.array(raw_mask_path), np.array(mypolygon_data)
+        yield  np.array(image_data), np.array(mask_data), np.array(mypolygon_data), np.array(depolygon_data), np.array(empty_count_data)
 
 def get_random_data(img_path, mask_path, input_shape, image_datagen, mask_datagen, random=True, max_boxes=80, hue_alter=20, sat_alter=30, val_alter=30, proc_img=True):
     # load data ------------------------>
@@ -189,25 +195,127 @@ def get_random_data(img_path, mask_path, input_shape, image_datagen, mask_datage
     # print(copy_mask)
     ret, thresh = cv2.threshold(copy_mask, 127, 255, 0) # this require the numpy array has to be the uint8 type
     image, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    # myPolygon= None
+    # encode contours into annotation lines ---->
+    annotation_line, myPolygon = encode_polygone(img_path, contours)
+    # decode annotation into angle, distance, probability and return the decoded actual polygones
+    decoded_polys, empty_sections = decode_annotationline(annotation_line)
+
+    return aug_image , aug_mask, myPolygon, decoded_polys, empty_sections
+
+def encode_polygone(img_path, contours, MAX_VERTICES =1000):
+    "give polygons and encode as angle, ditance , probability"
     skipped = 0
     polygons_line = ''
-    c=0
+    c = 0
     for obj in contours:
-        print(obj.shape)
+        # print(obj.shape)
         myPolygon = obj.reshape([-1, 2])
-        print("mypolygon:", myPolygon.shape)
-        if myPolygon.shape[0] > max_v:
+        # print("mypolygon:", myPolygon.shape)
+        if myPolygon.shape[0] > MAX_VERTICES:
             print()
             print("too many polygons")
             break
 
+        min_x = sys.maxsize
+        max_x = 0
+        min_y = sys.maxsize
+        max_y = 0
+        polygon_line = ''
 
-    return aug_image , aug_mask, myPolygon
+        # for po
+        for x, y in myPolygon:
+            # print("({}, {})".format(x, y))
+            if x > max_x: max_x = x
+            if y > max_y: max_y = y
+            if x < min_x: min_x = x
+            if y < min_y: min_y = y
+            polygon_line += ',{},{}'.format(x, y)
+        if max_x - min_x <= 1.0 or max_y - min_y <= 1.0:
+            skipped += 1
+            continue
 
-def encode_polygone():
-    "give polygons and encode as angle, ditance , probability"
+        polygons_line += ' {},{},{},{},{}'.format(min_x, min_y, max_x, max_y, c) + polygon_line
 
+    annotation_line = img_path + polygons_line
+
+    return annotation_line, myPolygon
+
+def decode_annotationline(encoded_annotationline, MAX_VERTICES=1000, max_boxes=80):
+    """
+    :param encoded_annotationline: string for lines of img_path and objects c and its contours
+    :return:
+    """
+
+    # preprocessing of lines from string  ---> very important otherwise can not well split
+    annotation_line = encoded_annotationline.split()
+    # print(lines[i])
+    for element in range(1, len(annotation_line)):
+        for symbol in range(annotation_line[element].count(',') - 4, MAX_VERTICES * 2, 2):
+            annotation_line[element] = annotation_line[element] + ',0,0'
+    box = np.array([np.array(list(map(float, box.split(','))))
+                    for box in annotation_line[1:]])
+
+    # correct boxes
+    box_data = np.zeros((max_boxes, 5 + NUM_ANGLES3))
+    if len(box) > 0:
+        np.random.shuffle(box)
+        if len(box) > max_boxes:
+            box = box[:max_boxes]
+        box_data[:len(box), 0:5] = box[:, 0:5]
+    # start polygon --->
+    for b in range(0, len(box)):
+        boxes_xy = (box[b, 0:2] + box[b, 2:4]) // 2
+        for i in range(5, MAX_VERTICES * 2, 2):
+            if box[b, i] == 0 and box[b, i + 1] == 0:
+                break
+            dist_x = boxes_xy[0] - box[b, i]
+            dist_y = boxes_xy[1] - box[b, i + 1]
+            dist = np.sqrt(np.power(dist_x, 2) + np.power(dist_y, 2))
+            if (dist < 1): dist = 1
+
+            angle = np.degrees(np.arctan2(dist_y, dist_x))
+            if (angle < 0): angle += 360
+            # num of section it belongs to
+            iangle = int(angle) // ANGLE_STEP
+
+            if iangle >= NUM_ANGLES: iangle = NUM_ANGLES - 1
+
+            if dist > box_data[b, 5 + iangle * 3]:  # check for vertex existence. only the most distant is taken
+                box_data[b, 5 + iangle * 3] = dist
+                box_data[b, 5 + iangle * 3 + 1] = (angle - (
+                        iangle * int(ANGLE_STEP))) / ANGLE_STEP  # relative angle
+                box_data[b, 5 + iangle * 3 + 2] = 1
+    polygon_data = box_data[:, 5:]
+    # print("polygon_data.shape:", polygon_data.shape)
+
+    # decoded_polygons = np.zeros((len(box), NUM_ANGLES*2))
+    empty_section = 0
+    decoded_polygons = []
+    for b in range(0, len(box)):
+        # convert vertex into polygon xy
+        cx= (box_data[b, 0] + box_data[b, 2]) // 2  # .....
+        cy = (box_data[b, 1] + box_data[b, 3]) // 2  #..............
+        for i in range(0, NUM_ANGLES):
+            # print("NUM_ANGLES:", NUM_ANGLES)
+            # print("i:", i)
+            # print("angle index:",i * 3 + 1)
+            # print("dist index:",  i * 3,)
+            dela_x = math.cos(math.radians((polygon_data[b, i * 3 + 1] + i) / NUM_ANGLES * 360)) * polygon_data[b,
+                i * 3]
+            dela_y = math.sin(math.radians((polygon_data[b, i * 3 + 1] + i) / NUM_ANGLES * 360)) * polygon_data[b,
+                i * 3]
+            x1 = cx - dela_x
+            y1 = cy - dela_y
+
+            if dela_x == 0 and dela_y ==0:
+                empty_section += 1
+
+            # print("x, y:", x1, y1)
+            decoded_polygons.append([x1, y1])
+
+            print()
+    print("total {} empty section:".format(empty_section))
+    return decoded_polygons, empty_section
 
 def plot_aug_compare(image_list,name_list, batch_idx, img_idx):
     num_images_per_raw =  int(len(image_list)/2)
@@ -253,25 +361,35 @@ if __name__ == '__main__':
 
     my_data =  my_Gnearator(raw_input_paths, raw_binary_paths, batch_size=4, input_shape=[256, 256])
     print(my_data)
-
+    empty_section_list = []
     save_aug_compare_folder ="E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\AugCompare"
     i=1
-    for aug_image, aug_mask, b_raw_input_paths, b_raw_mask_paths, b_polygons in my_data:
-
+    for aug_image , aug_mask, myPolygon, decoded_polys, empty_sections in my_data:
+        print("empty_sections:", empty_sections)
         # # fig, ax = plt.subplots(2, 2)
-        # print("fetched image shape:", aug_image.shape)
-        # print("fetched mask shape:", aug_mask.shape)
+        # print("fetched myPolygon shape:", myPolygon.shape)
+        # print("fetched decoded_polys shape:", decoded_polys.shape)
         # raw_im = Image.open(b_raw_input_paths[0])
         # raw_mask = Image.open(b_raw_mask_paths[0])
         for idx in range(aug_image.shape[0]):
+            empty_section_list.append(empty_sections[idx])
+            # print("fetched myPolygon shape:", myPolygon[idx].shape)
+            # print("fetched decoded_polys shape:", decoded_polys[idx].shape)
             aug_i = aug_image[idx]
             aug_m =  aug_mask[idx]
-            raw_im = Image.open(b_raw_input_paths[idx])
-            raw_mask = Image.open(b_raw_mask_paths[idx])
-            plot_aug_compare([ raw_im, raw_mask, aug_i, aug_m, aug_i,b_polygons[idx]], ["raw_img", "raw_mask", "Aug_img", "Aug_mask", "Aug_img","Polygons"], i, idx)
+            # raw_im = Image.open(b_raw_input_paths[idx])
+            # raw_mask = Image.open(b_raw_mask_paths[idx])
+            plot_aug_compare([aug_i, aug_m, aug_i, myPolygon[idx], aug_i, decoded_polys[idx]], ["Aug_img", "Aug_mask", "Aug_img","rawPolygons", "Aug_img","DePolygons"], i, idx)
 
 
 
 
         i+=1
+        if i >20:
+            break
+
         plt.close()
+    print(" emptys list:", empty_section_list)
+    # print("std emptys", np.std(empty_section_list))
+    print("mean emptys:", np.mean(empty_section_list))
+    print("std emptys", np.std(empty_section_list))

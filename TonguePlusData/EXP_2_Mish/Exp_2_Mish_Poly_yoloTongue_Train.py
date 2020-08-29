@@ -895,7 +895,7 @@ def yolo_head(feats, anchors, num_classes, input_shape, calc_loss=False):
 
 
 def yolo_correct_boxes(box_xy, box_wh, input_shape, image_shape):
-    '''Get corrected boxes'''
+    '''Get corrected boxes (xmin, ymin, xmax, ymax) to (ymax, xmax,ymin, xmin)'''
     box_yx = box_xy[..., ::-1]
     box_hw = box_wh[..., ::-1]
     input_shape = K.cast(input_shape, K.dtype(box_yx))
