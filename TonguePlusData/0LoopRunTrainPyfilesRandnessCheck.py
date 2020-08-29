@@ -107,7 +107,7 @@ for i in range(10):
 
 
 
-    run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_7_Mish_Best_Aug_reduced10Percent',
+    run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_7_Mish_Best_Aug_reduced10Percent',
              rotation_range=rotation_range_in,
              width_shift_range=width_shift_range_in,
              height_shift_range=height_shift_range_in,
