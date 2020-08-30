@@ -204,7 +204,7 @@ def get_random_data(img_path, mask_path, input_shape, image_datagen, mask_datage
     annotation_line, myPolygon = encode_polygone(img_path, contours)
     # decode annotation into angle, distance, probability and return the decoded actual polygones
     # decoded_polys, empty_sections = decode_annotationline(annotation_line)
-    decoded_polys, empty_sections = My_bilinear_decode_annotationline(annotation_line)
+    decoded_polys, empty_sections = My_bilinear_decode_annotationline1(annotation_line)
     return aug_image , aug_mask, myPolygon, decoded_polys, empty_sections
 
 def encode_polygone(img_path, contours, MAX_VERTICES =1000):
@@ -324,7 +324,7 @@ def decode_annotationline(encoded_annotationline, MAX_VERTICES=1000, max_boxes=8
     print("total {} empty section:".format(empty_section))
     return decoded_polygons, empty_section
 
-def My_bilinear_decode_annotationline(encoded_annotationline, MAX_VERTICES=1000, max_boxes=80):
+def My_bilinear_decode_annotationline1(encoded_annotationline, MAX_VERTICES=1000, max_boxes=80):
     """
     :param encoded_annotationline: string for lines of img_path and objects c and its contours
     :return:
@@ -636,7 +636,7 @@ if __name__ == '__main__':
             # cv2.imshow("GT_MASK ", GT_MASK)
             # cv2.imshow("encoded_mask ", encoded_mask)
             # cv2.waitKey()
-            # calculate iou
+            # # calculate iou
             GT_MASK =  np.expand_dims(GT_MASK, 0)
             encoded_mask = np.expand_dims(encoded_mask, 0)
             one_iou = get_iou_vector(GT_MASK,encoded_mask)
