@@ -2,9 +2,10 @@ from IPython import display
 import imageio
 from glob import glob
 
-root_read = "E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\AugCompare"
+# root_read = "E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\AugCompare"
+root_read = "E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\CountourCompare"
 root_write = "E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\AugCompare\\GIF"
-anim_file = root_write +'/AngleStep20.gif'
+anim_file = root_write +'/AngleStep5_IOUS.gif'
 
 
 with imageio.get_writer(anim_file, mode='I') as writer:

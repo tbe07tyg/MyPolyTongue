@@ -15,7 +15,12 @@ from PIL import Image
 # plt.figure()
 import math
 from matplotlib.patches import Polygon
-ANGLE_STEP = 20
+from scipy import interpolate
+import cv2
+
+
+
+ANGLE_STEP = 5
 NUM_ANGLES3 = int(360 // ANGLE_STEP * 3)  # 72 = (360/15)*3
 NUM_ANGLES = int(360 // ANGLE_STEP)
 MAX_num_epochs = 4# 10 *443 =  4430 image
@@ -198,8 +203,8 @@ def get_random_data(img_path, mask_path, input_shape, image_datagen, mask_datage
     # encode contours into annotation lines ---->
     annotation_line, myPolygon = encode_polygone(img_path, contours)
     # decode annotation into angle, distance, probability and return the decoded actual polygones
-    decoded_polys, empty_sections = decode_annotationline(annotation_line)
-
+    # decoded_polys, empty_sections = decode_annotationline(annotation_line)
+    decoded_polys, empty_sections = My_bilinear_decode_annotationline(annotation_line)
     return aug_image , aug_mask, myPolygon, decoded_polys, empty_sections
 
 def encode_polygone(img_path, contours, MAX_VERTICES =1000):
@@ -308,6 +313,8 @@ def decode_annotationline(encoded_annotationline, MAX_VERTICES=1000, max_boxes=8
             y1 = cy - dela_y
 
             if dela_x == 0 and dela_y ==0:
+                print("dist in 0 section:", polygon_data[b, i * 3])
+                print("angle in 0 section:", polygon_data[b, i * 3 + 1])
                 empty_section += 1
 
             # print("x, y:", x1, y1)
@@ -316,6 +323,200 @@ def decode_annotationline(encoded_annotationline, MAX_VERTICES=1000, max_boxes=8
             print()
     print("total {} empty section:".format(empty_section))
     return decoded_polygons, empty_section
+
+def My_bilinear_decode_annotationline(encoded_annotationline, MAX_VERTICES=1000, max_boxes=80):
+    """
+    :param encoded_annotationline: string for lines of img_path and objects c and its contours
+    :return:
+    """
+
+    # preprocessing of lines from string  ---> very important otherwise can not well split
+    annotation_line = encoded_annotationline.split()
+    # print(lines[i])
+    for element in range(1, len(annotation_line)):
+        for symbol in range(annotation_line[element].count(',') - 4, MAX_VERTICES * 2, 2):
+            annotation_line[element] = annotation_line[element] + ',0,0'
+    box = np.array([np.array(list(map(float, box.split(','))))
+                    for box in annotation_line[1:]])
+    print("box:", box[0])
+    # correct boxes
+    box_data = np.zeros((max_boxes, 5 + NUM_ANGLES3))
+    if len(box) > 0:
+        np.random.shuffle(box)
+        if len(box) > max_boxes:
+            box = box[:max_boxes]
+        box_data[:len(box), 0:5] = box[:, 0:5]
+    # start polygon --->
+    for b in range(0, len(box)):
+        boxes_xy = (box[b, 0:2] + box[b, 2:4]) // 2
+        for i in range(5, MAX_VERTICES * 2, 2):
+            if box[b, i] == 0 and box[b, i + 1] == 0:
+                break
+            dist_x = boxes_xy[0] - box[b, i]
+            dist_y = boxes_xy[1] - box[b, i + 1]
+            dist = np.sqrt(np.power(dist_x, 2) + np.power(dist_y, 2))
+            if (dist < 1): dist = 1
+
+            angle = np.degrees(np.arctan2(dist_y, dist_x))
+            if (angle < 0): angle += 360
+            # num of section it belongs to
+            iangle = int(angle) // ANGLE_STEP
+
+            if iangle >= NUM_ANGLES: iangle = NUM_ANGLES - 1
+
+            if dist > box_data[b, 5 + iangle * 3]:  # check for vertex existence. only the most distant is taken
+                box_data[b, 5 + iangle * 3] = dist
+                box_data[b, 5 + iangle * 3 + 1] = (angle - (
+                        iangle * int(ANGLE_STEP))) / ANGLE_STEP  # relative angle
+                box_data[b, 5 + iangle * 3 + 2] = 1
+    polygon_data = box_data[:, 5: NUM_ANGLES3+5] # left to right
+
+    # plot our polygon vector check our data
+    dist_data =  polygon_data[:, 0:NUM_ANGLES3:3]
+    angle_data = polygon_data[:, 1:NUM_ANGLES3:3]
+    prob_data = polygon_data[:, 2:NUM_ANGLES3:3]
+    # plt.subplot(311)
+    # plt.plot(range(len(dist_data[0])),dist_data[0], marker ="o")
+    # plt.title("dist")
+    # plt.subplot(312)
+    # plt.plot(range(len(angle_data[0])), angle_data[0], marker="o")
+    # plt.title("angle")
+    # plt.subplot(313)
+    # plt.plot(range(len(prob_data[0])), prob_data[0], marker="o")
+    # plt.title("prob")
+    # plt.show()
+
+
+
+    # start_end_conect3_v_poly_v =  np.tile(polygon_data, 3)
+    # print("start_end_conect3_v_poly_v:", start_end_conect3_v_poly_v.shape)
+    # print("polygon_data.shape:", polygon_data.shape)
+    # check polygon_data zeros inside
+    for b in range(0, len(box)):
+        # count nonzeros
+        nonzeros = np.count_nonzero(dist_data[b])
+        if nonzeros == 0:
+            continue
+        else:
+            # for i in range(NUM_ANGLES):
+            mask_nonzeros = prob_data[b]> 0
+            # X.compressed()  # get normal array with masked values removed
+            # X.mask  # get a boolean array of the mask
+            prob_dataTemp = prob_data[b][mask_nonzeros] # it automatically discards masked values
+            dist_dataTemp = dist_data[b][mask_nonzeros]
+            angle_dataTemp =angle_data[b][mask_nonzeros]
+            # print("dist_dataTemp.shape", dist_dataTemp.shape)
+            # plt.subplot(311)
+            # plt.plot(range(len(dist_dataTemp)), dist_dataTemp, marker="o")
+            # plt.title("dist")
+            # plt.subplot(312)
+            # plt.plot(range(len(angle_dataTemp)), angle_dataTemp, marker="o")
+            # plt.title("angle")
+            # plt.subplot(313)
+            # plt.plot(range(len(prob_dataTemp)), prob_dataTemp, marker="o")
+            # plt.title("prob")
+            # plt.show()
+
+            # inter inter polate temp to the length that = num of sections :NUM_ANGLES
+            x = np.arange(len(prob_dataTemp))
+            # y_dist = dist_dataTemp
+            dist_f_inter =  interpolate.interp1d(x, dist_dataTemp)  # default mode = "linear" see :https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.interp1d.html
+            angle_f_inter = interpolate.interp1d(x, angle_dataTemp)
+            prob_f_inter = interpolate.interp1d(x, prob_dataTemp)
+            x_new =  np.linspace(0, len(prob_dataTemp)-1, NUM_ANGLES)
+            y_dist_new = dist_f_inter(x_new)
+            y_angle_new = angle_f_inter(x_new)
+            y_prob_new = prob_f_inter(x_new)
+
+            for i in range(NUM_ANGLES):
+                polygon_data[b, i * 3 ] = y_dist_new[i]
+                polygon_data[b, i * 3 + 1] =  y_angle_new[i]
+                polygon_data[b, i * 3 + 2] = y_prob_new[i]
+            # plt.subplot(311)
+            # plt.plot(range(len(y_dist_new)), y_dist_new, marker="o")
+            # plt.title("linear inter. dist")
+            # plt.subplot(312)
+            # plt.plot(range(len(y_angle_new)), y_angle_new, marker="o")
+            # plt.title("linear inter. angle")
+            # plt.subplot(313)
+            # plt.plot(range(len(y_prob_new)), y_prob_new, marker="o")
+            # plt.title("linear inter. prob")
+            # plt.show()
+
+
+            # dist = polygon_data[b, i * 3+2]
+            #
+            # if dist == 0: # probility == 1 there is vertex
+            #     right_angle_nonzero = 0
+            #     left_angle_nonzero = 0
+            #     right_dist_nonzero = 0
+            #     left_dist_nonzero = 0
+            #     # print("selected angle in raw v:", angle)
+            #     # print("current index in raw v：", i * 3 + 1)
+            #
+            #     # print("try to find right nonzero")
+            #     for right_index in range(len(polygon_data) + (i + 1) * 3 +2, len(start_end_conect3_v_poly_v), 3):
+            #         # print("right search value:", start_end_conect3_v_poly_v[b,right_index])
+            #         if start_end_conect3_v_poly_v[b,right_index] != 0:
+            #             # print("searched right nonzero value:", start_end_conect3_v_poly_v[b,right_index])
+            #             right_dist_nonzero = start_end_conect3_v_poly_v[b, right_index-2]
+            #             print("right_dist_nonzero:", right_dist_nonzero)
+            #             right_angle_nonzero = start_end_conect3_v_poly_v[b,right_index-1]
+            #             break
+            #     # print("try to find left nonzero")
+            #     for left_index in range(len(polygon_data) + (i - 1) * 3 + 2, 0, -3):
+            #         # print("left search value:", start_end_conect3_v_poly_v[b,left_index])
+            #         if start_end_conect3_v_poly_v[b,left_index] != 0:
+            #             # print("searched left nonzero value:", start_end_conect3_v_poly_v[b,left_index])
+            #             left_dist_nonzero = start_end_conect3_v_poly_v[b, left_index-2]
+            #             print("left_dist_nonzero:", left_dist_nonzero)
+            #             left_angle_nonzero = start_end_conect3_v_poly_v[b,left_index-1]
+            #             break
+            #
+            #
+            #     polygon_data[b, i * 3 ] = (right_dist_nonzero + left_dist_nonzero) / 2
+            #     polygon_data[b, i * 3 + 1] = (right_angle_nonzero + left_angle_nonzero)/2
+            #     polygon_data[b, i * 3 + 2] = 1
+            # else:
+            #     continue
+    # plt.subplot(212)
+    # plt.plot(range(len(polygon_data[0])), polygon_data[0], "r", marker ="o" )
+    # plt.show()
+    # decoded_polygons = np.zeros((len(box), NUM_ANGLES*2))
+    empty_section = 0
+    decoded_polygons = []
+    distanceone_count =  0
+    for b in range(0, len(box)):
+        # convert vertex into polygon xy
+        cx= (box_data[b, 0] + box_data[b, 2]) // 2  # .....
+        cy = (box_data[b, 1] + box_data[b, 3]) // 2  #..............
+        for i in range(0, NUM_ANGLES):
+            # print("NUM_ANGLES:", NUM_ANGLES)
+            # print("i:", i)
+            print("angle :", polygon_data[b, i * 3 + 1])
+            print("dist :",  polygon_data[b,i * 3])
+            dela_x = math.cos(math.radians((polygon_data[b, i * 3 + 1] + i) / NUM_ANGLES * 360)) * polygon_data[b,
+                i * 3]
+            dela_y = math.sin(math.radians((polygon_data[b, i * 3 + 1] + i) / NUM_ANGLES * 360)) * polygon_data[b,
+                i * 3]
+            x1 = cx - dela_x
+            y1 = cy - dela_y
+
+            if dela_x == 0 and dela_y ==0:
+                print("b:", b)
+                print("dist in 0 section:", polygon_data[b, i * 3])
+                print("angle in 0 section:", polygon_data[b, i * 3+1])
+                empty_section += 1
+            if  polygon_data[b, i * 3] == 1:
+                distanceone_count +=1
+                print("current distance =1 has #:", distanceone_count)
+                # print("x, y:", x1, y1)
+            decoded_polygons.append([x1, y1])
+
+            print()
+    print("total {} empty section:".format(empty_section))
+    return decoded_polygons, empty_section
+
 
 def plot_aug_compare(image_list,name_list, batch_idx, img_idx):
     num_images_per_raw =  int(len(image_list)/2)
@@ -350,14 +551,47 @@ def plot_aug_compare(image_list,name_list, batch_idx, img_idx):
     plt.savefig(save_aug_compare_folder + "/{}_{}.jpg".format(batch_idx, img_idx))
     plt.close()
 
+
+def get_iou_vector(A, B):
+    # Numpy version
+
+    batch_size = A.shape[0]
+    metric = 0.0
+    for batch in range(batch_size):
+        t, p = A[batch], B[batch]
+        true = np.sum(t)
+        pred = np.sum(p)
+
+        # deal with empty mask first
+        if true == 0:
+            metric += (pred == 0)
+            continue
+
+        # non empty mask case.  Union is never empty
+        # hence it is safe to divide by its number of pixels
+        intersection = np.sum(t * p)
+        union = true + pred - intersection
+        iou = intersection / union
+
+        # iou metrric is a stepwise approximation of the real iou over 0.5
+        # iou = np.floor(max(0, (iou - 0.45) * 20)) / 10
+
+        metric += iou
+
+    # teake the average over all images in batch
+    metric /= batch_size
+    return metric
+
 if __name__ == '__main__':
     raw_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
     raw_binary_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
     print("len of imgs:", len(raw_input_paths))
 
+    # path  to compare countour
+    contours_compare_root = "E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\CountourCompare/"
 
 
-
+    IoU_list = []
 
     my_data =  my_Gnearator(raw_input_paths, raw_binary_paths, batch_size=4, input_shape=[256, 256])
     print(my_data)
@@ -366,30 +600,91 @@ if __name__ == '__main__':
     i=1
     for aug_image , aug_mask, myPolygon, decoded_polys, empty_sections in my_data:
         print("empty_sections:", empty_sections)
+        overlay = aug_image.copy()
         # # fig, ax = plt.subplots(2, 2)
         # print("fetched myPolygon shape:", myPolygon.shape)
         # print("fetched decoded_polys shape:", decoded_polys.shape)
         # raw_im = Image.open(b_raw_input_paths[0])
         # raw_mask = Image.open(b_raw_mask_paths[0])
         for idx in range(aug_image.shape[0]):
-            empty_section_list.append(empty_sections[idx])
-            # print("fetched myPolygon shape:", myPolygon[idx].shape)
-            # print("fetched decoded_polys shape:", decoded_polys[idx].shape)
-            aug_i = aug_image[idx]
-            aug_m =  aug_mask[idx]
-            # raw_im = Image.open(b_raw_input_paths[idx])
-            # raw_mask = Image.open(b_raw_mask_paths[idx])
-            plot_aug_compare([aug_i, aug_m, aug_i, myPolygon[idx], aug_i, decoded_polys[idx]], ["Aug_img", "Aug_mask", "Aug_img","rawPolygons", "Aug_img","DePolygons"], i, idx)
+        #     empty_section_list.append(empty_sections[idx])
+        #     # print("fetched myPolygon shape:", myPolygon[idx].shape)
+        #     # print("fetched decoded_polys shape:", decoded_polys[idx].shape)
+        #     aug_i = aug_image[idx]
+        #     aug_m =  aug_mask[idx]
+        #     # raw_im = Image.open(b_raw_input_paths[idx])
+        #     # raw_mask = Image.open(b_raw_mask_paths[idx])
+        #     plot_aug_compare([aug_i, aug_m, aug_i, myPolygon[idx], aug_i, decoded_polys[idx]], ["Aug_img", "Aug_mask", "Aug_img","rawPolygons", "Aug_img","DePolygons"], i, idx)
+        #
+
+            # draw by polygons
+            # aug image shape:
+            # print("aug image shape:", aug_image[0].shape )
+            # print("myPolygon[0] shape:", myPolygon[0].shape)
+            # print("aug_image[0] dtype:", np.int32(aug_image[0]).dtype)
+            # print("myPolygon[0].dtype:", myPolygon[0].dtype)
+            # cv2.polylines(aug_image[0], np.int32(myPolygon[0]), True, color=(255,255,255), thickness=2)
 
 
 
+            # calculate IoUs for the countours
+            GT_MASK = np.zeros([aug_image[idx].shape[0], aug_image[idx].shape[1]])
+            encoded_mask = np.zeros([aug_image[idx].shape[0], aug_image[idx].shape[1]])
+            cv2.fillPoly(GT_MASK, np.int32([myPolygon[idx]]), color=(1))
+            cv2.fillPoly(encoded_mask, np.int32([decoded_polys[idx]]), color=(1))
+            print("type(GT_MASK):", type(GT_MASK))
+            # cv2.imshow("GT_MASK ", GT_MASK)
+            # cv2.imshow("encoded_mask ", encoded_mask)
+            # cv2.waitKey()
+            # calculate iou
+            GT_MASK =  np.expand_dims(GT_MASK, 0)
+            encoded_mask = np.expand_dims(encoded_mask, 0)
+            one_iou = get_iou_vector(GT_MASK,encoded_mask)
+            print("temp iou:", one_iou)
+            IoU_list.append(one_iou)
 
-        i+=1
-        if i >20:
+            # for saving
+            print("range{}, {}".format(overlay[idx].min(), overlay[idx].max()))
+            background_white = np.ones(aug_image[idx].shape)
+            # background_img = overlay[idx]/255.0 # CV2 ONLY SHOW IMAGES WHITH 0 TO 1 OTHERWISE IT WILL BE ALL WHITE
+            background_img = overlay[idx]  # CV2 ONLY SHOW IMAGES WHITH 0 TO 1 OTHERWISE IT WILL BE ALL WHITE
+            background_img_rgb = cv2.cvtColor(background_img, cv2.COLOR_BGR2RGB)  # BRG---PIL read to RGB
+            cv2.polylines(background_img_rgb, np.int32([myPolygon[idx]]), True, color=(230, 25 , 75 ),
+                          thickness=2)  # 加中括号 ，否则报错
+            layer1 =  background_img_rgb.copy()
+            cv2.polylines(background_img_rgb, np.int32([decoded_polys[idx]]), True, color=(60 , 180 , 75 ),
+                          thickness=2)  # 加中括号 ，否则报错
+            layer2 = background_img_rgb.copy()
+            cv2.addWeighted(layer1, 0.5, layer2, 1 - 0.5,
+                            0, layer2) # for Transparent
+            # cv2.putText(background_img_rgb, "GT", (30, 30 - 3),
+            #         cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+            #         (230, 25 , 75 ), 2)
+            # cv2.putText(background_img_rgb, "Encoded", (30, 60 - 3),
+            #             cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+            #             (60 , 180 , 75), 2)
+
+            cv2.putText(background_img_rgb, "IoU: {:.2f}".format(one_iou), (30, 30 - 3),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                    (0, 0, 255 ), 1)
+            # # cv2.polylines(background_white, np.int32([myPolygon[0]]), True, color=(230 / 255.0, 25 / 255.0, 75 / 255.0),
+            #               thickness=2)  # 加中括号 ，否则报错
+            # cv2.fillPoly(background_img_rgb, np.int32([myPolygon[0]]), color=(230, 25, 75))
+            # cv2.imshow(" ", background_img_rgb)
+            # cv2.waitKey() # show on line need divided 255 save into folder should remove keep in 0 to 255
+            cv2.imwrite(contours_compare_root + "batch{}_idx{}".format(i, idx) + '.jpg', background_img_rgb)
+
+            print()
+
+
+        i += 1
+        if i > 100:
             break
-
         plt.close()
-    print(" emptys list:", empty_section_list)
+
+    print("mean IoU_list:", np.mean(IoU_list))
+    print("std IoU_list", np.std(IoU_list))
+    # print(" emptys list:", empty_section_list)
+    # # print("std emptys", np.std(empty_section_list))
+    # print("mean emptys:", np.mean(empty_section_list))
     # print("std emptys", np.std(empty_section_list))
-    print("mean emptys:", np.mean(empty_section_list))
-    print("std emptys", np.std(empty_section_list))
