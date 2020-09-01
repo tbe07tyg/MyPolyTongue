@@ -34,7 +34,7 @@ try:
         print("total run {} training scripts!".format(fileIdx))
 except Exception as e:
     print("Has some error", e)
-#
+# #
 # Case 1  BaseExp
 run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_8_Mish_WithMyDataNpInterpDistRegOnly')
 
@@ -69,3 +69,6 @@ run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_8_Mish_WithMyDataNpInt
 # horizontal_flip=True
 # brightness_range=sys.argv[7]
 # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_6_CSP_SAE_MidNeck')
+
+#     # # Case 8 MISH NP INTERP
+# run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_8_Mish_WithMyDataNpInterpDistRegOnly')

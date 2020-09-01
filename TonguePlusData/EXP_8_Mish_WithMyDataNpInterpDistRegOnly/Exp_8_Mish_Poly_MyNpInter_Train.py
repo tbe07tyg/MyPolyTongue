@@ -873,8 +873,9 @@ def yolo_head(feats, anchors, num_classes, input_shape, calc_loss=False):
     # polygons_confidence = K.sigmoid(feats[..., 5+num_classes+2:5+num_classes+NUM_ANGLES3:3])
     # print("polygons_confidence:", polygons_confidence)
 
-    polygons_dist = K.exp(feats[..., 5 + num_classes:num_classes + 5 + NUM_ANGLES]) # distance
-    print("polygons_dist:", polygons_dist) # shape=(None, None, None, 9, 24) , distance predictions from vertix to center (px)? (px, py)
+    # polygons_dist = K.exp(feats[..., 5 + num_classes:num_classes + 5 + NUM_ANGLES]) # distance # because the lael is normalized into 0, 1
+    polygons_dist = K.exp(feats[..., 5 + num_classes:num_classes + 5 + NUM_ANGLES])
+    # print("polygons_dist:", polygons_dist) # shape=(None, None, None, 9, 24) , distance predictions from vertix to center (px)? (px, py)
 
     dx = K.square(anchors_tensor[..., 0:1] / 2)
     dy = K.square(anchors_tensor[..., 1:2] / 2)
@@ -935,7 +936,7 @@ def yolo_boxes_and_scores(feats, anchors, num_classes, input_shape, image_shape)
     box_scores = box_confidence * box_class_probs
     box_scores = K.reshape(box_scores, [-1, num_classes])
     polygons = yolo_correct_polygons(polygons_dist, boxes, input_shape, image_shape)
-    polygons = K.reshape(polygons, [-1, NUM_ANGLES]) # [dis1, dist2, dist 3...]
+    polygons = K.reshape(polygons,[-1, NUM_ANGLES]) # [dis1, dist2, dist 3...]
     return boxes, box_scores, polygons
 
 
@@ -1087,7 +1088,9 @@ def my_preprocess_true_boxes_NPinterp(true_boxes, input_shape, anchors, num_clas
     boxes_xy = (true_boxes[..., 0:2] + true_boxes[..., 2:4]) // 2
     boxes_wh = true_boxes[..., 2:4] - true_boxes[..., 0:2]
 
+    # distace nomralized by diagonal of  box [0.00000001, 1000]
     true_boxes[:,:, 5:NUM_ANGLES + 5] /= np.clip(np.expand_dims(np.sqrt(np.power(boxes_wh[:, :, 0], 2) + np.power(boxes_wh[:, :, 1], 2)), -1), 0.0001, 9999999)
+
     true_boxes[..., 0:2] = boxes_xy / input_shape[::-1]
     true_boxes[..., 2:4] = boxes_wh / input_shape[::-1]
 
@@ -1243,19 +1246,19 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5):
         # if the object_mask == False, generating all zeros for the same shape as raw_true_wh
         raw_true_wh = K.switch(object_mask, raw_true_wh, K.zeros_like(raw_true_wh))  # avoid log(0)=-inf
 
-        raw_true_polygon_dist = raw_true_polygon_distnace # ground truth, px,
+        # raw_true_polygon_dist = raw_true_polygon_distnace # ground truth, px,
         # raw_true_polygon_y = raw_true_polygon_distnace[..., 1::3] # ground truth, py,
 
         dx = K.square(anchors[anchor_mask[layer]][..., 0:1] / 2)  # get gt anchor x
         dy = K.square(anchors[anchor_mask[layer]][..., 1:2] / 2)  # get gt anchor y
-        d = K.cast(K.sqrt(dx + dy), K.dtype(raw_true_polygon_dist))  #  get gt d
+        d = K.cast(K.sqrt(dx + dy), K.dtype(raw_true_polygon_distnace))  #  get gt d
 
         diagonal = K.sqrt(K.pow(input_shape[::-1][0], 2) + K.pow(input_shape[::-1][1], 2)) # get diagnoal of feature maps
-        raw_true_polygon_dist = K.log(raw_true_polygon_dist / d * diagonal)  # the deviation of distances
+        raw_true_polygon_dist = K.log(raw_true_polygon_distnace / d * diagonal)  # the deviation of distances
         # the same as bounding boxes , according to the mask probbilities to calculate  distances from vertice to center
 
         # # if probilits all false, then give 0 distances
-        # raw_true_polygon_x = K.switch(vertices_mask, raw_true_polygon_x, K.zeros_like(raw_true_polygon_x))
+        raw_true_polygon_dist = K.switch(object_mask, raw_true_polygon_dist, K.zeros_like(raw_true_polygon_dist))
 
         box_loss_scale = 2 - y_true[layer][..., 2:3] * y_true[layer][..., 3:4] # weighted factor, changed with prediction of w, h
         # if w, h ground truth is small , then more loss weighted
@@ -1283,7 +1286,7 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5):
         confidence_loss = object_mask * K.binary_crossentropy(object_mask, raw_pred[..., 4:5], from_logits=True) + (1 - object_mask) * K.binary_crossentropy(object_mask, raw_pred[..., 4:5],
                                                                                                                                                              from_logits=True) * ignore_mask
         class_loss = object_mask * K.binary_crossentropy(true_class_probs, raw_pred[..., 5:5 + num_classes], from_logits=True)
-        polygon_loss_dist = object_mask  * box_loss_scale * 0.5 * K.square(raw_true_polygon_dist - raw_pred[..., 5 + num_classes:5 + num_classes + NUM_ANGLES])
+        polygon_loss_dist = object_mask* box_loss_scale * 0.5 * K.square(raw_true_polygon_dist - raw_pred[..., 5 + num_classes:5 + num_classes + NUM_ANGLES])
         # polygon_loss_y = object_mask * vertices_mask * box_loss_scale * K.binary_crossentropy(raw_true_polygon_y, raw_pred[..., 5 + num_classes + 1:5 + num_classes + NUM_ANGLES3:3], from_logits=True)
         # vertices_confidence_loss = object_mask * K.binary_crossentropy(vertices_mask, raw_pred[..., 5 + num_classes + 2:5 + num_classes + NUM_ANGLES3:3], from_logits=True)
 
@@ -1716,14 +1719,14 @@ if __name__ == "__main__":
         # train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
         # train_mask_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
         # print("len of train imgs:", len(train_input_paths))
-
+        #
         # assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
         # # for validation dataset  # we need or label and masks are the same shape
         # val_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
         # val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
         # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
-
-        # # # for train dataset for the lab
+        #
+        # # # # for train dataset for the lab
         train_input_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\inputs/*')
         train_mask_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\binary_labels/*.jpg')
         print("len of train imgs:", len(train_input_paths))
