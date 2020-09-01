@@ -35,6 +35,9 @@ try:
 except Exception as e:
     print("Has some error", e)
 #
+# Case 1  BaseExp
+run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_8_Mish_WithMyDataNpInterpDistRegOnly')
+
 # # Case 1  BaseExp
 # run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_5_CSP_SAE_FrontNeck')
 
