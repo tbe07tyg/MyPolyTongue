@@ -133,7 +133,8 @@ try:
             for pred  in pred_txt_list:
                 print("pred:", pred)
                 # this neeed to be changed for the lab computer gt:
-                gt = os.path.dirname(os.path.realpath(__file__)) + "/myTongueTestLab.txt"
+                # gt = os.path.dirname(os.path.realpath(__file__)) + "/myTongueTestLab.txt"
+                gt = os.path.dirname(os.path.realpath(__file__)) + "/myTongueTest.txt"  # for labe top
                 print("cwd", os.path.dirname(os.path.realpath(__file__)))
 
                 yolo_to_coco(pred, gt, class_file)
@@ -272,10 +273,10 @@ except Exception as e:
 
 if __name__ == '__main__':
     # CASE 5:  code test
-    Saved_model_file_root = "E:\\Projects\\logs\\tonguesSeg\\MyPolyTongue\\EXP_2_Mish"
-    Inference_scripts_root = "E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_2_Mish"
+    Saved_model_file_root = "E:\\MyWritings\\Tongue\\2020IEEE\\traindCodesAndLogs\\EXP_8_Mish_WithMyDataNpInterpDistRegOnlyFirstTempCheck"
+    Inference_scripts_root = "E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_8_Mish_WithMyDataNpInterpDistRegOnly"
 
-    output_folder = "E:\\MyWritings\\Tongue\\2020IEEE\\Inferenced_Results\\exp2_Reevaluate"
+    output_folder = "E:\\MyWritings\\Tongue\\2020IEEE\\Inferenced_Results\\exp8_MyNpInterpeEval"
     infer_case(Inference_scripts_root=Inference_scripts_root,
                Saved_model_file_root=Saved_model_file_root,
                output_folder=output_folder)

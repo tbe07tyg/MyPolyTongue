@@ -1283,7 +1283,7 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5):
         confidence_loss = object_mask * K.binary_crossentropy(object_mask, raw_pred[..., 4:5], from_logits=True) + (1 - object_mask) * K.binary_crossentropy(object_mask, raw_pred[..., 4:5],
                                                                                                                                                              from_logits=True) * ignore_mask
         class_loss = object_mask * K.binary_crossentropy(true_class_probs, raw_pred[..., 5:5 + num_classes], from_logits=True)
-        polygon_loss_dist = object_mask  * box_loss_scale * 0.5 * K.square(raw_true_polygon_distnace - raw_pred[..., 5 + num_classes:5 + num_classes + NUM_ANGLES])
+        polygon_loss_dist = object_mask  * box_loss_scale * 0.5 * K.square(raw_true_polygon_dist - raw_pred[..., 5 + num_classes:5 + num_classes + NUM_ANGLES])
         # polygon_loss_y = object_mask * vertices_mask * box_loss_scale * K.binary_crossentropy(raw_true_polygon_y, raw_pred[..., 5 + num_classes + 1:5 + num_classes + NUM_ANGLES3:3], from_logits=True)
         # vertices_confidence_loss = object_mask * K.binary_crossentropy(vertices_mask, raw_pred[..., 5 + num_classes + 2:5 + num_classes + NUM_ANGLES3:3], from_logits=True)
 
@@ -1389,18 +1389,22 @@ class YOLO(object):
             })
 
 
-
+        # get
+        polygon_xy = np.zeros([polygons.shape[0], 2 * NUM_ANGLES])
         for b in range(0, out_boxes.shape[0]):
             cy = (out_boxes[b, 0] + out_boxes[b, 2]) // 2
             cx = (out_boxes[b, 1] + out_boxes[b, 3]) // 2
             diagonal = np.sqrt(np.power(out_boxes[b, 3] - out_boxes[b, 1], 2.0) + np.power(out_boxes[b, 2] - out_boxes[b, 0], 2.0))
             for i in range(0, NUM_ANGLES):
-                x1 = cx - math.cos(math.radians((polygons[b, i+NUM_ANGLES] + i) / NUM_ANGLES * 360)) * polygons[b, i] *diagonal# scale[1]
-                y1 = cy - math.sin(math.radians((polygons[b, i+NUM_ANGLES] + i) / NUM_ANGLES * 360)) * polygons[b, i] *diagonal# scale[0]
-                polygons[b, i]            = x1
-                polygons[b, i+NUM_ANGLES] = y1
-
-        return out_boxes, out_scores, out_classes, polygons
+                print("angle :", i)
+                print("dist :", polygons[b, i])
+                dela_x = math.cos(math.radians(i / NUM_ANGLES * 360)) * polygons[b, i] *diagonal
+                dela_y = math.sin(math.radians(i / NUM_ANGLES * 360)) * polygons[b, i] *diagonal
+                x1 = cx - dela_x
+                y1 = cy - dela_y
+                polygon_xy[b, i] = x1
+                polygon_xy[b, i + NUM_ANGLES] = y1
+        return out_boxes, out_scores, out_classes, polygon_xy
 
     def close_session(self):
         self.sess.close()
@@ -1670,7 +1674,7 @@ if __name__ == "__main__":
 
 
         # log_dir = (current_file_dir_path + '/TongueModelsTang256x256_0.5lr_AngleStep{}_TonguePlus/').format(ANGLE_STEP)
-        log_dir = current_file_dir_path + '/Exp_2_MishMyNpInter{}/'.format(model_index)
+        log_dir = current_file_dir_path + '/Exp_8_MishMyNpInter{}/'.format(model_index)
 
         plot_folder = log_dir + 'Plots/'
         if not os.path.exists(log_dir):
@@ -1709,26 +1713,26 @@ if __name__ == "__main__":
 
         # for my data generator
         # for train dataset
-        train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
-        train_mask_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
+        # train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
+        # train_mask_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
+        # print("len of train imgs:", len(train_input_paths))
+
+        # assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
+        # # for validation dataset  # we need or label and masks are the same shape
+        # val_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
+        # val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
+        # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
+
+        # # # for train dataset for the lab
+        train_input_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\inputs/*')
+        train_mask_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\binary_labels/*.jpg')
         print("len of train imgs:", len(train_input_paths))
 
         assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
         # for validation dataset  # we need or label and masks are the same shape
-        val_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
-        val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
+        val_input_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\test_inputs/*')
+        val_mask_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
         assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
-
-        # # # for train dataset for the lab
-        # train_input_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\inputs/*')
-        # train_mask_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\binary_labels/*.jpg')
-        # print("len of train imgs:", len(train_input_paths))
-        #
-        # assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
-        # # for validation dataset  # we need or label and masks are the same shape
-        # val_input_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\test_inputs/*')
-        # val_mask_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
-        # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
 
         print("total {} training samples read".format(len(train_input_paths)))
         print("total {} val samples read".format(len(val_input_paths)))
