@@ -65,27 +65,7 @@ NUM_ANGLES  = int(360 // ANGLE_STEP) # 24
 grid_size_multiplier = 4 #that is resolution of the output scale compared with input. So it is 1/4
 anchor_mask = [[0,1,2,3,4,5,6,7,8], [0,1,2,3,4,5,6,7,8], [0,1,2,3,4,5,6,7,8]] #that should be optimized
 anchors_per_level = 9 #single scale and nine anchors
-# for running the script
-model_index =  sys.argv[1]
 
-
-rotation_range = int(float(sys.argv[2]))
-width_shift_range = float(sys.argv[3])
-height_shift_range = float(sys.argv[4])
-zoom_range = float(sys.argv[5])
-shear_range= float(sys.argv[6])
-brightness_range_start =float(sys.argv[7]) # sys.argv can not pass list
-brightness_range_stop =float(sys.argv[8])
-brightness_range = [float(brightness_range_start), float(brightness_range_stop)]
-print("input AUG----------------------->")
-print("rotation_range:", rotation_range)
-print("width_shift_range:", width_shift_range)
-print("height_shift_range:", height_shift_range)
-print("zoom_range:", zoom_range)
-print("shear_range:", shear_range)
-print("brightness_range_start:", brightness_range)
-print("input AUG----------------------->")
-horizontal_flip=True
 # def mish(x):
 #     return x * tf.math.tanh(tf.math.softplus(x))
 class Mish(Layer):
@@ -1538,6 +1518,29 @@ if __name__ == "__main__":
 
 
     def _main():
+        # for running the script
+        model_index = sys.argv[1]
+
+        rotation_range = int(float(sys.argv[2]))
+        width_shift_range = float(sys.argv[3])
+        height_shift_range = float(sys.argv[4])
+        zoom_range = float(sys.argv[5])
+        shear_range = float(sys.argv[6])
+        brightness_range_start = float(sys.argv[7])  # sys.argv can not pass list
+        brightness_range_stop = float(sys.argv[8])
+        brightness_range = [float(brightness_range_start), float(brightness_range_stop)]
+        print("input AUG----------------------->")
+        print("rotation_range:", rotation_range)
+        print("width_shift_range:", width_shift_range)
+        print("height_shift_range:", height_shift_range)
+        print("zoom_range:", zoom_range)
+        print("shear_range:", shear_range)
+        print("brightness_range_start:", brightness_range)
+        print("input AUG----------------------->")
+        horizontal_flip = True
+
+
+
         phase = 1
         print("current working dir:", os.getcwd())
         cwd =  os.getcwd()

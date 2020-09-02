@@ -1288,7 +1288,7 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5):
         class_loss = object_mask * K.binary_crossentropy(true_class_probs, raw_pred[..., 5:5 + num_classes], from_logits=True)
         polygon_loss_dist_L2 = object_mask* box_loss_scale * 0.5 * K.square(raw_true_polygon_dist - raw_pred[..., 5 + num_classes:5 + num_classes + NUM_ANGLES])
         polygon_loss_dist_CE = object_mask * box_loss_scale * 0.5 * K.binary_crossentropy(
-            raw_true_polygon_dist - raw_pred[..., 5 + num_classes:5 + num_classes + NUM_ANGLES])
+            raw_true_polygon_dist , raw_pred[..., 5 + num_classes:5 + num_classes + NUM_ANGLES], from_logits=True)
         # polygon_loss_y = object_mask * vertices_mask * box_loss_scale * K.binary_crossentropy(raw_true_polygon_y, raw_pred[..., 5 + num_classes + 1:5 + num_classes + NUM_ANGLES3:3], from_logits=True)
         # vertices_confidence_loss = object_mask * K.binary_crossentropy(vertices_mask, raw_pred[..., 5 + num_classes + 2:5 + num_classes + NUM_ANGLES3:3], from_logits=True)
 

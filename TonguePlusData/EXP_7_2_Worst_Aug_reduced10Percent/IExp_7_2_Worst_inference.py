@@ -4,7 +4,7 @@ import os
 import time
 # need to change
 from glob import glob
-from TonguePlusData.EXP_7_2_Worst_Aug_reduced10Percent.Exp7_2_worst_CSP_SAE_MidNeck_Poly_Tongue_Train import YOLO, my_Gnearator, get_anchors, my_get_random_data #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
+from TonguePlusData.EXP_7_2_Worst_Aug_reduced10Percent.Exp7_2_worst_CSP_SAE_MidNeck_Poly_Tongue_Train import YOLO, get_anchors, my_get_random_data #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
 import sys
 
 
@@ -118,12 +118,12 @@ anchors = get_anchors(anchors_path)
 input_shape = (256, 256)  # multiple of 32, hw
 
 # for validation dataset  # we need or label and masks are the same shape
-# test_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
-# test_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
+test_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
+test_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
 
 # # for validation dataset  # we need or label and masks are the same shape
-test_input_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\test_inputs/*')
-test_mask_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
+# test_input_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\test_inputs/*')
+# test_mask_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
 assert len(test_input_paths) == len(test_mask_paths), "test imgs and mask are not the same"
 print("total {} testsamples read".format(len(test_input_paths)))
 # create data_generator
