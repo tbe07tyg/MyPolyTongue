@@ -271,14 +271,14 @@ except Exception as e:
 
 
 if __name__ == '__main__':
-    # CASE 5:  code test
-    Saved_model_file_root = "E:\\Projects\\logs\\tonguesSeg\\MyPolyTongue\\EXP_2_Mish"
-    Inference_scripts_root = "E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_2_Mish"
-
-    output_folder = "E:\\MyWritings\\Tongue\\2020IEEE\\Inferenced_Results\\exp2_Reevaluate"
-    infer_case(Inference_scripts_root=Inference_scripts_root,
-               Saved_model_file_root=Saved_model_file_root,
-               output_folder=output_folder)
+    # # CASE 5:  code test
+    # Saved_model_file_root = "E:\\Projects\\logs\\tonguesSeg\\MyPolyTongue\\EXP_2_Mish"
+    # Inference_scripts_root = "E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_2_Mish"
+    #
+    # output_folder = "E:\\MyWritings\\Tongue\\2020IEEE\\Inferenced_Results\\exp2_Reevaluate"
+    # infer_case(Inference_scripts_root=Inference_scripts_root,
+    #            Saved_model_file_root=Saved_model_file_root,
+    #            output_folder=output_folder)
 
 
     # #CASE 1: base
@@ -354,3 +354,13 @@ if __name__ == '__main__':
     # infer_case(Inference_scripts_root= Inference_scripts_root,
     #        Saved_model_file_root=Saved_model_file_root,
     #        output_folder= output_folder)
+
+
+    # CASE 6: EXP_6_CSP_SAE_MidNeck
+    Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\EXP_8_Mish_WithMyDataNpInterpDistRegOnly"
+    Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_8_Mish_WithMyDataNpInterpDistRegOnly"
+    #
+    output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\exp8"
+    infer_case(Inference_scripts_root=Inference_scripts_root,
+               Saved_model_file_root=Saved_model_file_root,
+               output_folder=output_folder)

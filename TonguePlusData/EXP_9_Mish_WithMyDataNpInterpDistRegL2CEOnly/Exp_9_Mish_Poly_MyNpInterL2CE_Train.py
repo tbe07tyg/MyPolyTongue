@@ -881,11 +881,11 @@ def yolo_head(feats, anchors, num_classes, input_shape, calc_loss=False):
     dy = K.square(anchors_tensor[..., 1:2] / 2)
     d = K.cast(K.sqrt(dx + dy), K.dtype(polygons_dist)) # provided anchor diagonal as the type of our prediction of dists
     print("input_shape[::-1]:", input_shape[::-1])
-    a = K.pow(input_shape[::-1], 2)  # elementwise exponential of feature maps' size? (h^2, w^2)
+    a = K.pow(input_shape[::-1], 2)  # elementwise exponential of input' size? (h^2, w^2)
     a = K.cast(a, K.dtype(feats))
     b= K.sum(a) # b = h^2 + w^2  # diagonal of length fo feature map
     diagonal =  K.cast(K.sqrt(b), K.dtype(feats)) # calculate the diagonal distance according to the feature size
-    polygons_dist = polygons_dist * d / diagonal  #  normalize the anchor diagonal/ input diagnal
+    polygons_dist = polygons_dist * d / diagonal  #  normalize the anchor diagonal/ feature  map diagnal
 
 
     # # polar position (px, py), the following is py which is the angle prediction
@@ -1286,7 +1286,9 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5):
         confidence_loss = object_mask * K.binary_crossentropy(object_mask, raw_pred[..., 4:5], from_logits=True) + (1 - object_mask) * K.binary_crossentropy(object_mask, raw_pred[..., 4:5],
                                                                                                                                                              from_logits=True) * ignore_mask
         class_loss = object_mask * K.binary_crossentropy(true_class_probs, raw_pred[..., 5:5 + num_classes], from_logits=True)
-        polygon_loss_dist = object_mask* box_loss_scale * 0.5 * K.square(raw_true_polygon_dist - raw_pred[..., 5 + num_classes:5 + num_classes + NUM_ANGLES])
+        polygon_loss_dist_L2 = object_mask* box_loss_scale * 0.5 * K.square(raw_true_polygon_dist - raw_pred[..., 5 + num_classes:5 + num_classes + NUM_ANGLES])
+        polygon_loss_dist_CE = object_mask * box_loss_scale * 0.5 * K.binary_crossentropy(
+            raw_true_polygon_dist - raw_pred[..., 5 + num_classes:5 + num_classes + NUM_ANGLES])
         # polygon_loss_y = object_mask * vertices_mask * box_loss_scale * K.binary_crossentropy(raw_true_polygon_y, raw_pred[..., 5 + num_classes + 1:5 + num_classes + NUM_ANGLES3:3], from_logits=True)
         # vertices_confidence_loss = object_mask * K.binary_crossentropy(vertices_mask, raw_pred[..., 5 + num_classes + 2:5 + num_classes + NUM_ANGLES3:3], from_logits=True)
 
@@ -1297,10 +1299,10 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5):
         confidence_loss = K.sum(confidence_loss) / mf
         # vertices_confidence_loss = K.sum(vertices_confidence_loss) / mf
         # polygon_loss = K.sum(polygon_loss_x) / mf + K.sum(polygon_loss_y) / mf
-        polygon_loss = K.sum(polygon_loss_dist) / mf
+        polygon_dist_loss = K.sum(polygon_loss_dist_L2) / mf +  K.sum(polygon_loss_dist_CE) / mf
         print("finised losses for each image")
         # there is a weight for special masks losses and also weighted focal according to the confidences score in total for each image ,then * for the enirebatch
-        loss += (xy_loss + wh_loss + confidence_loss + class_loss + 0.2 * polygon_loss)/ (K.sum(object_mask) + 1)*mf
+        loss += (xy_loss + wh_loss + confidence_loss + class_loss + 0.2 * polygon_dist_loss)/ (K.sum(object_mask) + 1)*mf
     return loss
 
 
