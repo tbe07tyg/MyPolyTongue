@@ -1679,7 +1679,7 @@ if __name__ == "__main__":
 
 
         # log_dir = (current_file_dir_path + '/TongueModelsTang256x256_0.5lr_AngleStep{}_TonguePlus/').format(ANGLE_STEP)
-        log_dir = current_file_dir_path + '/Exp_8_MishMyNpInter{}/'.format(model_index)
+        log_dir = current_file_dir_path + '/Exp_9_MyNpInterL2CE{}/'.format(model_index)
 
         plot_folder = log_dir + 'Plots/'
         if not os.path.exists(log_dir):
