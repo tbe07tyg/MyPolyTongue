@@ -53,13 +53,13 @@ ANGLE_STEP  = 5 #that means Poly-YOLO will detect 360/15=24 vertices per polygon
 NUM_ANGLES  = int(360 // ANGLE_STEP) # 24
 print("NUM_ANGLES:", NUM_ANGLES)
 # for mydatagenerator aug
-rotation_range = 90
-width_shift_range = 0.3
-height_shift_range = 0.3
-zoom_range = 0.2
-shear_range=0.35
+rotation_range = 50
+width_shift_range = 0.16666666666666666
+height_shift_range = 0.16666666666666666
+zoom_range = 0.16666666666666666
+shear_range = 0.19444444444444445
 horizontal_flip=True
-brightness_range=[0.5, 1.3]
+brightness_range=[0.6684210526315789, 1.131578947368421]
 
 
 grid_size_multiplier = 4 #that is resolution of the output scale compared with input. So it is 1/4
@@ -1679,7 +1679,7 @@ if __name__ == "__main__":
 
 
         # log_dir = (current_file_dir_path + '/TongueModelsTang256x256_0.5lr_AngleStep{}_TonguePlus/').format(ANGLE_STEP)
-        log_dir = current_file_dir_path + '/Exp_9_MyNpInterL2CE{}/'.format(model_index)
+        log_dir = current_file_dir_path + '/Exp_9_NpInterpDistRegL2CEOnly_bestAug{}/'.format(model_index)
 
         plot_folder = log_dir + 'Plots/'
         if not os.path.exists(log_dir):

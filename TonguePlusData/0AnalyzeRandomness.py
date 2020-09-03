@@ -134,104 +134,107 @@ try:
         infered_Top_cases = [path for path in infered_Top_cases if os.path.isdir(path)]
         print("infered_top cases:",infered_Top_cases)
         #
-        colors=["g", "r"]
+        # colors=["g", "r"]
+        markers= ["o", "X"]
+        legends_text = ["worst", "best"]
 
         case_count =0
+        axes =None
         for inferd_case_dir in infered_Top_cases:  # case level
             case_name = os.path.basename(inferd_case_dir)
             infered_sub_aug_cases = [path for path in glob(inferd_case_dir + '/*') if os.path.isdir(path)]
             print("infered_sub_aug_cases:", infered_sub_aug_cases)
 
 
-
-
-            # # for sort order only
-            # sorted_all_sub_infered_roots = []
-            #
-            # for each_root in infered_sub_aug_cases:
-            #     root_name = os.path.basename(each_root)
-            #     print("root name:", root_name)
-            #     re_digits = re.findall(r'\d+', root_name)  # reg search digits in string
-            #     print("re_digits:", re_digits)
-            #     root_index = int(re_digits[-1])
-            #     group_root_withIndex = (root_index, each_root)
-            #     sorted_all_sub_infered_roots.append(group_root_withIndex)
-            #
-            # sorted_all_sub_infered_roots = sorted(sorted_all_sub_infered_roots)
-            # print("sorted_all_sub_infered_roots:", sorted_all_sub_infered_roots)
-            #
-            #
-            # # start real estimate
-            # summary_for_plot = []
-            # for index, infered_sub_root in sorted_all_sub_infered_roots:
-            #     print("index:", index)
-            #     print("infered_sub_root:", infered_sub_root)
-            #     infered_sub_root_name = os.path.basename(infered_sub_root)
-            #     # start to find the txt result from sub inferred root
-            #     pred_txt_list = []
-            #     for root, dirs, files in os.walk(infered_sub_root):
-            #         for i in files:
-            #             if i.endswith("txt"):
-            #                 print("root", root)
-            #                 print("dirs", dirs)
-            #                 print("files", i)
-            #                 pred_txt_list.append(root+'/'+i)
-            #     print("pred_txt_list:", pred_txt_list)
-            #
-            #     # start coco evlauate for one aug case
-            #     # start to evaluate:
-            #     eval_types_list =["bbox", "segm"]
-            #
-            #     for type in eval_types_list:
-            #         AP_5to95_list = []
-            #         AP_5_list = []
-            #         AP_75_list = []
-            #         with open(inferenc_summary_txt, 'a') as f:
-            #             f.write("\n")
-            #         for pred  in pred_txt_list:
-            #             print("pred:", pred)
-            #             # this neeed to be changed for the lab computer gt:
-            #             # gt = os.path.dirname(os.path.realpath(__file__)) + "/myTongueTestLab.txt"
-            #             gt = os.path.dirname(os.path.realpath(__file__)) + "/myTongueTest.txt"  # for labe top
-            #             print("cwd", os.path.dirname(os.path.realpath(__file__)))
-            #
-            #             yolo_to_coco(pred, gt, class_path)
-            #             mean_s=coco_eval(type)
-            #             print("tyep:", type)
-            #             print("mean_s:", mean_s)
-            #
-            #             # write to our txt
-            #             AP_5to95=mean_s[0]
-            #             AP_5 = mean_s[1]
-            #             AP_75 = mean_s[2]
-            #             print("AP_5to95", AP_5to95)
-            #             print("AP_5", AP_5)
-            #             print("AP_75", AP_75)
-            #             # AP_5to95_list.append(AP_5to95)
-            #             # AP_5_list.append(AP_5)
-            #             # AP_75_list.append(AP_75)
-            #
-            #         # # with open(inferenc_summary_paper_need_txt, 'a') as f:
-            #         # m_AP_5to95 = np.array(AP_5to95_list).mean()
-            #         # std_AP_5to95 = np.array(AP_5to95_list).std()
-            #         #
-            #         # m_AP_5 = np.array(AP_5_list).mean()
-            #         # std_AP_5 = np.array(AP_5_list).std()
-            #         #
-            #         # m_AP_75 = np.array(AP_75_list).mean()
-            #         # std_AP_75 = np.array(AP_75_list).std()
-            #             summary_for_plot.append([index, infered_sub_root_name, type, AP_5to95, AP_5,AP_75])
-            #             # content= 'type {}, AP_5to95_m(AP_5to95_std)|AP_5_m(AP_5_std)|AP_75_m(AP_75_std) ' \
-            #             #          '{:.3f}({:.3f})|{:.3f}({:.3f})|{:.3f}({:.3f})\n'.format(type, m_AP_5to95, std_AP_5to95, m_AP_5, std_AP_5, m_AP_75, std_AP_75)
-            #             # f.write(content)
-            #
-            # data_to_plot = DataFrame(summary_for_plot, columns=["x",'infered_sub_root', 'type',
-            #                                                     "$\mathregular{mAP_{0.5_0.95}}$",
-            #                                                     "$\mathregular{mAP_{0.5}}$",
-            #                                                     "$\mathregular{mAP_{0.75}}$"])
-            # print("plot_summary data:",data_to_plot )
-            # # save to the disk for avoid next run long time analyze:
-            # data_to_plot.to_pickle("randomness_case_"+ case_name)
+        #
+        #
+        #     # for sort order only
+        #     sorted_all_sub_infered_roots = []
+        #
+        #     for each_root in infered_sub_aug_cases:
+        #         root_name = os.path.basename(each_root)
+        #         print("root name:", root_name)
+        #         re_digits = re.findall(r'\d+', root_name)  # reg search digits in string
+        #         print("re_digits:", re_digits)
+        #         root_index = int(re_digits[-1])
+        #         group_root_withIndex = (root_index, each_root)
+        #         sorted_all_sub_infered_roots.append(group_root_withIndex)
+        #
+        #     sorted_all_sub_infered_roots = sorted(sorted_all_sub_infered_roots)
+        #     print("sorted_all_sub_infered_roots:", sorted_all_sub_infered_roots)
+        #
+        #
+        #     # start real estimate
+        #     summary_for_plot = []
+        #     for index, infered_sub_root in sorted_all_sub_infered_roots:
+        #         print("index:", index)
+        #         print("infered_sub_root:", infered_sub_root)
+        #         infered_sub_root_name = os.path.basename(infered_sub_root)
+        #         # start to find the txt result from sub inferred root
+        #         pred_txt_list = []
+        #         for root, dirs, files in os.walk(infered_sub_root):
+        #             for i in files:
+        #                 if i.endswith("txt"):
+        #                     print("root", root)
+        #                     print("dirs", dirs)
+        #                     print("files", i)
+        #                     pred_txt_list.append(root+'/'+i)
+        #         print("pred_txt_list:", pred_txt_list)
+        #
+        #         # start coco evlauate for one aug case
+        #         # start to evaluate:
+        #         eval_types_list =["bbox", "segm"]
+        #
+        #         for type in eval_types_list:
+        #             AP_5to95_list = []
+        #             AP_5_list = []
+        #             AP_75_list = []
+        #             with open(inferenc_summary_txt, 'a') as f:
+        #                 f.write("\n")
+        #             for pred  in pred_txt_list:
+        #                 print("pred:", pred)
+        #                 # this neeed to be changed for the lab computer gt:
+        #                 # gt = os.path.dirname(os.path.realpath(__file__)) + "/myTongueTestLab.txt"
+        #                 gt = os.path.dirname(os.path.realpath(__file__)) + "/myTongueTest.txt"  # for labe top
+        #                 print("cwd", os.path.dirname(os.path.realpath(__file__)))
+        #
+        #                 yolo_to_coco(pred, gt, class_path)
+        #                 mean_s=coco_eval(type)
+        #                 print("tyep:", type)
+        #                 print("mean_s:", mean_s)
+        #
+        #                 # write to our txt
+        #                 AP_5to95=mean_s[0]
+        #                 AP_5 = mean_s[1]
+        #                 AP_75 = mean_s[2]
+        #                 print("AP_5to95", AP_5to95)
+        #                 print("AP_5", AP_5)
+        #                 print("AP_75", AP_75)
+        #                 # AP_5to95_list.append(AP_5to95)
+        #                 # AP_5_list.append(AP_5)
+        #                 # AP_75_list.append(AP_75)
+        #
+        #             # # with open(inferenc_summary_paper_need_txt, 'a') as f:
+        #             # m_AP_5to95 = np.array(AP_5to95_list).mean()
+        #             # std_AP_5to95 = np.array(AP_5to95_list).std()
+        #             #
+        #             # m_AP_5 = np.array(AP_5_list).mean()
+        #             # std_AP_5 = np.array(AP_5_list).std()
+        #             #
+        #             # m_AP_75 = np.array(AP_75_list).mean()
+        #             # std_AP_75 = np.array(AP_75_list).std()
+        #                 summary_for_plot.append([index, case_count, infered_sub_root_name, type, AP_5to95, AP_5,AP_75])
+        #                 # content= 'type {}, AP_5to95_m(AP_5to95_std)|AP_5_m(AP_5_std)|AP_75_m(AP_75_std) ' \
+        #                 #          '{:.3f}({:.3f})|{:.3f}({:.3f})|{:.3f}({:.3f})\n'.format(type, m_AP_5to95, std_AP_5to95, m_AP_5, std_AP_5, m_AP_75, std_AP_75)
+        #                 # f.write(content)
+        #
+        #     data_to_plot = DataFrame(summary_for_plot, columns=["x","top_case",'infered_sub_root', 'type',
+        #                                                         "$\mathregular{mAP_{0.5_0.95}}$",
+        #                                                         "$\mathregular{mAP_{0.5}}$",
+        #                                                         "$\mathregular{mAP_{0.75}}$"])
+        #     print("plot_summary data:",data_to_plot )
+        #     # save to the disk for avoid next run long time analyze:
+        #     data_to_plot.to_pickle("randomness_case_"+ case_name)
 
 
             ## Analyzing is finished. ------------------->
@@ -249,13 +252,44 @@ try:
             tyep_data = data_to_plot.melt('type', var_name='$\mathregular{mAP_{IoU}}$', value_name='mAP',
                                           value_vars=["$\mathregular{mAP_{0.5}}$", "$\mathregular{mAP_{0.5_0.95}}$",
                                                       "$\mathregular{mAP_{0.75}}$"])
+            topcase_data = data_to_plot.melt('top_case', var_name='$\mathregular{mAP_{IoU}}$', value_name='mAP',
+                                          value_vars=["$\mathregular{mAP_{0.5}}$", "$\mathregular{mAP_{0.5_0.95}}$",
+                                                      "$\mathregular{mAP_{0.75}}$"])
+            # print("map_range_data,", map_range_data)
             # print("map_range_data,", map_range_data)
             # print("map_range_data,", tyep_data)
             merged_new_data_plot = pd.merge(map_range_data,tyep_data)
+            merged_new_data_plot = pd.merge(merged_new_data_plot,topcase_data )
             print("merged_new_data_plot,", merged_new_data_plot)
+            #
+            # # # take out mAP according to the type
+            # # seg_Data =merged_new_data_plot.loc[merged_new_data_plot['type']=="segm", "mAP"]
+            # seg_Data = merged_new_data_plot[(merged_new_data_plot['type']=="segm") * (merged_new_data_plot['$\mathregular{mAP_{IoU}}$']=="$\mathregular{mAP_{0.5}}$")]
+            # seg_Data_mAP_marker = seg_Data.groupby('x', as_index=False)['mAP'].mean()
+            # seg_data_line_plot = merged_new_data_plot[merged_new_data_plot['type']=="segm"]
+
+            # print("seg_data_line_plot:", seg_data_line_plot)
+
             axes = sns.lineplot(x="x",
                          y="mAP",
-                         data=merged_new_data_plot,markers=True, hue= "$\mathregular{mAP_{IoU}}$", style="type", color=colors[case_count])
+                         data=merged_new_data_plot, hue= "$\mathregular{mAP_{IoU}}$", markers=[markers[case_count], markers[case_count]], style="type")
+
+            legend = axes.legend()
+            # print(legend.texts)
+            # if case_count ==0:
+            #     legend.texts[4].set_text(legends_text[case_count])
+            #     print(legend.texts[4])
+            # else:
+            #     # print(legend.texts)
+            #     legend.texts[11].set_text(legends_text[case_count])
+            #     print(legend.texts[11])
+            # print(legend.texts)
+            # axes = sns.lineplot(x="x",
+            #                     y="mAP",
+            #                     data=merged_new_data_plot, markers=True, style="type", hue="top_case")
+
+            # sns.scatterplot(x="x", y="mAP",data=seg_Data_mAP_marker, markers="o")
+
             axes.set_title("mAP(Aug. Randomness)", fontweight='bold')
             box = axes.get_position()
             axes.set_position([box.x0, box.y0, box.width * 0.90, box.height])  # resize position
@@ -274,7 +308,7 @@ try:
 
             axes.xaxis.set_major_formatter(FuncFormatter(format_fn))
             axes.xaxis.set_major_locator(MaxNLocator(integer=True))
-
+            # plt.legend(bbox_to_anchor=(1.05, 1), loc="best", borderaxespad=0.)
             # plt.xlim([0, 10])
             # plt.xlim([0, 1])
 
@@ -286,6 +320,14 @@ try:
             #              data=data_to_plot, markers=True, style="type",color=colors[case_count])
         # plt.show()
             case_count +=1
+        # handles, labels = axes.get_legend_handles_labels()
+        # print("handles", handles)
+        # print("labels", labels)
+        # labels[4] = "worst"
+        # labels[1] = "best"
+        # new_labels =  labels
+        # print("new_labels", new_labels)
+
         axes.tick_params(axis='both', which='major', labelsize=10)
         axes.tick_params(axis='both', which='minor', labelsize=8)
         axes.set_xlabel("Aug. Reduction (%)", fontweight='bold')
@@ -296,8 +338,33 @@ try:
         # plt.subplots_adjust(top=0.92, left= 0.1, right=0.9)
         # plt.tight_layout()
         plt.subplots_adjust(left=0.1, bottom=0.2, right=0.75)
-        plt.legend(bbox_to_anchor=(1.05, 1), loc="best", borderaxespad=0.)
+
         # sns.lineplot(x="x",
+        # legend = axes.legend()
+        # print(legend.texts)
+        # labels =  legend.texts
+        # del labels[7:9]
+        # legend.texts = labels
+        le_handles, le_labels = axes.get_legend_handles_labels()
+        head_handles =  le_handles[0:7]
+        tail_handles = le_handles[-2:]
+        head_labels = le_labels[0:7]
+        tail_labels = le_labels[-2:]
+        head_handles.extend(tail_handles)
+        head_labels.extend(tail_labels)
+
+        print("head_labels:", head_labels)
+        # print("tail_labels:", tail_labels)
+        # print("labels", labels)
+        head_labels[-4] ="worst-bbox"
+        head_labels[-3] = "worst-segm"
+        head_labels[-2] = "best-bbox"
+        head_labels[-1] = "best-segm"
+        axes.legend(handles=head_handles, labels=head_labels, bbox_to_anchor=(1.05, 1), loc="best", borderaxespad=0. )
+
+        # legend.texts[4].set_text("worst")
+        # legend.texts[11].set_text("best")
+        # print(legend.texts)
         plt.savefig("randomnessCheck.jpg", dpi=300)
 
     def yolo_to_coco(pred_path: str, gt_path: str, classes_path: str) -> None:

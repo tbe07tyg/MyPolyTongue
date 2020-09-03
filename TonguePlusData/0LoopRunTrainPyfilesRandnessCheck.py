@@ -97,23 +97,24 @@ for i in range(10):
     brightness_range_start_in = brightness_range[i]
     brightness_range_stop_in = brightness_range[len(brightness_range)-1 - i]
     # brightness_range_in =  [brightness_range_start, brightness_range_stop]
-    print("rotation_range_in:", rotation_range_in)
-    print("width_shift_range_in:", width_shift_range_in)
-    print("height_shift_range_in:", height_shift_range_in)
-    print("zoom_range_in:", zoom_range_in)
-    print("shear_range_in:", shear_range_in)
-    print("brightness_range_in:", [brightness_range_start_in, brightness_range_stop_in])
-    print()
+    if i ==4:
+        print("rotation_range_in:", rotation_range_in)
+        print("width_shift_range_in:", width_shift_range_in)
+        print("height_shift_range_in:", height_shift_range_in)
+        print("zoom_range_in:", zoom_range_in)
+        print("shear_range_in:", shear_range_in)
+        print("brightness_range_in:", [brightness_range_start_in, brightness_range_stop_in])
+        print()
 
 
+    #
+    # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_7_Mish_Best_Aug_reduced10Percent',
+    #          rotation_range=rotation_range_in,
+    #          width_shift_range=width_shift_range_in,
+    #          height_shift_range=height_shift_range_in,
+    #          zoom_range=zoom_range_in,
+    #          shear_range=shear_range_in,
+    #          brightness_range_start=brightness_range_start_in,
+    #          brightness_range_stop=brightness_range_stop_in
 
-    run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_7_Mish_Best_Aug_reduced10Percent',
-             rotation_range=rotation_range_in,
-             width_shift_range=width_shift_range_in,
-             height_shift_range=height_shift_range_in,
-             zoom_range=zoom_range_in,
-             shear_range=shear_range_in,
-             brightness_range_start=brightness_range_start_in,
-             brightness_range_stop=brightness_range_stop_in
-
-             )
+             # )
