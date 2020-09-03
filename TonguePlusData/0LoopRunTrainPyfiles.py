@@ -36,7 +36,7 @@ except Exception as e:
     print("Has some error", e)
 # #
 # Case 1  BaseExp
-run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_8_Mish_WithMyDataNpInterpDistRegOnly')
+run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAug')
 
 # # Case 1  BaseExp
 # run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_5_CSP_SAE_FrontNeck')
