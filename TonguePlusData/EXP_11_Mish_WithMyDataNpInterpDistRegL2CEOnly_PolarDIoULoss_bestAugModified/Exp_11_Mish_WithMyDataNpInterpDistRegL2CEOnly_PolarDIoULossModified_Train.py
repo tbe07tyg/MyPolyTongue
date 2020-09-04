@@ -1785,7 +1785,7 @@ if __name__ == "__main__":
 
 
     def _main():
-        project_name = 'Exp_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_BestAug{}'.format(model_index)
+        project_name = 'Exp_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_BestAugModified{}'.format(model_index)
 
         phase = 1
         print("current working dir:", os.getcwd())
