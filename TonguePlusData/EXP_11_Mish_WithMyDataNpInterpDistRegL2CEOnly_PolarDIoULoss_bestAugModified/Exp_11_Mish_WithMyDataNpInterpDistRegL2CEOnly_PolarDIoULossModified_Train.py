@@ -47,7 +47,7 @@ import cv2
 
 np.set_printoptions(precision=3, suppress=True)
 MAX_VERTICES = 1000 #that allows the labels to have 1000 vertices per polygon at max. They are reduced for training
-ANGLE_STEP  = 5 #that means Poly-YOLO will detect 360/15=24 vertices per polygon at max
+ANGLE_STEP  = 1 #that means Poly-YOLO will detect 360/15=24 vertices per polygon at max
 # NUM_ANGLES3  = int(360 // ANGLE_STEP * 3) #72 = (360/15)*3
 # print("NUM_ANGLES3:", NUM_ANGLES3)
 NUM_ANGLES  = int(360 // ANGLE_STEP) # 24
@@ -1501,7 +1501,7 @@ def my_Gnearator(images_list, masks_list, batch_size, input_shape, anchors, num_
     :return:
     """
     n = len(images_list)
-    i = 0
+    print("total_images:", n)
     img_data_gen_args = dict(rotation_range=rotation_range,
                              width_shift_range=width_shift_range,
                              height_shift_range=height_shift_range,
@@ -1519,6 +1519,7 @@ def my_Gnearator(images_list, masks_list, batch_size, input_shape, anchors, num_
                               )
     image_datagen = ImageDataGenerator(**img_data_gen_args)
     mask_datagen = ImageDataGenerator(**mask_data_gen_args)
+    count = 0
     while True:
         image_data_list = []
         box_data_list = []
@@ -1529,32 +1530,38 @@ def my_Gnearator(images_list, masks_list, batch_size, input_shape, anchors, num_
         # my_annotation = []
         # print(images_list)
         # print(masks_list)
-        ziped_img_mask_list = list(zip(images_list, masks_list))
-        count = 1
-        while count <= batch_size:
-            if count == 1:
+        ziped_img_mask_list =  list(zip(images_list, masks_list))
+        b =0
+        while  b< batch_size:
+            print("True")
+            if count == 0 and train_flag == "Train":
                 np.random.shuffle(ziped_img_mask_list)
             images_list, masks_list = zip(*ziped_img_mask_list)
 
-            temp_img_path = images_list[i]
-            temp_mask_path = masks_list[i]
+            temp_img_path = images_list[count]
+            temp_mask_path = masks_list[count]
             img, box, myPolygon = my_get_random_data(temp_img_path, temp_mask_path, input_shape, image_datagen, mask_datagen,
                                           train_or_test=train_flag)
             # print("myPolygon.shape:", myPolygon.shape)
             # check there is zero: if there is boundry points
 
-            # print("count before next:", count)
-            # print("range polygon [{}, {}]".format(myPolygon.min(), myPolygon.max()))
-            count += 1
-            # print(count)
-            if np.any(myPolygon == 0) or np.any(myPolygon == img.shape[0] - 1) or np.any(
-                    myPolygon == img.shape[1] - 1):  # roll back.
+            print("myPolygon.shape:", myPolygon.shape)
+            # check there is zero: if there is boundry points
 
-                print("boundary image")
-                count -= 1
-                continue
-            # print("count after next:", count)
+            print("count before next:", count)
+            print("range polygon [{}, {}]".format(myPolygon.min(), myPolygon.max()))
+            count = (count + 1) % n
+            b += 1
+            print(count)
+            # if np.any(myPolygon==0) or np.any(myPolygon==aug_image.shape[0]-1) or np.any(myPolygon==aug_image.shape[1]-1):  # roll back.
+            #
+            #     print("boundary image")
+            #     count -=1
+            #     b-=1
+            #     continue
+            print("count after next:", count)
             image_data_list.append(img)
+            # box_data.append(box)
             box_data_list.append(box)
 
         image_batch = np.array(image_data_list)
@@ -1565,7 +1572,7 @@ def my_Gnearator(images_list, masks_list, batch_size, input_shape, anchors, num_
               [np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size)]
 
 
-def my_get_random_data(img_path, mask_path, input_shape, image_datagen, mask_datagen, train_or_test, max_boxes=80):
+def my_get_random_data(img_path, mask_path, input_shape, image_datagen, mask_datagen, train_or_test):
     # load data ------------------------>
     # image_name = os.path.basename(img_path).replace('.JPG', '')
     # mask_name = os.path.basename(mask_path).replace('.JPG', '')
@@ -1601,7 +1608,7 @@ def my_get_random_data(img_path, mask_path, input_shape, image_datagen, mask_dat
     # imgray = cv2.cvtColor(np.squeeze(copy_mask), cv2.COLOR_BGR2GRAY)
     # print(copy_mask)
     ret, thresh = cv2.threshold(copy_mask, 127, 255, 0)  # this require the numpy array has to be the uint8 type
-    image, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    image, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 
     # encode contours into annotation lines ---->
     annotation_line, myPolygon = encode_polygone(img_path, contours)
@@ -1661,6 +1668,7 @@ def My_bilinear_decode_annotationlineNP_inter(encoded_annotationline, MAX_VERTIC
     annotation_line = encoded_annotationline.split()
     # print(lines[i])
     for element in range(1, len(annotation_line)):
+        # print(element)
         for symbol in range(annotation_line[element].count(',') - 4, MAX_VERTICES * 2, 2):
             annotation_line[element] = annotation_line[element] + ',0,0'
     box = np.array([np.array(list(map(float, box.split(','))))
@@ -1804,27 +1812,27 @@ if __name__ == "__main__":
                                                              embeddings_metadata=None)
 
         # for my data generator
-        # for train dataset
-        train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
-        train_mask_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
-        print("len of train imgs:", len(train_input_paths))
-
-        assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
-        # for validation dataset  # we need or label and masks are the same shape
-        val_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
-        val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
-        assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
-        #
-        # # # # # # # for train dataset for the lab
-        # train_input_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\inputs/*')
-        # train_mask_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\binary_labels/*.jpg')
+        # # for train dataset
+        # train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
+        # train_mask_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
         # print("len of train imgs:", len(train_input_paths))
         #
         # assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
         # # for validation dataset  # we need or label and masks are the same shape
-        # val_input_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\test_inputs/*')
-        # val_mask_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
+        # val_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
+        # val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
         # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
+        #
+        # # # # # # for train dataset for the lab
+        train_input_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\inputs/*')
+        train_mask_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\binary_labels/*.jpg')
+        print("len of train imgs:", len(train_input_paths))
+
+        assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
+        # for validation dataset  # we need or label and masks are the same shape
+        val_input_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\test_inputs/*')
+        val_mask_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
+        assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
 
         print("total {} training samples read".format(len(train_input_paths)))
         print("total {} val samples read".format(len(val_input_paths)))

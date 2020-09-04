@@ -5,7 +5,7 @@ from glob import glob
 # root_read = "E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\AugCompare"
 root_read = "E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\CountourCompare"
 root_write = "E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\AugCompare\\GIF"
-anim_file = root_write +'/AngleStep1_My1dSortedNpInterpNoBoundaryImages.gif'
+anim_file = root_write +'/AngleStep20_ALLPoly_our.gif'
 
 
 with imageio.get_writer(anim_file, mode='I') as writer:
