@@ -893,7 +893,7 @@ def yolo_head(feats, anchors, num_classes, input_shape, calc_loss=False):
     # polygons_y = K.sigmoid(polygons_y)
 
     if calc_loss == True: # for calculating the loss use this other wise output the output
-        return grid, feats, box_xy, box_wh
+        return grid, feats, box_xy, box_wh, polygons_dist
     # return box_xy, box_wh, box_confidence, box_class_probs, polygons_dist, polygons_y, polygons_confidence
     return box_xy, box_wh, box_confidence, box_class_probs, polygons_dist
 
@@ -1287,7 +1287,7 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5):
     mf = K.cast(m, K.dtype(yolo_outputs[0]))
     for layer in range(num_layers):
         # preds -------------------------------------------------------->
-        grid, raw_pred, pred_xy, pred_wh = yolo_head(yolo_outputs[layer], anchors[anchor_mask[layer]], num_classes,
+        grid, raw_pred, pred_xy, pred_wh, pred_dist = yolo_head(yolo_outputs[layer], anchors[anchor_mask[layer]], num_classes,
                                                      input_shape, calc_loss=True)
         pred_box = K.concatenate([pred_xy, pred_wh])
         print("pred_box:", pred_box)
@@ -1314,48 +1314,6 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5):
 
 
 
-
-
-        # slice as seq[start:end:step] ==> [8, 78, step= 3], this is vertices sections
-        # remember NUM_ANGLES3  = int(360 // ANGLE_STEP * 3) =72
-        # recap: our output contains (4 boundingboxes, num_classes, polarangle, polardistance, problbilies for each section)
-        # print("5 + num_classes + 2:", 5 + num_classes + 2)
-        # print("5 + num_classes + NUM_ANGLES:", 5 + num_classes + NUM_ANGLES)
-        # # vertices_mask = y_true[layer][..., 5 + num_classes + 2:5 + num_classes + NUM_ANGLES]  # problabilies for each section
-        # # print("vertices_mask:", vertices_mask)
-        #
-        # print("true_class_probs:", true_class_probs)
-        # return yolo_head: grid, feats, box_xy, box_wh
-
-        # x,y , w, h for 9 anchors , with shape (None, None, None, 9, 4)
-
-        # (px(distance), py(angle), pz(probability) ), should have 72 elements for all feature positions
-
-        # print("raw_true_polygon_distnace:", raw_true_polygon_distnace)
-        # anchor_mask = = [[0,1,2,3,4,5,6,7,8], [0,1,2,3,4,5,6,7,8], [0,1,2,3,4,5,6,7,8]]
-        # anchors[anchor_mask[layer]]
-        # anchors = with shape [num, 2] ==>[9,2]
-        # anchors[anchor_mask[layer]] --> just choose all anchors
-        # print("y_true[layer][..., 2:4]：", y_true[layer][..., 2:4]) # shape=(None, 104, 208, 9, 2)
-        # each ground truth w, h, find the value corresponding to our direct prediction deviation see one note calculation GM slides for 7.31 day
-
-        # print("raw_true_wh",raw_true_wh) # shape=(None, 104, 208, 9, 2)
-        #  object_mask is the condidence score for the bbox
-        # k.switch to switch to different function accoding to the condience score.
-        # if the object_mask == False, generating all zeros for the same shape as raw_true_wh
-
-        # raw_true_polygon_dist = raw_true_polygon_distnace # ground truth, px,
-        # raw_true_polygon_y = raw_true_polygon_distnace[..., 1::3] # ground truth, py,
-
-
-        # the same as bounding boxes , according to the mask probbilities to calculate  distances from vertice to center
-
-        # # if probilits all false, then give 0 distances
-
-        # box_loss_scale = 2 - y_true[layer][..., 2:3] * y_true[layer][..., 3:4] # weighted factor, changed with prediction of w, h
-        # if w, h ground truth is small , then more loss weighted
-
-        # Find ignore mask, iterate over each of batch.
         ignore_mask = tf.TensorArray(K.dtype(y_true[0]), size=1, dynamic_size=True)
         object_mask_bool = K.cast(object_mask, 'bool') # acoording to the confidence score
         # (0 prediction , will be ignored, only consider non-zero postion, of ground truth).
@@ -1415,8 +1373,8 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5):
         #
         polar_diou_loss = K.sum(object_mask * (1 - polar_diou(pred_box,
                                                               y_true[layer][..., 0:4],
-                                                              raw_pred[...,5 + num_classes:5 + num_classes + NUM_ANGLES],
-                                                              raw_true_polygon_dist)))
+                                                              pred_dist,
+                                                              raw_true_polygon_distnace)))
 
         loss += (xy_loss + wh_loss + confidence_loss + polar_diou_loss + class_loss + 0.2 * polygon_dist_loss)/ (K.sum(object_mask) + 1)
 
@@ -1847,26 +1805,26 @@ if __name__ == "__main__":
 
         # for my data generator
         # for train dataset
-        # train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
-        # train_mask_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
-        # print("len of train imgs:", len(train_input_paths))
-        #
-        # assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
-        # # for validation dataset  # we need or label and masks are the same shape
-        # val_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
-        # val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
-        # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
-        #
-        # # # # # # for train dataset for the lab
-        train_input_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\inputs/*')
-        train_mask_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\binary_labels/*.jpg')
+        train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
+        train_mask_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
         print("len of train imgs:", len(train_input_paths))
 
         assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
         # for validation dataset  # we need or label and masks are the same shape
-        val_input_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\test_inputs/*')
-        val_mask_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
+        val_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
+        val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
         assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
+        #
+        # # # # # # # for train dataset for the lab
+        # train_input_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\inputs/*')
+        # train_mask_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\binary_labels/*.jpg')
+        # print("len of train imgs:", len(train_input_paths))
+        #
+        # assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
+        # # for validation dataset  # we need or label and masks are the same shape
+        # val_input_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\test_inputs/*')
+        # val_mask_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
+        # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
 
         print("total {} training samples read".format(len(train_input_paths)))
         print("total {} val samples read".format(len(val_input_paths)))
