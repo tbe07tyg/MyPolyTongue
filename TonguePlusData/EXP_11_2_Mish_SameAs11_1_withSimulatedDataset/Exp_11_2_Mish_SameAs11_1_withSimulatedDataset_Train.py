@@ -44,7 +44,7 @@ from glob import glob
 from tensorflow.keras.preprocessing import image as krs_image
 import cv2
 
-contours_compare_root = "E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\CountourCompare/"
+
 np.set_printoptions(precision=3, suppress=True)
 MAX_VERTICES = 1000 #that allows the labels to have 1000 vertices per polygon at max. They are reduced for training
 ANGLE_STEP  = 1 #that means Poly-YOLO will detect 360/15=24 vertices per polygon at max
@@ -62,12 +62,19 @@ horizontal_flip=True
 brightness_range=[0.6684210526315789, 1.131578947368421]
 
 
+# save input image in folder to check Nan value
+
+
+
 grid_size_multiplier = 4 #that is resolution of the output scale compared with input. So it is 1/4
 anchor_mask = [[0,1,2,3,4,5,6,7,8], [0,1,2,3,4,5,6,7,8], [0,1,2,3,4,5,6,7,8]] #that should be optimized
 anchors_per_level = 9 #single scale and nine anchors
 # for running the script
 model_index =  sys.argv[1]
 
+contours_compare_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_11_2_Mish_SameAs11_1_withSimulatedDataset/" + "check{}/".format(model_index)
+if not os.path.exists(contours_compare_root):
+    os.makedirs(contours_compare_root)
 # def mish(x):
 #     return x * tf.math.tanh(tf.math.softplus(x))
 class Mish(Layer):
@@ -1299,7 +1306,7 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5):
         true_class_probs = y_true[layer][..., 5:5 + num_classes]
         # found the left-up corner, which may be normalized with ground truth , since y_true[..., 2:] * Feature shapes
         raw_true_xy = y_true[layer][..., :2] * grid_shapes[layer][::-1] - grid
-        raw_true_wh = K.log(y_true[layer][..., 2:4] / anchors[anchor_mask[layer]] * input_shape[::-1])
+        raw_true_wh = K.log(y_true[layer][..., 2:4] / anchors[anchor_mask[layer]] * input_shape[::-1] + K.epsilon()) # to avoid log (0)
         raw_true_wh = K.switch(object_mask, raw_true_wh, K.zeros_like(raw_true_wh))  # avoid log(0)=-inf  # only positive use to optimized
 
         raw_true_polygon_distnace = y_true[layer][..., 5 + num_classes: 5 + num_classes + NUM_ANGLES]
@@ -1308,7 +1315,7 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5):
         d = K.cast(K.sqrt(dx + dy), K.dtype(raw_true_polygon_distnace))  # get gt d
         diagonal = K.sqrt(
             K.pow(input_shape[::-1][0], 2) + K.pow(input_shape[::-1][1], 2))  # get diagnoal of feature maps
-        raw_true_polygon_dist = K.log(raw_true_polygon_distnace / d * diagonal)  # the deviation of distances
+        raw_true_polygon_dist = K.log(raw_true_polygon_distnace / d * diagonal + K.epsilon())  # the deviation of distances + epsiolon # to avoid log (0)
         raw_true_polygon_dist = K.switch(object_mask, raw_true_polygon_dist, K.zeros_like(raw_true_polygon_dist))  # only positives
 
 
@@ -1520,6 +1527,7 @@ def my_Gnearator(images_list, masks_list, batch_size, input_shape, anchors, num_
     image_datagen = ImageDataGenerator(**img_data_gen_args)
     mask_datagen = ImageDataGenerator(**mask_data_gen_args)
     count = 0
+    epoch=0
     while True:
         image_data_list = []
         box_data_list = []
@@ -1540,8 +1548,20 @@ def my_Gnearator(images_list, masks_list, batch_size, input_shape, anchors, num_
 
             temp_img_path = images_list[count]
             temp_mask_path = masks_list[count]
-            img, box, myPolygon = my_get_random_data(temp_img_path, temp_mask_path, input_shape, image_datagen, mask_datagen,
+            img, box, myPolygon, aug_mask, selected_coutours = my_get_random_data(temp_img_path, temp_mask_path, input_shape, image_datagen, mask_datagen,
                                           train_or_test=train_flag)
+
+            # check the data
+            # if count+1==n:
+            #     epoch+=1
+            # background = np.ones(img.shape)*255
+            # cv2.imwrite(contours_compare_root + "batch{}_idx{}_1_".format(epoch, count) + 'image.jpg', img*255)
+            # cv2.imwrite(contours_compare_root + "batch{}_idx{}_2_".format(epoch, count) + 'mask.jpg', aug_mask)
+            # #
+            # cv2.drawContours(background, selected_coutours, -1, (60, 180, 75))
+            # cv2.imwrite(contours_compare_root + "batch{}_idx{}_3_".format(epoch, count) + 'selected_contour.jpg', background)
+            # cv2.imshow(" ", background)
+            # cv2.waitKey()  # show on line need divided 255 save into folder should remove keep in 0 to 255
             # print("myPolygon.shape:", myPolygon.shape)
             # check there is zero: if there is boundry points
 
@@ -1601,12 +1621,12 @@ def my_get_random_data(img_path, mask_path, input_shape, image_datagen, mask_dat
         aug_image = image
         copy_mask = mask.copy().astype(np.uint8)
 
-    img, label = random_shapes((256, 256), max_shapes=5, min_size=40, intensity_range=((0, 255),))
+    img, label = random_shapes((256, 256), max_shapes=5, min_size=40,  max_size=180, intensity_range=((0, 255),))
     # img, label = random_shapes((256, 256), min_size=40, intensity_range=((0, 255),), random_seed=pri_seed)
 
     added_img = 255 - img
     gray = cv2.cvtColor(added_img, cv2.COLOR_BGR2GRAY)
-    print("labels:", label)
+    # print("labels:", label)
 
     # aug_image =  added_img
     aug_image = aug_image / 2 + added_img
@@ -1618,19 +1638,12 @@ def my_get_random_data(img_path, mask_path, input_shape, image_datagen, mask_dat
     image, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     selected_coutours = []
     for x in range(len(contours)):
-        print("countour x:", x, contours[x].shape)
+        # print("countour x:", x, contours[x].shape)
         if contours[x].shape[0] > 8:  # require one contour at lest 8 polygons(360/40=9)
             selected_coutours.append(contours[x])
-    print("# selected_coutours:", len(selected_coutours))
+    # print("# selected_coutours:", len(selected_coutours))
 
-    # # check the data
-    # background = np.ones(aug_image.shape)
-    # cv2.imwrite(contours_compare_root + "batch{}_idx{}".format(1, x) + 'image.jpg', aug_image)
-    # cv2.imwrite(contours_compare_root + "batch{}_idx{}".format(1, x) + 'mask.jpg', aug_mask)
-    #
-    # cv2.drawContours(background, contours, -1, (60/255, 180/255, 75/255))
-    # cv2.imshow(" ", background)
-    # cv2.waitKey()  # show on line need divided 255 save into folder should remove keep in 0 to 255
+
 
     # encode contours into annotation lines ---->
     annotation_line, myPolygon = encode_polygone(img_path, selected_coutours)
@@ -1641,7 +1654,7 @@ def my_get_random_data(img_path, mask_path, input_shape, image_datagen, mask_dat
     aug_image = aug_image / 255.0
 
 
-    return aug_image, box_data, myPolygon
+    return aug_image, box_data, myPolygon, aug_mask, selected_coutours
 
 def encode_polygone(img_path, contours, MAX_VERTICES =1000):
     "give polygons and encode as angle, ditance , probability"
@@ -1796,6 +1809,9 @@ if __name__ == "__main__":
 
         plot_folder = log_dir + 'Plots/'
         tf_folder = os.path.join(current_file_dir_path, project_name, 'TF_logs')
+
+
+
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
         if not os.path.exists(tf_folder):
