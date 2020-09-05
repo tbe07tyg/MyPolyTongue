@@ -18,6 +18,7 @@ import tensorflow.keras.backend as K
 import numpy as np
 import tensorflow as tf
 from PIL import Image
+from skimage.draw import random_shapes
 from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint, ReduceLROnPlateau, EarlyStopping, Callback
 from tensorflow.keras.layers import Layer
 from tensorflow.keras.layers import Conv2D, Add, ZeroPadding2D, UpSampling2D, Concatenate
@@ -43,8 +44,7 @@ from glob import glob
 from tensorflow.keras.preprocessing import image as krs_image
 import cv2
 
-
-
+contours_compare_root = "E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\CountourCompare/"
 np.set_printoptions(precision=3, suppress=True)
 MAX_VERTICES = 1000 #that allows the labels to have 1000 vertices per polygon at max. They are reduced for training
 ANGLE_STEP  = 1 #that means Poly-YOLO will detect 360/15=24 vertices per polygon at max
@@ -1533,7 +1533,7 @@ def my_Gnearator(images_list, masks_list, batch_size, input_shape, anchors, num_
         ziped_img_mask_list =  list(zip(images_list, masks_list))
         b =0
         while  b< batch_size:
-            print("True")
+            # print("True")
             if count == 0 and train_flag == "Train":
                 np.random.shuffle(ziped_img_mask_list)
             images_list, masks_list = zip(*ziped_img_mask_list)
@@ -1545,14 +1545,14 @@ def my_Gnearator(images_list, masks_list, batch_size, input_shape, anchors, num_
             # print("myPolygon.shape:", myPolygon.shape)
             # check there is zero: if there is boundry points
 
-            print("myPolygon.shape:", myPolygon.shape)
-            # check there is zero: if there is boundry points
-
-            print("count before next:", count)
-            print("range polygon [{}, {}]".format(myPolygon.min(), myPolygon.max()))
+            # print("myPolygon.shape:", myPolygon.shape)
+            # # check there is zero: if there is boundry points
+            #
+            # print("count before next:", count)
+            # print("range polygon [{}, {}]".format(myPolygon.min(), myPolygon.max()))
             count = (count + 1) % n
             b += 1
-            print(count)
+            # print(count)
             # if np.any(myPolygon==0) or np.any(myPolygon==aug_image.shape[0]-1) or np.any(myPolygon==aug_image.shape[1]-1):  # roll back.
             #
             #     print("boundary image")
@@ -1601,23 +1601,46 @@ def my_get_random_data(img_path, mask_path, input_shape, image_datagen, mask_dat
         aug_image = image
         copy_mask = mask.copy().astype(np.uint8)
 
-    # print("mask shape after aug:", np.squeeze(aug_mask).shape)
-    # aug_image = krs_image.img_to_array(aug_image)
-    # aug_mask = krs_image.img_to_array(aug_mask)
-    # find polygons with augmask ------------------------------------>
-    # imgray = cv2.cvtColor(np.squeeze(copy_mask), cv2.COLOR_BGR2GRAY)
-    # print(copy_mask)
-    ret, thresh = cv2.threshold(copy_mask, 127, 255, 0)  # this require the numpy array has to be the uint8 type
+    img, label = random_shapes((256, 256), max_shapes=5, min_size=40, intensity_range=((0, 255),))
+    # img, label = random_shapes((256, 256), min_size=40, intensity_range=((0, 255),), random_seed=pri_seed)
+
+    added_img = 255 - img
+    gray = cv2.cvtColor(added_img, cv2.COLOR_BGR2GRAY)
+    print("labels:", label)
+
+    # aug_image =  added_img
+    aug_image = aug_image / 2 + added_img
+    ret, thresh = cv2.threshold(gray, 0.00001, 255, 0)  # this require the numpy array has to be the uint8 type
+    aug_mask = thresh
+
+
+    # ret, thresh = cv2.threshold(copy_mask, 127, 255, 0)  # this require the numpy array has to be the uint8 type
     image, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    selected_coutours = []
+    for x in range(len(contours)):
+        print("countour x:", x, contours[x].shape)
+        if contours[x].shape[0] > 8:  # require one contour at lest 8 polygons(360/40=9)
+            selected_coutours.append(contours[x])
+    print("# selected_coutours:", len(selected_coutours))
+
+    # # check the data
+    # background = np.ones(aug_image.shape)
+    # cv2.imwrite(contours_compare_root + "batch{}_idx{}".format(1, x) + 'image.jpg', aug_image)
+    # cv2.imwrite(contours_compare_root + "batch{}_idx{}".format(1, x) + 'mask.jpg', aug_mask)
+    #
+    # cv2.drawContours(background, contours, -1, (60/255, 180/255, 75/255))
+    # cv2.imshow(" ", background)
+    # cv2.waitKey()  # show on line need divided 255 save into folder should remove keep in 0 to 255
 
     # encode contours into annotation lines ---->
-    annotation_line, myPolygon = encode_polygone(img_path, contours)
+    annotation_line, myPolygon = encode_polygone(img_path, selected_coutours)
     # decode contours annotation line into distance
     box_data = My_bilinear_decode_annotationlineNP_inter(annotation_line)
 
     # normal the image ----------------->
     aug_image = aug_image / 255.0
-    # return aug_image, aug_mask, annotation_line
+
+
     return aug_image, box_data, myPolygon
 
 def encode_polygone(img_path, contours, MAX_VERTICES =1000):
@@ -1625,6 +1648,7 @@ def encode_polygone(img_path, contours, MAX_VERTICES =1000):
     skipped = 0
     polygons_line = ''
     c = 0
+    my_poly_list =[]
     for obj in contours:
         # print(obj.shape)
         myPolygon = obj.reshape([-1, 2])
@@ -1633,6 +1657,7 @@ def encode_polygone(img_path, contours, MAX_VERTICES =1000):
             print()
             print("too many polygons")
             break
+        my_poly_list.append(myPolygon)
 
         min_x = sys.maxsize
         max_x = 0
@@ -1656,7 +1681,7 @@ def encode_polygone(img_path, contours, MAX_VERTICES =1000):
 
     annotation_line = img_path + polygons_line
 
-    return annotation_line, myPolygon
+    return annotation_line, my_poly_list
 
 def My_bilinear_decode_annotationlineNP_inter(encoded_annotationline, MAX_VERTICES=1000, max_boxes=80):
     """
@@ -1751,7 +1776,7 @@ if __name__ == "__main__":
 
 
     def _main():
-        project_name = 'Exp_11_Mish_MyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_BestAug+FixedRollGen_AngleStep1_{}'.format(model_index)
+        project_name = 'Exp_11_2_Mish_SameAs11_1_withSimulatedDataset_Train_AngleStep1_{}'.format(model_index)
 
         phase = 1
         print("current working dir:", os.getcwd())
@@ -1823,7 +1848,7 @@ if __name__ == "__main__":
         # val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
         # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
         #
-        # # # # # # for train dataset for the lab
+        # # # # # # # # for train dataset for the lab
         train_input_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\inputs/*')
         train_mask_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\binary_labels/*.jpg')
         print("len of train imgs:", len(train_input_paths))

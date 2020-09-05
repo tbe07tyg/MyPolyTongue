@@ -74,7 +74,7 @@ except Exception as e:
 # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_8_Mish_WithMyDataNpInterpDistRegOnly')
 
  # # Case11 EXP_11_E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAug
-run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAugModified')
+run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_11_2_Mish_SameAs11_1_withSimulatedDataset')
 
 #     # # Case11 MISH NP INTERP
 # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAug')

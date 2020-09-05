@@ -20,11 +20,14 @@ import cv2
 import pickle
 from scipy import signal
 
+from skimage.draw import random_shapes
+import random
+import cv2
 COUNT_F = 0
 # ANGLE_STEP = 20
 # NUM_ANGLES3 = int(360 // ANGLE_STEP * 3)  # 72 = (360/15)*3
 # NUM_ANGLES = int(360 // ANGLE_STEP)
-
+pri_seed =1
 MAX_num_epochs = 4# 10 *443 =  4430 image
 seed_list= range(MAX_num_epochs)
 print(seed_list)
@@ -161,12 +164,15 @@ def my_Gnearator(images_list, masks_list, batch_size, input_shape, train_or_test
             aug_image , aug_mask, myPolygon, decoded_polys, count_emptys= get_random_data(temp_img_path, temp_mask_path,
                                                                                           input_shape, image_datagen,
                                                                                           mask_datagen, train_or_test,
-                                                                                          decode_method, ANGLE_STEP)
-            print("myPolygon.shape:", myPolygon.shape)
+                                                                                                  decode_method, ANGLE_STEP)
+            for each in myPolygon:
+                print("for each in myPolygon:", each.shape)
+            # print("myPolygon.shape:", np.array(myPolygon).shape) # becaus the number of polygons are different, there fore can not change tu np.
+            # print("decoded_polys.shape:", np.array(decoded_polys).shape)
             # check there is zero: if there is boundry points
 
             print("count before next:", count)
-            print("range polygon [{}, {}]".format(myPolygon.min(), myPolygon.max()))
+            # print("range polygon [{}, {}]".format(np.min(myPolygon), np.max(myPolygon)))
             count = (count + 1) % n
             b+=1
             print(count)
@@ -191,7 +197,7 @@ def my_Gnearator(images_list, masks_list, batch_size, input_shape, train_or_test
         # box_data = np.array(box_data)
         # y_true = preprocess_true_boxes(box_data, input_shape, anchors, num_classes)
         # yield [image_data, *y_true], np.zeros(batch_size)
-        yield  np.array(image_data), np.array(mask_data), np.array(mypolygon_data), np.array(depolygon_data), np.array(empty_count_data)
+        yield  np.array(image_data), np.array(mask_data), mypolygon_data, np.array(depolygon_data), np.array(empty_count_data)
 
 def get_random_data(img_path, mask_path, input_shape, image_datagen, mask_datagen, train_or_test, decode_method, ANGLE_STEP):
     # load data ------------------------>
@@ -218,29 +224,42 @@ def get_random_data(img_path, mask_path, input_shape, image_datagen, mask_datage
         aug_mask = mask
         copy_mask = mask.copy().astype(np.uint8)
 
+    # generate primaries
+    max_shape_random = random.randint(1, 5)
+    img, label = random_shapes((256, 256), max_shapes=5, min_size=40, intensity_range=((0, 255),))
+    # img, label = random_shapes((256, 256), min_size=40, intensity_range=((0, 255),), random_seed=pri_seed)
 
-    ret, thresh = cv2.threshold(copy_mask, 127, 255, 0) # this require the numpy array has to be the uint8 type
+    added_img = 255- img
+    gray = cv2.cvtColor(added_img, cv2.COLOR_BGR2GRAY)
+    print("labels:", label)
+
+    # aug_image =  added_img
+    aug_image = aug_image/2 + added_img
+    ret, thresh = cv2.threshold(gray, 0.00001, 255, 0) # this require the numpy array has to be the uint8 type
+    aug_mask = thresh
+
     # image, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     image, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     # encode contours into annotation lines ---->
     # if len(contours)>1:
-    #     cv2.imwrite(contours_compare_root + "batch{}_idx{}".format(i, idx) + 'image.jpg', aug_image)
-    #     cv2.imwrite(contours_compare_root + "batch{}_idx{}".format(i, idx) + 'mask.jpg', aug_mask)
-    #
-    #     cv2.drawContours(copy_mask,contours, 0, (60 , 180 , 75))
-    #     cv2.imshow(" ", copy_mask)
-    #     cv2.waitKey() # show on line need divided 255 save into folder should remove keep in 0 to 255
+
     selected_coutours= []
     for x in range(len(contours)):
         print("countour x:", x, contours[x].shape)
         if contours[x].shape[0]>8:
             selected_coutours.append(contours[x])
 
+            # background = np.ones(aug_image.shape)
+            # cv2.imwrite(contours_compare_root + "batch{}_idx{}".format(i, x) + 'image.jpg', aug_image)
+            # cv2.imwrite(contours_compare_root + "batch{}_idx{}".format(i, x) + 'mask.jpg', aug_mask)
+            #
+            # cv2.drawContours(background, contours, -1, (60/255, 180/255, 75/255))
+            # cv2.imshow(" ", background)
+            # cv2.waitKey()  # show on line need divided 255 save into folder should remove keep in 0 to 255
+
     print("# selected_coutours:", len(selected_coutours))
     annotation_line, myPolygon = encode_polygone(img_path, selected_coutours)
-    print("myPolygon:", myPolygon.shape)
-    if myPolygon.shape[0] > 1000:
-        print("number of polygons overr")
+
 
     # decode annotation into angle, distance, probability and return the decoded actual polygones
     # decoded_polys, empty_sections = decode_annotationline(annotation_line)
@@ -251,6 +270,14 @@ def get_random_data(img_path, mask_path, input_shape, image_datagen, mask_datage
         decoded_polys, empty_sections = My_bilinear_decode_annotationlineNP_inter(annotation_line, ANGLE_STEP=ANGLE_STEP)
     else:
         decoded_polys, empty_sections = decode_annotationline(annotation_line, ANGLE_STEP=ANGLE_STEP)
+
+    for each_my, each_de in zip(myPolygon, decoded_polys):
+        print("my each polygon shape:", each_my.shape)
+        print("de each polygon shape:", each_de.shape)
+    # print("myPolygon:", myPolygon.shape)
+        if each_my.shape[0] > 1000 or each_de.shape[0]>1000:
+            print("number of polygons overr")
+
     return aug_image , aug_mask, myPolygon, decoded_polys, empty_sections
 
 def encode_polygone(img_path, contours, MAX_VERTICES =1000):
@@ -258,6 +285,7 @@ def encode_polygone(img_path, contours, MAX_VERTICES =1000):
     skipped = 0
     polygons_line = ''
     c = 0
+    my_poly_list =[]
     for obj in contours:
         # print(obj.shape)
         myPolygon = obj.reshape([-1, 2])
@@ -266,6 +294,7 @@ def encode_polygone(img_path, contours, MAX_VERTICES =1000):
             print()
             print("too many polygons")
             break
+        my_poly_list.append(myPolygon)
 
         min_x = sys.maxsize
         max_x = 0
@@ -289,7 +318,7 @@ def encode_polygone(img_path, contours, MAX_VERTICES =1000):
 
     annotation_line = img_path + polygons_line
 
-    return annotation_line, myPolygon
+    return annotation_line, my_poly_list
 
 def decode_annotationline(encoded_annotationline, MAX_VERTICES=1000, max_boxes=80, ANGLE_STEP=5):
     """
@@ -729,7 +758,7 @@ def My_bilinear_decode_annotationlineNP_inter(encoded_annotationline, MAX_VERTIC
     # preprocessing of lines from string  ---> very important otherwise can not well split
     annotation_line = encoded_annotationline.split()
 
-    # print(lines[i])
+    print("annotation_line:", annotation_line)
     for element in range(1, len(annotation_line)):
 
         for symbol in range(annotation_line[element].count(',') - 4, MAX_VERTICES * 2, 2):
@@ -737,7 +766,7 @@ def My_bilinear_decode_annotationlineNP_inter(encoded_annotationline, MAX_VERTIC
             annotation_line[element] = annotation_line[element] + ',0,0'
     box = np.array([np.array(list(map(float, box.split(','))))
                     for box in annotation_line[1:]])
-    print("box:", box[0])
+    print("box:", box)
 
     # correct boxes
     box_data = np.zeros((max_boxes, 5 + NUM_ANGLES))
@@ -846,6 +875,7 @@ def My_bilinear_decode_annotationlineNP_inter(encoded_annotationline, MAX_VERTIC
     decoded_polygons = []
     distanceone_count =  0
     for b in range(0, len(box)):
+        each_decoded = []
         # convert vertex into polygon xy
         cx= (box_data[b, 0] + box_data[b, 2]) // 2  # .....
         cy = (box_data[b, 1] + box_data[b, 3]) // 2  #..............
@@ -868,9 +898,9 @@ def My_bilinear_decode_annotationlineNP_inter(encoded_annotationline, MAX_VERTIC
             #     distanceone_count +=1
             #     print("current distance =1 has #:", distanceone_count)
             #     # print("x, y:", x1, y1)
-            decoded_polygons.append([x1, y1])
-
-            print()
+            each_decoded.append([x1, y1])
+        decoded_polygons.append(np.array(each_decoded))
+        print()
     print("total {} empty section:".format(empty_section))
     return decoded_polygons, empty_section
 
@@ -964,8 +994,8 @@ if __name__ == '__main__':
     # print("angle_steps", angle_steps)
 
     for decode in decode_choice:
-        for angle_step in np.linspace(0.1, 40, 100):
-        # for angle_step in np.linspace(30, 30 , 1):
+        # for angle_step in np.linspace(0.1, 40, 100):
+        for angle_step in np.linspace(1, 1 , 1):
             IoU_list =[]
             my_data =  my_Gnearator(raw_input_paths, raw_binary_paths, batch_size=4, input_shape=[256, 256],
                                     train_or_test="Test",decode_method=decode, ANGLE_STEP=angle_step)
@@ -980,14 +1010,27 @@ if __name__ == '__main__':
                 print("empty_sections:", empty_sections)
                 overlay = aug_image.copy()
 
+
+
                 for idx in range(aug_image.shape[0]):
+                    background_img = overlay[idx]  # CV2 ONLY SHOW IMAGES WHITH 0 TO 1 OTHERWISE IT WILL BE ALL WHITE
 
+                    background_img_rgb = cv2.cvtColor(background_img, cv2.COLOR_BGR2RGB)
+                    layer1 = background_img_rgb.copy()
 
+                    layer2 = background_img_rgb.copy()
                     # calculate IoUs for the countours
                     GT_MASK = np.zeros([aug_image[idx].shape[0], aug_image[idx].shape[1]])
                     encoded_mask = np.zeros([aug_image[idx].shape[0], aug_image[idx].shape[1]])
-                    cv2.fillPoly(GT_MASK, np.int32([myPolygon[idx]]), color=(1))
-                    cv2.fillPoly(encoded_mask, np.int32([decoded_polys[idx]]), color=(1))
+                    for x in range(len(myPolygon[idx])):
+                        cv2.fillPoly(GT_MASK, np.int32([myPolygon[idx][x]]), color=(1))
+                        cv2.fillPoly(encoded_mask, np.int32([decoded_polys[idx][x]]), color=(1))
+
+                        cv2.polylines(layer1, np.int32([myPolygon[idx][x]]), True, color=(230, 25, 75),
+                                      thickness=2)  # 加中括号 ，否则报错
+
+                        cv2.polylines(layer2, np.int32([decoded_polys[idx][x]]), True, color=(60, 180, 75),
+                                      thickness=2)  # 加中括号 ，否则报错
                     # print("type(GT_MASK):", type(GT_MASK))
                     # cv2.imshow("GT_MASK ", GT_MASK)
                     # cv2.imshow("encoded_mask ", encoded_mask)
@@ -999,33 +1042,27 @@ if __name__ == '__main__':
                     print("temp iou:", one_iou)
                     IoU_list.append(one_iou)
 
-                    # # for saving
-                    # # print("range{}, {}".format(overlay[idx].min(), overlay[idx].max()))
-                    #
-                    # # background_img = overlay[idx]/255.0 # CV2 ONLY SHOW IMAGES WHITH 0 TO 1 OTHERWISE IT WILL BE ALL WHITE
-                    #
-                    # background_img = overlay[idx]  # CV2 ONLY SHOW IMAGES WHITH 0 TO 1 OTHERWISE IT WILL BE ALL WHITE
-                    #
-                    # background_img_rgb = cv2.cvtColor(background_img, cv2.COLOR_BGR2RGB)  # BRG---PIL read to RGB
-                    # cv2.polylines(background_img_rgb, np.int32([myPolygon[idx]]), True, color=(230, 25 , 75 ),
+                    # for saving
+                    # print("range{}, {}".format(overlay[idx].min(), overlay[idx].max()))
+
+                    # background_img = overlay[idx]/255.0 # CV2 ONLY SHOW IMAGES WHITH 0 TO 1 OTHERWISE IT WILL BE ALL WHITE
+
+                     # BRG---PIL read to RGB
+
+
+                    cv2.addWeighted(layer1, 0.5, layer2, 1 - 0.5,
+                                    0, layer2) # for Transparent
+
+                    cv2.putText(background_img_rgb, "IoU: {:.2f}".format(one_iou), (30, 30 - 3),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                            (0, 0, 255 ), 1)
+
+                    # cv2.polylines(background_white, np.int32([myPolygon[0]]), True, color=(230 / 255.0, 25 / 255.0, 75 / 255.0),
                     #               thickness=2)  # 加中括号 ，否则报错
-                    # layer1 =  background_img_rgb.copy()
-                    # cv2.polylines(background_img_rgb, np.int32([decoded_polys[idx]]), True, color=(60 , 180 , 75 ),
-                    #               thickness=2)  # 加中括号 ，否则报错
-                    # layer2 = background_img_rgb.copy()
-                    # cv2.addWeighted(layer1, 0.5, layer2, 1 - 0.5,
-                    #                 0, layer2) # for Transparent
-                    #
-                    # cv2.putText(background_img_rgb, "IoU: {:.2f}".format(one_iou), (30, 30 - 3),
-                    #         cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                    #         (0, 0, 255 ), 1)
-                    #
-                    # # cv2.polylines(background_white, np.int32([myPolygon[0]]), True, color=(230 / 255.0, 25 / 255.0, 75 / 255.0),
-                    # #               thickness=2)  # 加中括号 ，否则报错
-                    # # cv2.fillPoly(background_img_rgb, np.int32([myPolygon[0]]), color=(230, 25, 75))
-                    # # cv2.imshow(" ", background_img_rgb)
-                    # # cv2.waitKey() # show on line need divided 255 save into folder should remove keep in 0 to 255
-                    # cv2.imwrite(contours_compare_root + "batch{}_idx{}".format(i, idx) + '.jpg', background_img_rgb)
+                    # cv2.fillPoly(background_img_rgb, np.int32([myPolygon[0]]), color=(230, 25, 75))
+                    # cv2.imshow(" ", background_img_rgb)
+                    # cv2.waitKey() # show on line need divided 255 save into folder should remove keep in 0 to 255
+                    cv2.imwrite(contours_compare_root + "batch{}_idx{}".format(i, idx) + '.jpg', background_img_rgb)
 
                     print()
 
@@ -1043,10 +1080,10 @@ if __name__ == '__main__':
             else:
                 their_IoU_data.append((np.mean(IoU_list), np.std(IoU_list)))
         #
-        if decode == "my":
-            with open('my_IoU_data_polydeocde', 'wb') as fp:
-                pickle.dump(my_IoU_data, fp)
-        else:
-            with open('their_IoU_data_polydeocde', 'wb') as fp:
-                pickle.dump(their_IoU_data, fp)
-
+        # if decode == "my":
+        #     with open('my_IoU_data_polydeocde', 'wb') as fp:
+        #         pickle.dump(my_IoU_data, fp)
+        # else:
+        #     with open('their_IoU_data_polydeocde', 'wb') as fp:
+        #         pickle.dump(their_IoU_data, fp)
+        #

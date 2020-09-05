@@ -2,19 +2,32 @@ import matplotlib.pyplot as plt
 
 from skimage.draw import random_shapes
 import random
+import cv2
 
 # Let's start simple and generate a 128x128 image
 # with a single grayscale rectangle.
 max_shape_random =  random.randint(1, 5)
 # ranomd num of images
 N = 10000
+seed =1
+result1 = random_shapes((256, 256), max_shapes=max_shape_random, intensity_range=((0, 255),), random_seed=seed)
+# result2_label = random_shapes((256, 256), max_shapes=max_shape_random, random_seed=seed,  multichannel=False)
 
-result = random_shapes((256, 256), max_shapes=max_shape_random, intensity_range=((0, 0),))
-img, label =  result
+
+img, label =  result1
 img = 255-img
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+ret, thresh = cv2.threshold(gray, 0.00001, 255, type=0)
+# img2_label, label2 =  result2_label
+# print( result)
+# img = 255-img
 print(img.shape)
+print(thresh.shape)
 print(label)
-plt.imshow(img)
+plt.subplot(121)
+plt.imshow(img, )
+plt.subplot(122)
+plt.imshow(thresh, cmap='gray')
 plt.show()
 out_img_folder = "E:\\Projects\\MyPolyTongue\\RandomGenearteGeometricPrimiries\\imgs"
 # out_label_folder =
