@@ -4,7 +4,7 @@ import os
 import time
 # need to change
 from glob import glob
-from TonguePlusData.EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAugModified.Exp_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULossModified_Train import YOLO, \
+from TonguePlusData.EXP_11_1_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAugModified.Exp_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULossModified_Train import YOLO, \
     get_anchors, my_get_random_data #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
 import sys
 
@@ -137,23 +137,34 @@ imgs = 0
 fps_list=[]
 input_shape=[256,256]
 for test_path, mask_path in zip(test_input_paths,test_mask_paths):
-    input_img, _, myPolygon = my_get_random_data(test_path, mask_path, input_shape, None, None, train_or_test="Test", max_boxes=80)
-    input_img = np.expand_dims(input_img,0)
+    input_img,_, myPolygon = my_get_random_data(test_path, mask_path, input_shape, None, None, train_or_test="Test")
+    # cv2.imwrite(contours_compare_root + "idx{}_1_".format(epoch, count) + 'image.jpg', input_img*255)
+    # image for plot
+
+
+
     # print("myPolygon:", myPolygon.shape)
-    print("input _img shape:", input_img.shape)
+    # print("input _img shape:", input_img.shape)
     print("test_path:", test_path)
-    img = cv2.imread(test_path)
+    # img = cv2.imread(test_path)
+    # print( "img.shape", img.shape)
+    # raw_size_input_for_plot = cv2.resize(input_img, (img.shape[1], img.shape[0])) *255 # [W, H] 255 to avoid dark plot
+
+
     imgs += 1
 
     #     print(img)
-    overlay = img.copy()
+
+    background = input_img.copy()*255
+    background= cv2.cvtColor(background, cv2.COLOR_BGR2RGB)
+    overlay = input_img.copy()
     boxes = []
     scores = []
     classes = []
 
     # realize prediciction using poly-yolo
     startx = time.time()
-    box, score, classs, polygons = trained_model.detect_image(input_img,[img.shape[0], img.shape[1]])
+    box, score, classs, polygons = trained_model.detect_image(input_img,input_shape)
     tmp_fps = 1.0 / (time.time() - startx)
     print('Prediction speed: ', tmp_fps, 'fps')
     fps_list.append(tmp_fps)
@@ -165,8 +176,8 @@ for test_path, mask_path in zip(test_input_paths,test_mask_paths):
         scores.append(score[k])
         classes.append(classs[k])
 
-        cv2.rectangle(img, (box[k][1], box[k][0]), (box[k][3], box[k][2]), translate_color(classes[k]), 3, 1)
-        cv2.putText(img, "{}:{:.2f}".format(class_names[classs[k]], score[k]), (int(box[k][1]), int(box[k][0])-3 ),
+        cv2.rectangle(background, (box[k][1], box[k][0]), (box[k][3], box[k][2]), translate_color(classes[k]), 3, 1)
+        cv2.putText(background, "{}:{:.2f}".format(class_names[classs[k]], score[k]), (int(box[k][1]), int(box[k][0])-3 ),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                     (255, 255, 255), 1)
     total_boxes += len(boxes)
@@ -194,7 +205,7 @@ for test_path, mask_path in zip(test_input_paths,test_mask_paths):
         points_to_draw = np.asarray(points_to_draw)
         points_to_draw = points_to_draw.astype(np.int32)
         if points_to_draw.shape[0] > 0:
-            cv2.polylines(img, [points_to_draw], True, f, thickness=2)
+            cv2.polylines(background, [points_to_draw], True, f, thickness=2)
             cv2.fillPoly(overlay, [points_to_draw], f)
 
         # cv2.polylines(img, [myPolygon], True, f, thickness=2)
@@ -224,7 +235,7 @@ for test_path, mask_path in zip(test_input_paths,test_mask_paths):
         file.write(str_to_write)
     file.write("\n")
 
-    img = cv2.addWeighted(overlay, 0.4, img, 1 - 0.4, 0)
+    img = cv2.addWeighted(overlay, 0.4, background, 1 - 0.4, 0)
     cv2.imwrite(out_path + str(imgs) + '.jpg', img)
 file.close()
 print('total detected boxes: ', total_boxes)

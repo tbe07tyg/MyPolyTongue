@@ -34,9 +34,14 @@ try:
         print("total run {} training scripts!".format(fileIdx))
 except Exception as e:
     print("Has some error", e)
+
+# for the paper
+
+
+
 # #
-# # Case 1  BaseExp
-# run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAug')
+# Case 1  BaseExp
+run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\PaperExpS_Part1_Exp1_rawModel')
 
 # # Case 1  BaseExp
 # run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_5_CSP_SAE_FrontNeck')

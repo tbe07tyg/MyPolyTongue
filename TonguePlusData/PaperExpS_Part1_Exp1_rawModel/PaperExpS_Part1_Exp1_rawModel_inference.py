@@ -4,7 +4,7 @@ import os
 import time
 # need to change
 from glob import glob
-from TonguePlusData.EXP_11_2_Mish_SameAs11_1_withSimulatedDataset.Exp_11_2_Mish_SameAs11_1_withSimulatedDataset_Train import YOLO, \
+from TonguePlusData.EXP_11_1_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAugModified.Exp_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULossModified_Train import YOLO, \
     get_anchors, my_get_random_data #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
 import sys
 
@@ -13,6 +13,11 @@ saved_model_name =  sys.argv[1]
 best_h5_path =  sys.argv[2]
 output_folder =  sys.argv[3]
 FPS_txt = sys.argv[4]
+ANGLE_STEP  = 1 #that means Poly-YOLO will detect 360/15=24 vertices per polygon at max
+# NUM_ANGLES3  = int(360 // ANGLE_STEP * 3) #72 = (360/15)*3
+# print("NUM_ANGLES3:", NUM_ANGLES3)
+NUM_ANGLES  = int(360 // ANGLE_STEP) # 24
+
 
 
 def get_classes(classes_path):
@@ -137,7 +142,7 @@ imgs = 0
 fps_list=[]
 input_shape=[256,256]
 for test_path, mask_path in zip(test_input_paths,test_mask_paths):
-    input_img, _, myPolygon, _, _ = my_get_random_data(test_path, mask_path, input_shape, None, None, train_or_test="Test")
+    input_img,_, myPolygon = my_get_random_data(test_path, mask_path, input_shape, None, None, train_or_test="Test")
     # cv2.imwrite(contours_compare_root + "idx{}_1_".format(epoch, count) + 'image.jpg', input_img*255)
     # image for plot
 
@@ -163,6 +168,7 @@ for test_path, mask_path in zip(test_input_paths,test_mask_paths):
     classes = []
 
     # realize prediciction using poly-yolo
+    # polygon_xy = np.zeros([polygons.shape[0], 2 * NUM_ANGLES])
     startx = time.time()
     box, score, classs, polygons = trained_model.detect_image(input_img,input_shape)
     tmp_fps = 1.0 / (time.time() - startx)
