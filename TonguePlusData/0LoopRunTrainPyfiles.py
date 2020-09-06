@@ -37,49 +37,54 @@ except Exception as e:
 
 # for the paper
 
+# Paper real experiments start:  -------------------------------->
+
+# PaperExpS_Part1_Exp1_rawModel
+run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExpS_Part1_Exp1_rawModel')
 
 
-# #
-# Case 1  BaseExp
-run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\PaperExpS_Part1_Exp1_rawModel')
 
+# # #
 # # Case 1  BaseExp
-# run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_5_CSP_SAE_FrontNeck')
-
-# # Case 1_2 BASE NO SAE
-# run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_1_2_base_noSAE')
-
-# # Case 2  Exp Mish
-# run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_2_Mish')
-
-
-# # Case 4  EXP_4_SAE_MidNeck
-# run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_4_SAE_MidNeck')
-
+# run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\PaperExpS_Part1_Exp1_rawModel')
 #
-# # Case 5  EXP_4_SAE_FrontNeck
-# run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_5_CSP_SAE_FrontNeck')
-
-
-# # Case 6  EXP_4_SAE_MidNeck
-# run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_6_CSP_SAE_MidNeck')
-
-# # Case 7  best randomness Checking
-
-# rotation_range = sys.argv[2]
-# width_shift_range = sys.argv[3]
-# height_shift_range = sys.argv[4]
-# zoom_range = sys.argv[5]
-# shear_range=sys.argv[6]
-# horizontal_flip=True
-# brightness_range=sys.argv[7]
-# run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_6_CSP_SAE_MidNeck')
-
-#     # # Case 8 MISH NP INTERP
-# run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_8_Mish_WithMyDataNpInterpDistRegOnly')
-
- # # Case11 EXP_11_E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAug
-run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_11_2_Mish_SameAs11_1_withSimulatedDataset')
-
-#     # # Case11 MISH NP INTERP
-# run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAug')
+# # # Case 1  BaseExp
+# # run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_5_CSP_SAE_FrontNeck')
+#
+# # # Case 1_2 BASE NO SAE
+# # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_1_2_base_noSAE')
+#
+# # # Case 2  Exp Mish
+# # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_2_Mish')
+#
+#
+# # # Case 4  EXP_4_SAE_MidNeck
+# # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_4_SAE_MidNeck')
+#
+# #
+# # # Case 5  EXP_4_SAE_FrontNeck
+# # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_5_CSP_SAE_FrontNeck')
+#
+#
+# # # Case 6  EXP_4_SAE_MidNeck
+# # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_6_CSP_SAE_MidNeck')
+#
+# # # Case 7  best randomness Checking
+#
+# # rotation_range = sys.argv[2]
+# # width_shift_range = sys.argv[3]
+# # height_shift_range = sys.argv[4]
+# # zoom_range = sys.argv[5]
+# # shear_range=sys.argv[6]
+# # horizontal_flip=True
+# # brightness_range=sys.argv[7]
+# # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_6_CSP_SAE_MidNeck')
+#
+# #     # # Case 8 MISH NP INTERP
+# # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_8_Mish_WithMyDataNpInterpDistRegOnly')
+#
+#  # # Case11 EXP_11_E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAug
+# run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_11_2_Mish_SameAs11_1_withSimulatedDataset')
+#
+# #     # # Case11 MISH NP INTERP
+# # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAug')
