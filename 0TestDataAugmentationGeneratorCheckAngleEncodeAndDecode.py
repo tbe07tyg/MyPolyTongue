@@ -955,8 +955,8 @@ if __name__ == '__main__':
     # path  to compare countour
     contours_compare_root = "E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\CountourCompare/"
 
-    # decode_choice=["their"]
-    decode_choice = ["my"]
+    decode_choice=["their"]
+    # decode_choice = ["my"]
     my_IoU_data = []
     their_IoU_data= []
 
@@ -964,13 +964,13 @@ if __name__ == '__main__':
     # print("angle_steps", angle_steps)
 
     for decode in decode_choice:
-        for angle_step in np.linspace(0.1, 40, 100):
-        # for angle_step in np.linspace(30, 30 , 1):
+        # for angle_step in np.linspace(0.1, 40, 100):
+        for angle_step in np.linspace(30, 30 , 1):
             IoU_list =[]
-            my_data =  my_Gnearator(raw_input_paths, raw_binary_paths, batch_size=4, input_shape=[256, 256],
-                                    train_or_test="Test",decode_method=decode, ANGLE_STEP=angle_step)
-            # my_data = my_Gnearator(raw_input_paths, raw_binary_paths, batch_size=4, input_shape=[256, 256],
-            #                        train_or_test="Train", decode_method=decode, ANGLE_STEP=angle_step)
+            # my_data =  my_Gnearator(raw_input_paths, raw_binary_paths, batch_size=4, input_shape=[256, 256],
+            #                         train_or_test="Test",decode_method=decode, ANGLE_STEP=angle_step)
+            my_data = my_Gnearator(raw_input_paths, raw_binary_paths, batch_size=4, input_shape=[256, 256],
+                                   train_or_test="Train", decode_method=decode, ANGLE_STEP=angle_step)
 
             print(my_data)
             empty_section_list = []
@@ -999,33 +999,33 @@ if __name__ == '__main__':
                     print("temp iou:", one_iou)
                     IoU_list.append(one_iou)
 
-                    # # for saving
-                    # # print("range{}, {}".format(overlay[idx].min(), overlay[idx].max()))
-                    #
-                    # # background_img = overlay[idx]/255.0 # CV2 ONLY SHOW IMAGES WHITH 0 TO 1 OTHERWISE IT WILL BE ALL WHITE
-                    #
-                    # background_img = overlay[idx]  # CV2 ONLY SHOW IMAGES WHITH 0 TO 1 OTHERWISE IT WILL BE ALL WHITE
-                    #
-                    # background_img_rgb = cv2.cvtColor(background_img, cv2.COLOR_BGR2RGB)  # BRG---PIL read to RGB
-                    # cv2.polylines(background_img_rgb, np.int32([myPolygon[idx]]), True, color=(230, 25 , 75 ),
+                    # for saving
+                    # print("range{}, {}".format(overlay[idx].min(), overlay[idx].max()))
+
+                    # background_img = overlay[idx]/255.0 # CV2 ONLY SHOW IMAGES WHITH 0 TO 1 OTHERWISE IT WILL BE ALL WHITE
+
+                    background_img = overlay[idx]  # CV2 ONLY SHOW IMAGES WHITH 0 TO 1 OTHERWISE IT WILL BE ALL WHITE
+
+                    background_img_rgb = cv2.cvtColor(background_img, cv2.COLOR_BGR2RGB)  # BRG---PIL read to RGB
+                    cv2.polylines(background_img_rgb, np.int32([myPolygon[idx]]), True, color=(230, 25 , 75 ),
+                                  thickness=2)  # 加中括号 ，否则报错
+                    layer1 =  background_img_rgb.copy()
+                    cv2.polylines(background_img_rgb, np.int32([decoded_polys[idx]]), True, color=(60 , 180 , 75 ),
+                                  thickness=2)  # 加中括号 ，否则报错
+                    layer2 = background_img_rgb.copy()
+                    cv2.addWeighted(layer1, 0.5, layer2, 1 - 0.5,
+                                    0, layer2) # for Transparent
+
+                    cv2.putText(background_img_rgb, "IoU: {:.2f}".format(one_iou), (30, 30 - 3),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                            (0, 0, 255 ), 1)
+
+                    # cv2.polylines(background_white, np.int32([myPolygon[0]]), True, color=(230 / 255.0, 25 / 255.0, 75 / 255.0),
                     #               thickness=2)  # 加中括号 ，否则报错
-                    # layer1 =  background_img_rgb.copy()
-                    # cv2.polylines(background_img_rgb, np.int32([decoded_polys[idx]]), True, color=(60 , 180 , 75 ),
-                    #               thickness=2)  # 加中括号 ，否则报错
-                    # layer2 = background_img_rgb.copy()
-                    # cv2.addWeighted(layer1, 0.5, layer2, 1 - 0.5,
-                    #                 0, layer2) # for Transparent
-                    #
-                    # cv2.putText(background_img_rgb, "IoU: {:.2f}".format(one_iou), (30, 30 - 3),
-                    #         cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                    #         (0, 0, 255 ), 1)
-                    #
-                    # # cv2.polylines(background_white, np.int32([myPolygon[0]]), True, color=(230 / 255.0, 25 / 255.0, 75 / 255.0),
-                    # #               thickness=2)  # 加中括号 ，否则报错
-                    # # cv2.fillPoly(background_img_rgb, np.int32([myPolygon[0]]), color=(230, 25, 75))
-                    # # cv2.imshow(" ", background_img_rgb)
-                    # # cv2.waitKey() # show on line need divided 255 save into folder should remove keep in 0 to 255
-                    # cv2.imwrite(contours_compare_root + "batch{}_idx{}".format(i, idx) + '.jpg', background_img_rgb)
+                    # cv2.fillPoly(background_img_rgb, np.int32([myPolygon[0]]), color=(230, 25, 75))
+                    # cv2.imshow(" ", background_img_rgb)
+                    # cv2.waitKey() # show on line need divided 255 save into folder should remove keep in 0 to 255
+                    cv2.imwrite(contours_compare_root + "batch{}_idx{}".format(i, idx) + '.jpg', background_img_rgb)
 
                     print()
 
@@ -1043,10 +1043,10 @@ if __name__ == '__main__':
             else:
                 their_IoU_data.append((np.mean(IoU_list), np.std(IoU_list)))
         #
-        if decode == "my":
-            with open('my_IoU_data_polydeocde', 'wb') as fp:
-                pickle.dump(my_IoU_data, fp)
-        else:
-            with open('their_IoU_data_polydeocde', 'wb') as fp:
-                pickle.dump(their_IoU_data, fp)
+        # if decode == "my":
+        #     with open('my_IoU_data_polydeocde', 'wb') as fp:
+        #         pickle.dump(my_IoU_data, fp)
+        # else:
+        #     with open('their_IoU_data_polydeocde', 'wb') as fp:
+        #         pickle.dump(their_IoU_data, fp)
 

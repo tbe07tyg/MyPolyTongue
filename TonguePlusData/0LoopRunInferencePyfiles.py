@@ -112,6 +112,7 @@ try:
 
         # search saved txt predictions and compared with text label with coco evaluation  ---------------->
         pred_txt_list = []
+        label_txt_list = []
         for root, dirs, files in os.walk(output_folder):
             for i in files:
                 if "predictResult" in i:
@@ -119,7 +120,11 @@ try:
                     print("dirs", dirs)
                     print("files", i)
                     pred_txt_list.append(root+'/'+i)
+                if "labelResult" in i:
+                    label_txt_list.append(root + '/' + i)
         print("pred_txt_list:", pred_txt_list)
+        print("label_txt_list:", label_txt_list)
+
         # start to evaluate:
         eval_types_list =["bbox", "segm"]
 
@@ -130,10 +135,10 @@ try:
             AP_75_list = []
             with open(inferenc_summary_txt, 'a') as f:
                 f.write("\n")
-            for pred  in pred_txt_list:
+            for pred, gt in zip(pred_txt_list, label_txt_list):
                 print("pred:", pred)
                 # this neeed to be changed for the lab computer gt:
-                gt = os.path.dirname(os.path.realpath(__file__)) + "/myTongueTestLab.txt"
+                # gt = os.path.dirname(os.path.realpath(__file__)) + "/myTongueTestLab.txt"
                 print("cwd", os.path.dirname(os.path.realpath(__file__)))
 
                 yolo_to_coco(pred, gt, class_file)
@@ -167,7 +172,7 @@ try:
                 m_AP_75 = np.array(AP_75_list).mean()
                 std_AP_75 = np.array(AP_75_list).std()
                 content= 'type {}, AP_5to95_m(AP_5to95_std)|AP_5_m(AP_5_std)|AP_75_m(AP_75_std) ' \
-                         '{:.3f}({:.3f})|{:.3f}({:.3f})|{:.3f}({:.3f})\n'.format(type, m_AP_5to95, std_AP_5to95, m_AP_5, std_AP_5, m_AP_75, std_AP_75)
+                         '{:.3f} ({:.3f})|{:.3f} ({:.3f})|{:.3f} ({:.3f})\n'.format(type, m_AP_5to95, std_AP_5to95, m_AP_5, std_AP_5, m_AP_75, std_AP_75)
                 f.write(content)
 
         # print("total found and evaluated {} training models!".format(fileIdx-1))
@@ -271,6 +276,21 @@ except Exception as e:
 
 
 if __name__ == '__main__':
+
+    # paper experiemtns starts ---------------------->
+    Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\FUllPolygonsFixedGen\\PaperExperiments\\PaperExpS_Part1_Exp1_rawModel"
+    Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExpS_Part1_Exp1_rawModel"
+    #
+    output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\backbone\\PaperExp1"
+    infer_case(Inference_scripts_root=Inference_scripts_root,
+               Saved_model_file_root=Saved_model_file_root,
+               output_folder=output_folder)
+
+
+
+
+
+
     # # CASE 5:  code test
     # Saved_model_file_root = "E:\\Projects\\logs\\tonguesSeg\\MyPolyTongue\\EXP_2_Mish"
     # Inference_scripts_root = "E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_2_Mish"
@@ -357,10 +377,10 @@ if __name__ == '__main__':
 
 
     # CASE 6: EXP_6_CSP_SAE_MidNeck
-    Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\EXP_8_Mish_WithMyDataNpInterpDistRegOnly"
-    Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_8_Mish_WithMyDataNpInterpDistRegOnly"
-    #
-    output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\exp8"
-    infer_case(Inference_scripts_root=Inference_scripts_root,
-               Saved_model_file_root=Saved_model_file_root,
-               output_folder=output_folder)
+    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\EXP_8_Mish_WithMyDataNpInterpDistRegOnly"
+    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_8_Mish_WithMyDataNpInterpDistRegOnly"
+    # #
+    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\exp8"
+    # infer_case(Inference_scripts_root=Inference_scripts_root,
+    #            Saved_model_file_root=Saved_model_file_root,
+    #            output_folder=output_folder)

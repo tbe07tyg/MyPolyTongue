@@ -4,7 +4,7 @@ import os
 import time
 # need to change
 from glob import glob
-from TonguePlusData.EXP_11_1_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAugModified.Exp_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULossModified_Train import YOLO, \
+from TonguePlusData.PaperExpS_Part1_Exp1_rawModel.PaperExpS_Part1_Exp1_rawModel_Train import YOLO, \
     get_anchors, my_get_random_data #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
 import sys
 
@@ -13,11 +13,6 @@ saved_model_name =  sys.argv[1]
 best_h5_path =  sys.argv[2]
 output_folder =  sys.argv[3]
 FPS_txt = sys.argv[4]
-ANGLE_STEP  = 1 #that means Poly-YOLO will detect 360/15=24 vertices per polygon at max
-# NUM_ANGLES3  = int(360 // ANGLE_STEP * 3) #72 = (360/15)*3
-# print("NUM_ANGLES3:", NUM_ANGLES3)
-NUM_ANGLES  = int(360 // ANGLE_STEP) # 24
-
 
 
 def get_classes(classes_path):
@@ -52,7 +47,10 @@ if not os.path.exists(output_root):
     os.makedirs(output_root)
 # inference txt name
 inferTXTName = output_root+ '/predictResult_{}.txt'.format(saved_model_name)
+LabelTXTName = output_root+ '/labelResult_{}.txt'.format(saved_model_name)
+
 file = open(inferTXTName, "w")
+label_out = open(LabelTXTName, 'w')
 
 #if you want to detect more objects, lower the score and vice versa
 trained_model = YOLO(model_path=best_h5_path,  ## need to change
@@ -142,11 +140,12 @@ imgs = 0
 fps_list=[]
 input_shape=[256,256]
 for test_path, mask_path in zip(test_input_paths,test_mask_paths):
-    input_img,_, myPolygon = my_get_random_data(test_path, mask_path, input_shape, None, None, train_or_test="Test")
+    input_img, _, myPolygon, _, annotation_line= my_get_random_data(test_path, mask_path, input_shape, None, None, train_or_test="Test")
     # cv2.imwrite(contours_compare_root + "idx{}_1_".format(epoch, count) + 'image.jpg', input_img*255)
     # image for plot
 
-
+    label_out.write(annotation_line)
+    label_out.write("\n")
 
     # print("myPolygon:", myPolygon.shape)
     # print("input _img shape:", input_img.shape)
@@ -193,20 +192,23 @@ for test_path, mask_path in zip(test_input_paths,test_mask_paths):
 
     print("write image path")
     file.write(test_path + " ")
+
+    print(annotation_line)
+
+    # print(annotation_line, file=label_out)
+
     # browse all boxes
     for b in range(0, len(boxes)):
 
         # draw box and masks on the raw images:-------->
         f = translate_color(classes[b])
         points_to_draw = []
-        offset = len(polygons[b]) // 2  # this = NUM_ANGLES
-        # offset = NUM_ANGLES
+        offset = len(polygons[b]) // 3
+
         # filter bounding polygon vertices
-        print("polygons len:", len(polygons[b]))
-        print("offset")
-        for dst in range(0, offset):   # this = NUM_ANGLES LOOP TO GET (X,Y) pairs
-            # if polygons[b][dst + offset] > 0.3:
-            points_to_draw.append([int(polygons[b][dst]), int(polygons[b][dst + offset])])
+        for dst in range(0, len(polygons[b]) // 3):
+            if polygons[b][dst + offset * 2] > 0.3:
+                points_to_draw.append([int(polygons[b][dst]), int(polygons[b][dst + offset])])
 
         points_to_draw = np.asarray(points_to_draw)
         points_to_draw = points_to_draw.astype(np.int32)
@@ -225,13 +227,13 @@ for test_path, mask_path in zip(test_input_paths,test_mask_paths):
         str_to_write += str(scores[b]) + ","
         str_to_write += str(int(classes[b]))
 
-        offset = len(polygons[b]) // 2  # 72 for 24 vertexes. offset = 24
+        offset = len(polygons[b]) // 3  # 72 for 24 vertexes. offset = 24
         vertices = 0
-        for dst in range(0, len(polygons[b]) // 2):  # 下取整
-            # if polygons[b][dst + offset] > 0.2:
+        for dst in range(0, len(polygons[b]) // 3):  # 下取整
+            if polygons[b][dst + offset * 2] > 0.2:
 
-            str_to_write += "," + str(float(polygons[b][dst])) + "," + str(float(polygons[b][dst + offset]))
-            vertices += 1
+                str_to_write += "," + str(float(polygons[b][dst])) + "," + str(float(polygons[b][dst + offset]))
+                vertices += 1
         str_to_write += " "
         if vertices < 3:
             print("No mask found")
@@ -239,11 +241,14 @@ for test_path, mask_path in zip(test_input_paths,test_mask_paths):
             continue
         # print(str_to_write)
         file.write(str_to_write)
+
+
     file.write("\n")
 
     img = cv2.addWeighted(overlay, 0.4, background, 1 - 0.4, 0)
     cv2.imwrite(out_path + str(imgs) + '.jpg', img)
 file.close()
+label_out.close()
 print('total detected boxes: ', total_boxes)
 print('imgs: ', imgs)
 print("avg fps:", sum(fps_list)/len(fps_list))

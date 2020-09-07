@@ -782,15 +782,15 @@ def darknet_body(x):
     '''Darknent body having 52 Convolution2D layers'''
     base = 6  # YOLOv3 has base=8, we have less parameters
     x = DarknetConv2D_BN_Leaky(base * 4, (3, 3))(x)
-    x = resblock_body(x, base * 8, 1)
+    x = resblock_body(x, base * 8, 1)      # /2
     x = resblock_body(x, base * 16, 2)
-    tiny = x
+    tiny = x                 # /4 ------------------>
     x = resblock_body(x, base * 32, 8)
-    small = x
+    small = x                # /8 ------------------>
     x = resblock_body(x, base * 64, 8)
-    medium = x
+    medium = x               # /16 ------------------>
     x = resblock_body(x, base * 128, 8)
-    big = x
+    big = x                 #  /32 ------------------>
     return tiny, small, medium, big
 
 
@@ -1040,21 +1040,19 @@ def preprocess_true_boxes(true_boxes, input_shape, anchors, num_classes):
 
         # Find best anchor for each true box
         best_anchor = np.argmax(iou, axis=-1)
-        for t, n in enumerate(best_anchor): # search for best anchor w,h size in the anchor mask setting
+        for t, n in enumerate(best_anchor):
             l = 0
             if n in anchor_mask[l]:
-                i = np.floor(true_boxes[b, t, 0] * grid_shapes[l][1]).astype('int32')# for each image b , and each box t
+                i = np.floor(true_boxes[b, t, 0] * grid_shapes[l][1]).astype('int32')
                 j = np.floor(true_boxes[b, t, 1] * grid_shapes[l][0]).astype('int32')
                 k = anchor_mask[l].index(n)
-                c = true_boxes[b, t, 4].astype('int32')  # class number e.g 10 classses = [0 ,1, 2,3,4,...9], in our case ,one class only , c=0
+                c = true_boxes[b, t, 4].astype('int32')
 
-                y_true[l][b, j, i, k, 0:4] = true_boxes[b, t, 0:4] # set as raw  xmin, ymin , xmax ymax
-                y_true[l][b, j, i, k, 4] = 1 # F/B label
-                y_true[l][b, j, i, k, 5 + c] = 1  # class label as 1 as one-hot for class score. e.g. if 3 class, c =2 , then label in [5: num_classes] into  [0, 0 ,1]
-                y_true[l][b, j, i, k, 5 + num_classes:5 + num_classes + NUM_ANGLES] = true_boxes[b, t, 5: 5 + NUM_ANGLES]
+                y_true[l][b, j, i, k, 0:4] = true_boxes[b, t, 0:4]
+                y_true[l][b, j, i, k, 4] = 1
+                y_true[l][b, j, i, k, 5 + c] = 1
+                y_true[l][b, j, i, k, 5 + num_classes:5 + num_classes + NUM_ANGLES3] = true_boxes[b, t, 5: 5 + NUM_ANGLES3]
     return y_true
-
-
 
 
 def box_iou(b1, b2):
@@ -1372,7 +1370,7 @@ def my_Gnearator(images_list, masks_list, batch_size, input_shape, anchors, num_
 
             temp_img_path = images_list[count]
             temp_mask_path = masks_list[count]
-            img, box, myPolygon, aug_mask, selected_coutours = my_get_random_data(temp_img_path, temp_mask_path, input_shape, image_datagen, mask_datagen,
+            img, box, myPolygon, aug_mask, annotation_line = my_get_random_data(temp_img_path, temp_mask_path, input_shape, image_datagen, mask_datagen,
                                           train_or_test=train_flag)
             # print("myPolygon.shape:", myPolygon.shape)
             # check there is zero: if there is boundry points
@@ -1439,6 +1437,7 @@ def my_get_random_data(img_path, mask_path, input_shape, image_datagen, mask_dat
     # imgray = cv2.cvtColor(np.squeeze(copy_mask), cv2.COLOR_BGR2GRAY)
     # print(copy_mask)
     ret, thresh = cv2.threshold(copy_mask, 127, 255, 0)  # this require the numpy array has to be the uint8 type
+    aug_mask =thresh
     image, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     selected_coutours = []
     for x in range(len(contours)):
@@ -1451,6 +1450,11 @@ def my_get_random_data(img_path, mask_path, input_shape, image_datagen, mask_dat
 
     # encode contours into annotation lines ---->
     annotation_line, myPolygon = encode_polygone(img_path, selected_coutours)
+
+    # if output_filename_full_path is not None:
+    #     out = open(output_filename_full_path, 'w')
+    #     print(annotation_line, file=out)
+
     # decode contours annotation line into distance
     box_data = decode_annotationline(annotation_line)
 
@@ -1458,7 +1462,7 @@ def my_get_random_data(img_path, mask_path, input_shape, image_datagen, mask_dat
     aug_image = aug_image / 255.0
 
 
-    return aug_image, box_data, myPolygon, aug_mask, selected_coutours
+    return aug_image, box_data, myPolygon, aug_mask, annotation_line
 
 def encode_polygone(img_path, contours, MAX_VERTICES =1000):
     "give polygons and encode as angle, ditance , probability"
@@ -1525,9 +1529,6 @@ def decode_annotationline(encoded_annotationline, MAX_VERTICES=1000, max_boxes=8
 
     # correct boxes
     box_data = np.zeros((max_boxes, 5 + NUM_ANGLES3))
-    # print("box:", box)
-    # print("box.shape:", box.shape)
-    # print("box_data:", box_data.shape)
     if len(box) > 0:
         np.random.shuffle(box)
         if len(box) > max_boxes:
@@ -1767,7 +1768,7 @@ if __name__ == "__main__":
     #         image_data = np.array(image_data)
     #         # print("image_data:", image_data.shape)
     #         box_data = np.array(box_data)
-    #         y_true = preprocess_true_boxes(box_data, input_shape, anchors, num_classes)  # return [xy, wh, F/B, one-hot of class, dists.(NUM_ANGLES)]
+    #         y_true = preprocess_true_boxes (box_data, input_shape, anchors, num_classes)  # return [xy, wh, F/B, one-hot of class, dists.(NUM_ANGLES)]
     #         yield [image_data, *y_true], np.zeros(batch_size)
     #
 
