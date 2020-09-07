@@ -42,7 +42,7 @@ import numpy as np
 from glob import glob
 from tensorflow.keras.preprocessing import image as krs_image
 import cv2
-from tensorflow.keras.applications.xception import Xception
+from tensorflow.keras.applications.resnet_v2 import ResNet101V2
 
 
 
@@ -740,18 +740,18 @@ def DarknetConv2D_BN_Leaky(*args, **kwargs):
         LeakyReLU(alpha=0.1))
 
 
-def resblock_body(x, num_filters, num_blocks):
-    '''A series of resblocks starting with a downsampling Convolution2D'''
-    # Darknet uses left and top padding instead of 'same' mode
-    x = ZeroPadding2D(((1, 0), (1, 0)))(x)
-    x = DarknetConv2D_BN_Leaky(num_filters, (3, 3), strides=(2, 2))(x)
-    for i in range(num_blocks):
-        y = compose(
-            DarknetConv2D_BN_Leaky(num_filters // 2, (1, 1)),
-            DarknetConv2D_BN_Leaky(num_filters, (3, 3)))(x)
-        y = squeeze_excite_block(y)
-        x = Add()([x, y])
-    return x
+# def resblock_body(x, num_filters, num_blocks):
+#     '''A series of resblocks starting with a downsampling Convolution2D'''
+#     # Darknet uses left and top padding instead of 'same' mode
+#     x = ZeroPadding2D(((1, 0), (1, 0)))(x)
+#     x = DarknetConv2D_BN_Leaky(num_filters, (3, 3), strides=(2, 2))(x)
+#     for i in range(num_blocks):
+#         y = compose(
+#             DarknetConv2D_BN_Leaky(num_filters // 2, (1, 1)),
+#             DarknetConv2D_BN_Leaky(num_filters, (3, 3)))(x)
+#         y = squeeze_excite_block(y)
+#         x = Add()([x, y])
+#     return x
 
 
 #taken from https://github.com/titu1994/keras-squeeze-excite-network/blob/master/keras_squeeze_excite_network/se_resnet.py
@@ -800,12 +800,12 @@ def yolo_body(inputs, num_anchors, num_classes):
     """Create Poly-YOLO model CNN body in Keras."""
     # backbone and feature extraction  ---------->
 
-    base_model = Xception(input_tensor=inputs, weights=None, include_top=False) # random initialization
+    base_model = ResNet101V2(input_tensor=inputs, weights=None, include_top=False) # random initialization
     # extract features from each block end: ["add", "add_1", "add_10", "add_11"]
-    tiny = base_model.get_layer('add').output
-    small = base_model.get_layer('add_1').output
-    medium = base_model.get_layer('add_10').output
-    big = base_model.get_layer('add_11').output
+    tiny = base_model.get_layer('conv2_block2_out').output   # 64x64 : 1/4
+    small = base_model.get_layer('conv3_block3_out').output  # 32x32 : 1/8
+    medium = base_model.get_layer('conv4_block22_out').output  # 16x16 : 1/16
+    big = base_model.get_layer('conv5_block3_out').output  # 8x8 : 1/32
 
 
         # tiny, small, medium, big = darknet_body(inputs)
@@ -1593,7 +1593,7 @@ if __name__ == "__main__":
 
 
     def _main():
-        project_name = 'PaperExp_Part1_Backbone_Exp2_Xception_FullAug_AngleStep17_{}'.format(model_index)
+        project_name = 'PaperExp_Part1_Backbone_Exp3_ResNet101V2_FullAug_AngleStep17_{}'.format(model_index)
 
         phase = 1
         print("current working dir:", os.getcwd())

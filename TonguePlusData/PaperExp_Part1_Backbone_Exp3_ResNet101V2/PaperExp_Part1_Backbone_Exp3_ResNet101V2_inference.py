@@ -4,7 +4,7 @@ import os
 import time
 # need to change
 from glob import glob
-from TonguePlusData.PaperExp_Part1_Backbone_Exp2_Xception.PaperExp_Part1_Backbone_Exp2_Xception_Train import YOLO, \
+from TonguePlusData.PaperExp_Part1_Backbone_Exp3_ResNet101V2.PaperExp_Part1_Backbone_Exp3_ResNet101V2_Train import YOLO, \
     get_anchors, my_get_random_data #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
 import sys
 
