@@ -43,7 +43,11 @@ except Exception as e:
 # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp1_rawModel')
 #
 # # PaperExp_Part1_Backbone_Exp2_Xception
-run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp2_Xception')
+# run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp2_Xception')
+
+# # PaperExp_Part1_Backbone_Exp3_ResNet101V2
+run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp3_ResNet101V2')
+
 
 
 
