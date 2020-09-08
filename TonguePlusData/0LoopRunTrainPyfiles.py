@@ -49,8 +49,8 @@ except Exception as e:
 # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp3_ResNet101V2')
 
 
-# # PaperExp_Part1_Backbone_Exp3_ResNet101V2
-run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large')
+# # # PaperExp_Part1_Backbone_Exp3_ResNet101V2
+# run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large')
 
 
 
@@ -60,8 +60,8 @@ run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_
 # # Case 1  BaseExp
 # run_case('/TonguePlusData/PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large')
 #
-# # # Case 1  BaseExp
-# # run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_5_CSP_SAE_FrontNeck')
+# # Case 1  BaseExp
+run_case('/TonguePlusData/PaperExp_Part1_Backbone_Exp7_Xception_Our_DpolarIoU_L2_loss')
 #
 # # # Case 1_2 BASE NO SAE
 # # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_1_2_base_noSAE')

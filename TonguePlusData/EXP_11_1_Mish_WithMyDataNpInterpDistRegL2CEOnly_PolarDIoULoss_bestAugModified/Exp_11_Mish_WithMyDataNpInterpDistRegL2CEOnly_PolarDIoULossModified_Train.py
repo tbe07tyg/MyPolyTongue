@@ -1299,7 +1299,7 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5):
         true_class_probs = y_true[layer][..., 5:5 + num_classes]
         # found the left-up corner, which may be normalized with ground truth , since y_true[..., 2:] * Feature shapes
         raw_true_xy = y_true[layer][..., :2] * grid_shapes[layer][::-1] - grid
-        raw_true_wh = K.log(y_true[layer][..., 2:4] / anchors[anchor_mask[layer]] * input_shape[::-1])
+        raw_true_wh = K.log(y_true[layer][..., 2:4] / anchors[anchor_mask[layer]] * input_shape[::-1] + K.epsilon()) # to avoid log (0)
         raw_true_wh = K.switch(object_mask, raw_true_wh, K.zeros_like(raw_true_wh))  # avoid log(0)=-inf  # only positive use to optimized
 
         raw_true_polygon_distnace = y_true[layer][..., 5 + num_classes: 5 + num_classes + NUM_ANGLES]
@@ -1308,7 +1308,7 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5):
         d = K.cast(K.sqrt(dx + dy), K.dtype(raw_true_polygon_distnace))  # get gt d
         diagonal = K.sqrt(
             K.pow(input_shape[::-1][0], 2) + K.pow(input_shape[::-1][1], 2))  # get diagnoal of feature maps
-        raw_true_polygon_dist = K.log(raw_true_polygon_distnace / d * diagonal)  # the deviation of distances
+        raw_true_polygon_dist = K.log(raw_true_polygon_distnace / d * diagonal + K.epsilon())  # the deviation of distances + epsiolon # to avoid log (0)
         raw_true_polygon_dist = K.switch(object_mask, raw_true_polygon_dist, K.zeros_like(raw_true_polygon_dist))  # only positives
 
 
@@ -1542,8 +1542,20 @@ def my_Gnearator(images_list, masks_list, batch_size, input_shape, anchors, num_
 
             temp_img_path = images_list[count]
             temp_mask_path = masks_list[count]
-            img, box, myPolygon = my_get_random_data(temp_img_path, temp_mask_path, input_shape, image_datagen, mask_datagen,
+            img, box, myPolygon, aug_mask, selected_coutours = my_get_random_data(temp_img_path, temp_mask_path, input_shape, image_datagen, mask_datagen,
                                           train_or_test=train_flag)
+
+            # check the data
+            # if count+1==n:
+            #     epoch+=1
+            # background = np.ones(img.shape)*255
+
+            # cv2.imwrite(contours_compare_root + "batch{}_idx{}_2_".format(epoch, count) + 'mask.jpg', aug_mask)
+            # #
+            # cv2.drawContours(background, selected_coutours, -1, (60, 180, 75))
+            # cv2.imwrite(contours_compare_root + "batch{}_idx{}_3_".format(epoch, count) + 'selected_contour.jpg', background)
+            # cv2.imshow(" ", background)
+            # cv2.waitKey()  # show on line need divided 255 save into folder should remove keep in 0 to 255
             # print("myPolygon.shape:", myPolygon.shape)
             # check there is zero: if there is boundry points
 
@@ -1618,7 +1630,7 @@ def my_get_random_data(img_path, mask_path, input_shape, image_datagen, mask_dat
             selected_coutours.append(contours[x])
     print("# selected_coutours:", len(selected_coutours))
 
-            # encode contours into annotation lines ---->
+    # encode contours into annotation lines ---->
     annotation_line, myPolygon = encode_polygone(img_path, selected_coutours)
     # decode contours annotation line into distance
     box_data = My_bilinear_decode_annotationlineNP_inter(annotation_line)
@@ -1633,6 +1645,7 @@ def encode_polygone(img_path, contours, MAX_VERTICES =1000):
     skipped = 0
     polygons_line = ''
     c = 0
+    my_poly_list =[]
     for obj in contours:
         # print(obj.shape)
         myPolygon = obj.reshape([-1, 2])
@@ -1641,6 +1654,7 @@ def encode_polygone(img_path, contours, MAX_VERTICES =1000):
             print()
             print("too many polygons")
             break
+        my_poly_list.append(myPolygon)
 
         min_x = sys.maxsize
         max_x = 0
@@ -1664,7 +1678,7 @@ def encode_polygone(img_path, contours, MAX_VERTICES =1000):
 
     annotation_line = img_path + polygons_line
 
-    return annotation_line, myPolygon
+    return annotation_line, my_poly_list
 
 def My_bilinear_decode_annotationlineNP_inter(encoded_annotationline, MAX_VERTICES=1000, max_boxes=80):
     """
@@ -1779,6 +1793,9 @@ if __name__ == "__main__":
 
         plot_folder = log_dir + 'Plots/'
         tf_folder = os.path.join(current_file_dir_path, project_name, 'TF_logs')
+
+
+
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
         if not os.path.exists(tf_folder):

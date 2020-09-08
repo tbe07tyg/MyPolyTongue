@@ -1654,9 +1654,8 @@ def my_get_random_data(img_path, mask_path, input_shape, image_datagen, mask_dat
 
     # normal the image ----------------->
     aug_image = aug_image / 255.0
-
-
-    return aug_image, box_data, myPolygon, aug_mask, selected_coutours
+    # return aug_image, aug_mask, annotation_line
+    return aug_image, box_data, myPolygon
 
 def encode_polygone(img_path, contours, MAX_VERTICES =1000):
     "give polygons and encode as angle, ditance , probability"
