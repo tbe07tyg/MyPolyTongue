@@ -317,16 +317,28 @@ if __name__ == '__main__':
     # infer_case(Inference_scripts_root=Inference_scripts_root,
     #            Saved_model_file_root=Saved_model_file_root,
     #            output_folder=output_folder)
-
-    # backbone: exp 5 InceptionV3
-    # paper experiemtns starts ---------------------->
-    Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\FUllPolygonsFixedGen\\PaperExperiments\\PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large"
-    Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large"
     #
-    output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\backbone\\PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large"
+    # # backbone: exp 5 InceptionV3
+    # # paper experiemtns starts ---------------------->
+    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\FUllPolygonsFixedGen\\PaperExperiments\\PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large"
+    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large"
+    # #
+    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\backbone\\PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large"
+    # infer_case(Inference_scripts_root=Inference_scripts_root,
+    #            Saved_model_file_root=Saved_model_file_root,
+    #            output_folder=output_folder)
+
+    # backbone: exp 6 PaperExp_Part1_Backbone_Exp6_EfficientNetB4
+    # paper experiemtns starts ---------------------->
+    Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\FUllPolygonsFixedGen\\PaperExperiments\\PaperExp_Part1_Backbone_Exp6_EfficientNetB4"
+    Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp6_EfficientNetB4"
+    #
+    output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\backbone\\PaperExp_Part1_Backbone_Exp6_EfficientNetB4"
     infer_case(Inference_scripts_root=Inference_scripts_root,
                Saved_model_file_root=Saved_model_file_root,
                output_folder=output_folder)
+
+
 
 
 
