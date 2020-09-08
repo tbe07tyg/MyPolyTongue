@@ -193,7 +193,7 @@ for test_path, mask_path in zip(test_input_paths,test_mask_paths):
     print("write image path")
     file.write(test_path + " ")
 
-    print(annotation_line)
+    # print(annotation_line)
 
     # print(annotation_line, file=label_out)
 

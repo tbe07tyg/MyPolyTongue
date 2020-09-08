@@ -1,255 +1,162 @@
-"""MobileNet v3 models for Keras.
-# Reference
-    [Searching for MobileNetV3](https://arxiv.org/abs/1905.02244?context=cs)
-"""
-from tensorflow.keras.layers import Input, Conv2D, DepthwiseConv2D, Dense, GlobalAveragePooling2D, Reshape
-from tensorflow.keras.layers import Activation, BatchNormalization, Add, Lambda
-from tensorflow.keras.models import Model
+import tensorflow as tf
+
 from tensorflow.keras import backend as K
-from tensorflow.keras.utils import plot_model
+from tensorflow.keras.models import Model
 
-class MobileNetBase:
-    def __init__(self, input_tensor, n_class):
-        self.input = input_tensor
-        self.n_class = n_class
+from tensorflow.keras.layers import Conv2D, BatchNormalization, ReLU, DepthwiseConv2D, Activation, Input, Add
+from tensorflow.keras.layers import GlobalAveragePooling2D, Reshape, Dense, multiply, Softmax, Flatten
 
-    def _relu6(self, x):
-        """Relu 6
-        """
-        return K.relu(x, max_value=6.0)
-
-    def _hard_swish(self, x):
-        """Hard swish
-        """
-        return x * K.relu(x + 3.0, max_value=6.0) / 6.0
-
-    def _return_activation(self, x, nl):
-        """Convolution Block
-        This function defines a activation choice.
-
-        # Arguments
-            x: Tensor, input tensor of conv layer.
-            nl: String, nonlinearity activation type.
-
-        # Returns
-            Output tensor.
-        """
-        if nl == 'HS':
-            x = Activation(self._hard_swish)(x)
-        if nl == 'RE':
-            x = Activation(self._relu6)(x)
-
-        return x
-
-    def _conv_block(self, inputs, filters, kernel, strides, nl):
-        """Convolution Block
-        This function defines a 2D convolution operation with BN and activation.
-
-        # Arguments
-            inputs: Tensor, input tensor of conv layer.
-            filters: Integer, the dimensionality of the output space.
-            kernel: An integer or tuple/list of 2 integers, specifying the
-                width and height of the 2D convolution window.
-            strides: An integer or tuple/list of 2 integers,
-                specifying the strides of the convolution along the width and height.
-                Can be a single integer to specify the same value for
-                all spatial dimensions.
-            nl: String, nonlinearity activation type.
-
-        # Returns
-            Output tensor.
-        """
-
-        channel_axis = 1 if K.image_data_format() == 'channels_first' else -1
-
-        x = Conv2D(filters, kernel, padding='same', strides=strides)(inputs)
-        x = BatchNormalization(axis=channel_axis)(x)
-
-        return self._return_activation(x, nl)
-
-    def _squeeze(self, inputs):
-        """Squeeze and Excitation.
-        This function defines a squeeze structure.
-
-        # Arguments
-            inputs: Tensor, input tensor of conv layer.
-        """
-        input_channels = int(inputs.shape[-1])
-
-        x = GlobalAveragePooling2D()(inputs)
-        x = Dense(input_channels, activation='relu')(x)
-        x = Dense(input_channels, activation='hard_sigmoid')(x)
-
-        return x
-
-    def _bottleneck(self, inputs, filters, kernel, e, s, squeeze, nl):
-        """Bottleneck
-        This function defines a basic bottleneck structure.
-
-        # Arguments
-            inputs: Tensor, input tensor of conv layer.
-            filters: Integer, the dimensionality of the output space.
-            kernel: An integer or tuple/list of 2 integers, specifying the
-                width and height of the 2D convolution window.
-            e: Integer, expansion factor.
-                t is always applied to the input size.
-            s: An integer or tuple/list of 2 integers,specifying the strides
-                of the convolution along the width and height.Can be a single
-                integer to specify the same value for all spatial dimensions.
-            squeeze: Boolean, Whether to use the squeeze.
-            nl: String, nonlinearity activation type.
-
-        # Returns
-            Output tensor.
-        """
-
-        channel_axis = 1 if K.image_data_format() == 'channels_first' else -1
-        input_shape = K.int_shape(inputs)
-        tchannel = input_shape[channel_axis] * e
-        r = s == 1 and input_shape[3] == filters
-
-        x = self._conv_block(inputs, tchannel, (1, 1), (1, 1), nl)
-
-        x = DepthwiseConv2D(kernel, strides=(s, s), depth_multiplier=1, padding='same')(x)
-        x = BatchNormalization(axis=channel_axis)(x)
-
-        if squeeze:
-            x = Lambda(lambda x: x * self._squeeze(x))(x)
-
-        x = self._return_activation(x, nl)
-
-        x = Conv2D(filters, (1, 1), strides=(1, 1), padding='same')(x)
-        x = BatchNormalization(axis=channel_axis)(x)
-
-        if r:
-            x = Add()([x, inputs])
-
-        return x
-
-    def build(self):
-        pass
-
-"""MobileNet v3 Large models for Keras.
-# Reference
-    [Searching for MobileNetV3](https://arxiv.org/abs/1905.02244?context=cs)
-"""
+# ** to update custom Activate functions
+from tensorflow.keras.utils import get_custom_objects
 
 
+""" Define layers block functions """
+def Hswish(x):
+    return x * tf.nn.relu6(x + 3) / 6
 
-class MobileNetV3_Large(MobileNetBase):
-    def __init__(self, input_tensor, n_class):
-        """Init.
+# ** update custom Activate functions
+get_custom_objects().update({'custom_activation': Activation(Hswish)})
 
-        # Arguments
-            input_shape: An integer or tuple/list of 3 integers, shape
-                of input tensor.
-            n_class: Integer, number of classes.
+def __conv2d_block(_inputs, filters, kernel, strides, is_use_bias=False, padding='same', activation='RE', name=None):
+    x = Conv2D(filters, kernel, strides= strides, padding=padding, use_bias=is_use_bias)(_inputs)
+    x = BatchNormalization()(x)
+    if activation == 'RE':
+        x = ReLU(name=name)(x)
+    elif activation == 'HS':
+        x = Activation(Hswish, name=name)(x)
+    else:
+        raise NotImplementedError
+    return x
 
-        # Returns
-            MobileNetv2 model.
-        """
-        super(MobileNetV3_Large, self).__init__(input_tensor, n_class)
+def __depthwise_block(_inputs, kernel=(3, 3), strides=(1, 1), activation='RE', is_use_se=True, num_layers=0):
+    x = DepthwiseConv2D(kernel_size=kernel, strides=strides, depth_multiplier=1, padding='same')(_inputs)
+    x = BatchNormalization()(x)
+    if is_use_se:
+        x = __se_block(x)
+    if activation == 'RE':
+        x = ReLU()(x)
+    elif activation == 'HS':
+        x = Activation(Hswish)(x)
+    else:
+        raise NotImplementedError
+    return x
 
-    def build(self, plot=False):
-        """build MobileNetV3 Large.
+def __global_depthwise_block(_inputs):
+    assert _inputs._keras_shape[1] == _inputs._keras_shape[2]
+    kernel_size = _inputs._keras_shape[1]
+    x = DepthwiseConv2D((kernel_size, kernel_size), strides=(1, 1), depth_multiplier=1, padding='valid')(_inputs)
+    return x
 
-        # Arguments
-            plot: Boolean, weather to plot model.
+def __se_block(_inputs, ratio=4, pooling_type='avg'):
+    filters = _inputs.shape[-1]
+    se_shape = (1, 1, filters)
+    if pooling_type == 'avg':
+        se = GlobalAveragePooling2D()(_inputs)
+    elif pooling_type == 'depthwise':
+        se = __global_depthwise_block(_inputs)
+    else:
+        raise NotImplementedError
+    se = Reshape(se_shape)(se)
+    se = Dense(filters // ratio, activation='relu', kernel_initializer='he_normal', use_bias=False)(se)
+    se = Dense(filters, activation='hard_sigmoid', kernel_initializer='he_normal', use_bias=False)(se)
+    return multiply([_inputs, se])
 
-        # Returns
-            model: Model, model.
-        """
-        inputs = self.input
+def __bottleneck_block(_inputs, out_dim, kernel, strides, expansion_dim, is_use_bias=False, shortcut=True, is_use_se=True, activation='RE', num_layers=0, *args):
+    with tf.name_scope('bottleneck_block'):
+        # ** to high dim
+        bottleneck_dim = expansion_dim
 
-        x = self._conv_block(inputs, 16, (3, 3), strides=(2, 2), nl='HS')
+        # ** pointwise conv
+        x = __conv2d_block(_inputs, bottleneck_dim, kernel=(1, 1), strides=(1, 1), is_use_bias=is_use_bias, activation=activation)
 
-        x = self._bottleneck(x, 16, (3, 3), e=16, s=1, squeeze=False, nl='RE')
-        x = self._bottleneck(x, 24, (3, 3), e=64, s=2, squeeze=False, nl='RE')
-        x = self._bottleneck(x, 24, (3, 3), e=72, s=1, squeeze=False, nl='RE')
-        x = self._bottleneck(x, 40, (5, 5), e=72, s=2, squeeze=True, nl='RE')
-        x = self._bottleneck(x, 40, (5, 5), e=120, s=1, squeeze=True, nl='RE')
-        x = self._bottleneck(x, 40, (5, 5), e=120, s=1, squeeze=True, nl='RE')
-        x = self._bottleneck(x, 80, (3, 3), e=240, s=2, squeeze=False, nl='HS')
-        x = self._bottleneck(x, 80, (3, 3), e=200, s=1, squeeze=False, nl='HS')
-        x = self._bottleneck(x, 80, (3, 3), e=184, s=1, squeeze=False, nl='HS')
-        x = self._bottleneck(x, 80, (3, 3), e=184, s=1, squeeze=False, nl='HS')
-        x = self._bottleneck(x, 112, (3, 3), e=480, s=1, squeeze=True, nl='HS')
-        x = self._bottleneck(x, 112, (3, 3), e=672, s=1, squeeze=True, nl='HS')
-        x = self._bottleneck(x, 160, (5, 5), e=672, s=2, squeeze=True, nl='HS')
-        x = self._bottleneck(x, 160, (5, 5), e=960, s=1, squeeze=True, nl='HS')
-        x = self._bottleneck(x, 160, (5, 5), e=960, s=1, squeeze=True, nl='HS')
+        # ** depthwise conv
+        x = __depthwise_block(x, kernel=kernel, strides=strides, is_use_se=is_use_se, activation=activation, num_layers=num_layers)
 
-        x = self._conv_block(x, 960, (1, 1), strides=(1, 1), nl='HS')
-        x = GlobalAveragePooling2D()(x)
-        x = Reshape((1, 1, 960))(x)
+        # ** pointwise conv
+        x = Conv2D(out_dim, (1, 1), strides=(1, 1), padding='same')(x)
+        x = BatchNormalization()(x)
 
-        x = Conv2D(1280, (1, 1), padding='same')(x)
-        x = self._return_activation(x, 'HS')
-        x = Conv2D(self.n_class, (1, 1), padding='same', activation='softmax')(x)
+        if shortcut and strides == (1, 1):
+            in_dim = K.int_shape(_inputs)[-1]
+            if in_dim != out_dim:
+                ins = Conv2D(out_dim, (1, 1), strides=(1, 1), padding='same')(_inputs)
+                x = Add()([x, ins])
+            else:
+                x = Add()([x, _inputs])
+    return x
 
-        output = Reshape((self.n_class,))(x)
+def build_mobilenet_v3(input_tensor, num_classes=1000, model_type='large', pooling_type='avg', include_top=True):
+    # ** input layer
+    # inputs = Input(shape=(input_size, input_size, 3))
+    inputs = input_tensor
+    # ** feature extraction layers
+    net = __conv2d_block(inputs, 16, kernel=(3, 3), strides=(2, 2), is_use_bias=False, padding='same', activation='HS')
 
-        model = Model(inputs, output)
+    if model_type == 'large':
+        config_list = large_config_list
+    elif model_type == 'small':
+        config_list = small_config_list
+    else:
+        raise NotImplementedError
 
-        if plot:
-            plot_model(model, to_file='images/MobileNetv3_large.png', show_shapes=True)
+    for config in config_list:
+        net = __bottleneck_block(net, *config)
 
-        return model
+    # ** final layers
+    net = __conv2d_block(net, 960, kernel=(3, 3), strides=(1, 1), is_use_bias=True, padding='same', activation='HS', name='output_map')
 
+    if pooling_type == 'avg':
+        net = GlobalAveragePooling2D()(net)
+    elif pooling_type == 'depthwise':
+        net = __global_depthwise_block(net)
+    else:
+        raise NotImplementedError
 
-class MobileNetV3_Small(MobileNetBase):
-    def __init__(self, input_tensor, n_class):
-        """Init.
+    # ** shape=(None, channel) --> shape(1, 1, channel)
+    pooled_shape = (1, 1, net.shape[-1])
 
-        # Arguments
-            input_shape: An integer or tuple/list of 3 integers, shape
-                of input tensor.
-            n_class: Integer, number of classes.
+    net = Reshape(pooled_shape)(net)
+    net = Conv2D(1280, (1, 1), strides=(1, 1), padding='valid', use_bias=True)(net)
 
-        # Returns
-            MobileNetv2 model.
-        """
-        super(MobileNetV3_Small, self).__init__(input_tensor, n_class)
+    if include_top:
+        net = Conv2D(num_classes, (1, 1), strides=(1, 1), padding='valid', use_bias=True)(net)
+        net = Flatten()(net)
+        net = Softmax()(net)
 
+    model = Model(inputs=inputs, outputs=net)
 
-    def build(self, plot=False):
-        """build MobileNetV3 Small.
+    return model
 
-        # Arguments
-            plot: Boolean, weather to plot model.
+""" define bottleneck structure """
+# **
+# **
+global large_config_list
+global small_config_list
 
-        # Returns
-            model: Model, model.
-        """
-        inputs = self.input
+large_config_list = [[16,  (3, 3), (1, 1), 16,  False, False, False, 'RE',  0],
+                     [24,  (3, 3), (2, 2), 64,  False, False, False, 'RE',  1],
+                     [24,  (3, 3), (1, 1), 72,  False, True,  False, 'RE',  2],
+                     [40,  (5, 5), (2, 2), 72,  False, False, True,  'RE',  3],
+                     [40,  (5, 5), (1, 1), 120, False, True,  True,  'RE',  4],
+                     [40,  (5, 5), (1, 1), 120, False, True,  True,  'RE',  5],
+                     [80,  (3, 3), (2, 2), 240, False, False, False, 'HS',  6],
+                     [80,  (3, 3), (1, 1), 200, False, True,  False, 'HS',  7],
+                     [80,  (3, 3), (1, 1), 184, False, True,  False, 'HS',  8],
+                     [80,  (3, 3), (1, 1), 184, False, True,  False, 'HS',  9],
+                     [112, (3, 3), (1, 1), 480, False, False, True,  'HS', 10],
+                     [112, (3, 3), (1, 1), 672, False, True,  True,  'HS', 11],
+                     [160, (5, 5), (1, 1), 672, False, False, True,  'HS', 12],
+                     [160, (5, 5), (2, 2), 672, False, True,  True,  'HS', 13],
+                     [160, (5, 5), (1, 1), 960, False, True,  True,  'HS', 14]]
 
-        x = self._conv_block(inputs, 16, (3, 3), strides=(2, 2), nl='HS')
-
-        x = self._bottleneck(x, 16, (3, 3), e=16, s=2, squeeze=True, nl='RE')
-        x = self._bottleneck(x, 24, (3, 3), e=72, s=2, squeeze=False, nl='RE')
-        x = self._bottleneck(x, 24, (3, 3), e=88, s=1, squeeze=False, nl='RE')
-        x = self._bottleneck(x, 40, (5, 5), e=96, s=2, squeeze=True, nl='HS')
-        x = self._bottleneck(x, 40, (5, 5), e=240, s=1, squeeze=True, nl='HS')
-        x = self._bottleneck(x, 40, (5, 5), e=240, s=1, squeeze=True, nl='HS')
-        x = self._bottleneck(x, 48, (5, 5), e=120, s=1, squeeze=True, nl='HS')
-        x = self._bottleneck(x, 48, (5, 5), e=144, s=1, squeeze=True, nl='HS')
-        x = self._bottleneck(x, 96, (5, 5), e=288, s=2, squeeze=True, nl='HS')
-        x = self._bottleneck(x, 96, (5, 5), e=576, s=1, squeeze=True, nl='HS')
-        x = self._bottleneck(x, 96, (5, 5), e=576, s=1, squeeze=True, nl='HS')
-
-        x = self._conv_block(x, 576, (1, 1), strides=(1, 1), nl='HS')
-        x = GlobalAveragePooling2D()(x)
-        x = Reshape((1, 1, 576))(x)
-
-        x = Conv2D(1280, (1, 1), padding='same')(x)
-        x = self._return_activation(x, 'HS')
-        x = Conv2D(self.n_class, (1, 1), padding='same', activation='softmax')(x)
-
-        output = Reshape((self.n_class,))(x)
-
-        model = Model(inputs, output)
-
-        if plot:
-            plot_model(model, to_file='images/MobileNetv3_small.png', show_shapes=True)
-
-        return model
+small_config_list = [[16,  (3, 3), (2, 2), 16,  False, False, True,  'RE', 0],
+                     [24,  (3, 3), (2, 2), 72,  False, False, False, 'RE', 1],
+                     [24,  (3, 3), (1, 1), 88,  False, True,  False, 'RE', 2],
+                     [40,  (5, 5), (1, 1), 96,  False, False, True,  'HS', 3],
+                     [40,  (5, 5), (1, 1), 240, False, True,  True,  'HS', 4],
+                     [40,  (5, 5), (1, 1), 240, False, True,  True,  'HS', 5],
+                     [48,  (5, 5), (1, 1), 120, False, False, True,  'HS', 6],
+                     [48,  (5, 5), (1, 1), 144, False, True,  True,  'HS', 7],
+                     [96,  (5, 5), (2, 2), 288, False, False, True,  'HS', 8],
+                     [96,  (5, 5), (1, 1), 576, False, True,  True,  'HS', 9],
+                     [96,  (5, 5), (1, 1), 576, False, True,  True,  'HS', 10]]

@@ -42,8 +42,8 @@ import numpy as np
 from glob import glob
 from tensorflow.keras.preprocessing import image as krs_image
 import cv2
-from tensorflow.keras.applications.inception_v3 import InceptionV3
-from TonguePlusData.PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large.PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large_Model import MobileNetV3_Large
+# from tensorflow.keras.applications.inception_v3 import InceptionV3
+from TonguePlusData.PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large.PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large_Model import build_mobilenet_v3
 
 
 np.set_printoptions(precision=3, suppress=True)
@@ -800,19 +800,19 @@ def yolo_body(inputs, num_anchors, num_classes):
     """Create Poly-YOLO model CNN body in Keras."""
     # backbone and feature extraction  ---------->
     print("input.shape:", inputs.shape[1:])
-    base_model = MobileNetV3_Large(input_tensor=inputs, n_class=1).build()# random initialization
+    base_model = build_mobilenet_v3(inputs, num_classes=1, model_type='large', pooling_type='avg', include_top=False)
     # extract features from each block end: ["add", "add_1", "add_10", "add_11"]
-    tiny = base_model.get_layer('add_1').output   # 64x64 : 1/4
-    small = base_model.get_layer('add_3').output  # 32x32 : 1/8
-    medium = base_model.get_layer('add_7').output  # 16x16 : 1/16
-    big = base_model.get_layer('add_9').output  # 8x8 : 1/32
+    tiny = base_model.get_layer('add').output   # 64x64 : 1/4
+    small = base_model.get_layer('add_2').output  # 32x32 : 1/8
+    medium = base_model.get_layer('add_6').output  # 16x16 : 1/16
+    big = base_model.get_layer('add_7').output  # 8x8 : 1/32
 
 
         # tiny, small, medium, big = darknet_body(inputs)
     # # check the layer names
     # for i, layer in enumerate(base_model.layers):
     #     print(i, layer.name)
-    # base_model.summary()
+    base_model.summary()
 
     # Neck  ------------------------>
     base = 6
