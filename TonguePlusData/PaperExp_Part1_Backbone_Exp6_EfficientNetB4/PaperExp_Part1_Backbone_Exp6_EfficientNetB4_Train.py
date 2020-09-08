@@ -42,11 +42,12 @@ import numpy as np
 from glob import glob
 from tensorflow.keras.preprocessing import image as krs_image
 import cv2
-# from tensorflow.keras.applications.inception_v3 import InceptionV3
-from TonguePlusData.PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large.PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large_Model import build_mobilenet_v3
+
+# import efficient net
+import efficientnet.keras as efn
 
 
-np.set_printoptions(precision=3, suppress=True)
+# np.set_printoptions(precision=3, suppress=True)
 MAX_VERTICES = 1000 #that allows the labels to have 1000 vertices per polygon at max. They are reduced for training
 ANGLE_STEP  = 17 #that means Poly-YOLO will detect 360/15=24 vertices per polygon at max
 NUM_ANGLES3  = int(360 // ANGLE_STEP * 3) #72 = (360/15)*3
@@ -799,20 +800,20 @@ def _tensor_shape(tensor):
 def yolo_body(inputs, num_anchors, num_classes):
     """Create Poly-YOLO model CNN body in Keras."""
     # backbone and feature extraction  ---------->
-    print("input.shape:", inputs.shape[1:])
-    base_model = build_mobilenet_v3(inputs, num_classes=1, model_type='large', pooling_type='avg', include_top=False)
+
+    base_model =efn.EfficientNetB4(input_tensor=inputs, classes=1, include_top=False, weights=None)
     # extract features from each block end: ["add", "add_1", "add_10", "add_11"]
-    tiny = base_model.get_layer('add').output   # 64x64 : 1/4
-    small = base_model.get_layer('add_2').output  # 32x32 : 1/8
-    medium = base_model.get_layer('add_6').output  # 16x16 : 1/16
-    big = base_model.get_layer('add_7').output  # 8x8 : 1/32
+    tiny = base_model.get_layer('block2d_add').output   # 64x64 : 1/4
+    small = base_model.get_layer('block3d_add').output  # 32x32 : 1/8
+    medium = base_model.get_layer('block5f_add').output  # 16x16 : 1/16
+    big = base_model.get_layer('block7b_add').output  # 8x8 : 1/32
 
 
         # tiny, small, medium, big = darknet_body(inputs)
-    # # check the layer names
+    # # # check the layer names
     # for i, layer in enumerate(base_model.layers):
     #     print(i, layer.name)
-    # base_model.summary()
+    base_model.summary()
 
     # Neck  ------------------------>
     base = 6
@@ -1593,7 +1594,7 @@ if __name__ == "__main__":
 
 
     def _main():
-        project_name = 'PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large{}'.format(model_index)
+        project_name = 'PaperExp_Part1_Backbone_Exp6_EfficientNetB4_FullAug_AngleStep17_{}'.format(model_index)
 
         phase = 1
         print("current working dir:", os.getcwd())
@@ -1656,7 +1657,7 @@ if __name__ == "__main__":
         # val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
         # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
 
-        # # for train dataset for the lab
+        # # # for train dataset for the lab
         train_input_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\inputs/*')
         train_mask_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\binary_labels/*.jpg')
         print("len of train imgs:", len(train_input_paths))
