@@ -31,7 +31,7 @@ try:
                     fileIdx += 1
                     if fileIdx > max_run:
                         break
-        print("total run {} training scripts!".format(fileIdx))
+        print("total run {} training scripts!".format(fileIdx-1))
 except Exception as e:
     print("Has some error", e)
 
@@ -52,8 +52,15 @@ except Exception as e:
 # # # PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large
 # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large')
 
-# # PaperExp_Part1_Backbone_Exp3_ResNet101V2
-run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp6_EfficientNetB4')
+# # # PaperExp_Part1_Backbone_Exp6_EfficientNetB4
+# run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp6_EfficientNetB4')
+
+# # P_Part1_Backbone_Exp7_Xception_Our_DpolarIoU_L2_loss
+run_case('/TonguePlusData/P_Part1_Backbone_Exp7_Xception_Our_DpolarIoU_L2_loss')
+
+
+
+
 
 
 

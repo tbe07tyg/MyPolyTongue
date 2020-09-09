@@ -4,7 +4,7 @@ import os
 import time
 # need to change
 from glob import glob
-from TonguePlusData.PaperExp_Part1_Backbone_Exp7_Xception_Our_DpolarIoU_L2_loss.PaperExp_Part1_Backbone_Exp7Xception_Our_DpolarIoU_L2_lossTrain import YOLO, \
+from TonguePlusData.P_Part1_Backbone_Exp8_Xception_DpolarIoU_Ignore_L2_loss.P_Part1_Backbone_Exp8_Xception_DpolarIoU_Ignore_L2_loss_Train import YOLO, \
     get_anchors, my_get_random_data #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
 import sys
 
@@ -247,5 +247,7 @@ label_out.close()
 print('total detected boxes: ', total_boxes)
 print('imgs: ', imgs)
 print("avg fps:", sum(fps_list)/len(fps_list))
+
+
 with open(FPS_txt, 'a') as f:
-    f.write("saved_model_name {}, num_imgs {}, total_detected_box {}, avg_fps {}\n".format (saved_model_name, imgs, total_boxes, sum(fps_list)/len(fps_list)))
+    f.write("saved_model_name {}, num_imgs {}, total_detected_box {}, avg_fps {}, std_fps {}\n".format (saved_model_name, imgs, total_boxes,np.array(fps_list).mean(), np.array(fps_list).std()))

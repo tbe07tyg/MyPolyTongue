@@ -1240,25 +1240,31 @@ def polar_diou(b1, b2, dist1, dist2):
     dist1 = K.expand_dims(dist1, -1)
     dist2= K.expand_dims(dist2, -1)
     concat_dist =K.concatenate([dist1, dist2], -1)
-
+    print("dist1 shape:", dist1.shape)
+    print("concat_dist shape:", concat_dist.shape)
     # find inter
     intersect = K.min(concat_dist, -1)
+    print("intersect shape:", intersect.shape)
     # intersect = K.print_tensor(intersect,'inetersect')
     union = K.max(concat_dist, -1)
     # union = K.print_tensor(union.shape,'union')
+
     p_diou = K.mean(intersect/(union+ K.epsilon()), -1)
     # p_diou = K.print_tensor(p_diou)
+    # p_diou = intersect / (union + K.epsilon()) # p_diou shape: (?, 64, 64, 9, 25)
+    print("p_diou shape:", p_diou.shape)
 
 
 
     center_distance = K.sum(K.square(b1_xy - b2_xy), axis=-1)
+    print("center_distance:", center_distance.shape)
     enclose_mins = K.minimum(b1_mins, b2_mins)
     enclose_maxes = K.maximum(b1_maxes, b2_maxes)
     enclose_wh = K.maximum(enclose_maxes - enclose_mins, 0.0)
     enclose_diagonal = K.sum(K.square(enclose_wh), axis=-1)
     p_diou = p_diou - 1.0 * (center_distance) / (enclose_diagonal + K.epsilon())
 
-    polar_diou = K.expand_dims(p_diou, -1)
+    polar_diou = K.expand_dims(p_diou, -1)  # - 1 in order to select box to ignore
     return polar_diou
 
 def yolo_loss(args, anchors, num_classes, ignore_thresh=.5):
@@ -1332,7 +1338,9 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5):
 
         def loop_body(b, ignore_mask):
             true_box = tf.boolean_mask(y_true[layer][b, ..., 0:4], object_mask_bool[b, ..., 0])
-            iou = box_iou(pred_box[b], true_box)   # calculate IoU
+            # iou = box_iou(pred_box[b], true_box)   # calculate IoU
+            print("predict box:shape:", pred_box)
+            iou=polar_diou(pred_box, y_true[layer][..., 0:4], pred_dist, raw_true_polygon_distnace)
             best_iou = K.max(iou, axis=-1)
             ignore_mask = ignore_mask.write(b, K.cast(best_iou < ignore_thresh, K.dtype(true_box)))
             return b + 1, ignore_mask
@@ -1349,10 +1357,10 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5):
         wh_loss = object_mask  * 0.5 * K.square(raw_true_wh - raw_pred[..., 2:4])
         confidence_loss = object_mask * K.binary_crossentropy(object_mask, raw_pred[..., 4:5], from_logits=True) + (1 - object_mask) * K.binary_crossentropy(object_mask, raw_pred[..., 4:5],
                                                                                                                                                              from_logits=True) * ignore_mask
-        class_loss = object_mask * K.binary_crossentropy(true_class_probs, raw_pred[..., 5:5 + num_classes], from_logits=True)
+        class_loss = object_mask * K.binary_crossentropy(true_class_probs, raw_pred[..., 5:5 + num_classes], from_logits=True) * ignore_mask
         polygon_loss_dist_L2 = object_mask * 0.5 * K.square(raw_true_polygon_dist - raw_pred[..., 5 + num_classes:5 + num_classes + NUM_ANGLES])
-        polygon_loss_dist_CE = object_mask  * 0.5 * K.binary_crossentropy(
-            raw_true_polygon_dist , raw_pred[..., 5 + num_classes:5 + num_classes + NUM_ANGLES], from_logits=True)
+        # polygon_loss_dist_CE = object_mask  * 0.5 * K.binary_crossentropy(
+        #     raw_true_polygon_dist , raw_pred[..., 5 + num_classes:5 + num_classes + NUM_ANGLES], from_logits=True)
         # polygon_loss_y = object_mask * vertices_mask * box_loss_scale * K.binary_crossentropy(raw_true_polygon_y, raw_pred[..., 5 + num_classes + 1:5 + num_classes + NUM_ANGLES3:3], from_logits=True)
         # vertices_confidence_loss = object_mask * K.binary_crossentropy(vertices_mask, raw_pred[..., 5 + num_classes + 2:5 + num_classes + NUM_ANGLES3:3], from_logits=True)
 
@@ -1382,12 +1390,12 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5):
         # polygon_loss = K.sum(polygon_loss_x) / mf + K.sum(polygon_loss_y) / mf
         polygon_dist_loss = K.sum(polygon_loss_dist_L2)
         #
-        polar_diou_loss = K.sum(object_mask * (1 - polar_diou(pred_box,
-                                                              y_true[layer][..., 0:4],
-                                                              pred_dist,
-                                                              raw_true_polygon_distnace)))
+        Polar_diou = polar_diou(pred_box, y_true[layer][..., 0:4], pred_dist,raw_true_polygon_distnace)
+        # Polar_diou = K.print_tensor(Polar_diou, "Polar_diou")
+        print("Polar_diou:", Polar_diou)
+        polar_diou_loss = K.sum(object_mask * (1 - Polar_diou))
 
-        loss += (xy_loss + wh_loss + confidence_loss + polar_diou_loss + class_loss + 0.2 * polygon_dist_loss)/ (K.sum(object_mask) + 1)
+        # loss += (xy_loss + wh_loss + confidence_loss + polar_diou_loss + class_loss + 0.2 * polygon_dist_loss)/ (K.sum(object_mask) + 1)
 
         # xy_loss round: 11   wh_loss round: 11      d_loss around: 10  polygon_dist_loss(L2: 30): 60   polar_diou_loss: 11
         # loss += (polygon_dist_loss)/ (K.sum(object_mask) + 1)*mf
@@ -1788,7 +1796,7 @@ if __name__ == "__main__":
 
 
     def _main():
-        project_name = 'PaperExp_Part1_Backbone_Exp7_Xception_Our_DpolarIoU_L2_loss_FullAug_AngleStep14_{}'.format(model_index)
+        project_name = 'P_Part1_Backbone_Exp8_Xception_DpolarIoU_Ignore_L2_loss_FullAug_AngleStep14_{}'.format(model_index)
 
         phase = 1
         print("current working dir:", os.getcwd())
@@ -1852,7 +1860,7 @@ if __name__ == "__main__":
                                                              embeddings_metadata=None)
 
         # for my data generator
-        # # # for train dataset
+        # # for train dataset
         # train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
         # train_mask_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
         # print("len of train imgs:", len(train_input_paths))
@@ -1863,7 +1871,7 @@ if __name__ == "__main__":
         # val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
         # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
         #
-        # # # # # # # # for train dataset for the lab
+        # # # # # # # # # for train dataset for the lab
         train_input_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\inputs/*')
         train_mask_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\binary_labels/*.jpg')
         print("len of train imgs:", len(train_input_paths))
@@ -1946,7 +1954,7 @@ if __name__ == "__main__":
             "class_loss" : lambda y_true, y_pred: y_pred,
             "polygon_dist_loss": lambda y_true, y_pred: y_pred
         }
-        lossWeights = {"xy_loss": 1.0, "wh_loss" : 1.0, "confidence_loss": 1.0, "polar_diou_loss": 1.0, "class_loss": 1.0, "polygon_dist_loss":1.0}
+        lossWeights = {"xy_loss": 1.0, "wh_loss" : 1.0, "confidence_loss": 1.0, "polar_diou_loss": 1.0, "class_loss": 1.0, "polygon_dist_loss": 0.2}
         model.compile(optimizer=Adadelta(0.5), loss=losses, loss_weights=lossWeights)
 
         epochs = 100

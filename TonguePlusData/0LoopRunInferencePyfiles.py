@@ -98,18 +98,25 @@ try:
         for i in range (0, len(lines)):
 
             lines[i] = lines[i].split(',')
+        print(lines)
         Total_avg_fps_list = []
+        Total_std_fps_list = []
         for each_case in lines:
-            fps_element =  each_case[-1]
-            fps_value =  float(fps_element.split()[-1])
+            avg_fps_element =  each_case[-2]
+            avg_fps_value =  float(avg_fps_element.split()[-1])
+            std_fps_element = each_case[-1]
+            std_fps_value = float(std_fps_element.split()[-1])
             # print(type(fps_value))
-            Total_avg_fps_list.append(fps_value)
+            Total_avg_fps_list.append(avg_fps_value)
+            Total_std_fps_list.append(std_fps_value)
         Total_avg_fps = sum(Total_avg_fps_list)/len(Total_avg_fps_list)
+        Total_std_fps = sum(Total_std_fps_list) / len(Total_std_fps_list)
         print("Total_avg_fps:", Total_avg_fps)
+        print("Total_std_fps:", Total_std_fps)
         print("total_cases:", len(lines))
         with open(inferenc_summary_txt, 'a') as f:
             f.write("Total_avg_fps {}\n".format(Total_avg_fps))
-
+            f.write("Total_std_fps {}\n".format(Total_std_fps))
         # search saved txt predictions and compared with text label with coco evaluation  ---------------->
         pred_txt_list = []
         label_txt_list = []
@@ -329,16 +336,25 @@ if __name__ == '__main__':
     #            output_folder=output_folder)
 
     # backbone: exp 6 PaperExp_Part1_Backbone_Exp6_EfficientNetB4
+    # # paper experiemtns starts ---------------------->
+    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\FUllPolygonsFixedGen\\PaperExperiments\\PaperExp_Part1_Backbone_Exp6_EfficientNetB4"
+    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp6_EfficientNetB4"
+    # #
+    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\backbone\\PaperExp_Part1_Backbone_Exp6_EfficientNetB4"
+    # infer_case(Inference_scripts_root=Inference_scripts_root,
+    #            Saved_model_file_root=Saved_model_file_root,
+    #            output_folder=output_folder)
+
+
+    # backbone: exp 7 P_Part1_Backbone_Exp7_Xception_Our_DpolarIoU_L2_loss
     # paper experiemtns starts ---------------------->
-    Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\FUllPolygonsFixedGen\\PaperExperiments\\PaperExp_Part1_Backbone_Exp6_EfficientNetB4"
-    Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp6_EfficientNetB4"
+    Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\FUllPolygonsFixedGen\\PaperExperiments\\P_Part1_Backbone_Exp7_Xception_Our_DpolarIoU_L2_loss"
+    Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_Part1_Backbone_Exp7_Xception_Our_DpolarIoU_L2_loss"
     #
-    output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\backbone\\PaperExp_Part1_Backbone_Exp6_EfficientNetB4"
+    output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\backbone\\Xception_Our_DpolarIoU_L2_loss" # the name path can not be too long
     infer_case(Inference_scripts_root=Inference_scripts_root,
                Saved_model_file_root=Saved_model_file_root,
                output_folder=output_folder)
-
-
 
 
 
