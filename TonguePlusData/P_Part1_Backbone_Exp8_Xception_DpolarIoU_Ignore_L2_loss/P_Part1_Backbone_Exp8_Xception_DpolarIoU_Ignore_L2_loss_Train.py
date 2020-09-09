@@ -1267,7 +1267,7 @@ def polar_diou(b1, b2, dist1, dist2):
     polar_diou = K.expand_dims(p_diou, -1)  # - 1 in order to select box to ignore
     return polar_diou
 
-def yolo_loss(args, anchors, num_classes, ignore_thresh=.5):
+def yolo_loss(args, anchors, num_classes, ignore_thresh=.4):
     """Return yolo_loss tensor
 
     Parameters
@@ -1340,9 +1340,9 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5):
 
         def loop_body(b, ignore_mask):
             true_box = tf.boolean_mask(y_true[layer][b, ..., 0:4], object_mask_bool[b, ..., 0])
-            # iou = box_iou(pred_box[b], true_box)   # calculate IoU
+            iou = box_iou(pred_box[b], true_box)   # calculate IoU
             print("predict box:shape:", pred_box)
-            iou=polar_diou(pred_box, y_true[layer][..., 0:4], pred_dist, raw_true_polygon_distnace)
+            # iou= bbox(pred_box, y_true[layer][..., 0:4], pred_dist, raw_true_polygon_distnace)
             best_iou = K.max(iou, axis=-1)
             ignore_mask = ignore_mask.write(b, K.cast(best_iou < ignore_thresh, K.dtype(true_box)))
             return b + 1, ignore_mask
@@ -1357,8 +1357,10 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5):
         # K.binary_crossentropy is helpful to avoid exp overflow.
         xy_loss = object_mask * box_loss_scale * K.binary_crossentropy(raw_true_xy, raw_pred[..., 0:2], from_logits=True)
         wh_loss = object_mask * box_loss_scale * 0.5 * K.square(raw_true_wh - raw_pred[..., 2:4])
+
+        # (1 - object_mask) for background response
         confidence_loss = object_mask * K.binary_crossentropy(object_mask, raw_pred[..., 4:5], from_logits=True) + (1 - object_mask) * K.binary_crossentropy(object_mask, raw_pred[..., 4:5],
-                                                                                                                                                             from_logits=True) * ignore_mask
+                                                                                                                                                             from_logits=True) * ignore_mask # ignore_mask for negatives
         class_loss = object_mask * K.binary_crossentropy(true_class_probs, raw_pred[..., 5:5 + num_classes], from_logits=True)
         polygon_loss_dist_L2 = object_mask * box_loss_scale * 0.5 * K.square(raw_true_polygon_dist - raw_pred[..., 5 + num_classes:5 + num_classes + NUM_ANGLES])
         # polygon_loss_dist_CE = object_mask  * 0.5 * K.binary_crossentropy(
