@@ -1318,6 +1318,8 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5):
         raw_true_xy = y_true[layer][..., :2] * grid_shapes[layer][::-1] - grid
         raw_true_wh = K.log(y_true[layer][..., 2:4] / anchors[anchor_mask[layer]] * input_shape[::-1] + K.epsilon()) # to avoid log (0)
         raw_true_wh = K.switch(object_mask, raw_true_wh, K.zeros_like(raw_true_wh))  # avoid log(0)=-inf  # only positive use to optimized
+        # weights for every box
+        box_loss_scale = 2 - y_true[layer][..., 2:3] * y_true[layer][..., 3:4]
 
         raw_true_polygon_distnace = y_true[layer][..., 5 + num_classes: 5 + num_classes + NUM_ANGLES]
         dx = K.square(anchors[anchor_mask[layer]][..., 0:1] / 2)  # get gt anchor x
@@ -1353,12 +1355,12 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.5):
 
         # calculate loss------------------------------------>
         # K.binary_crossentropy is helpful to avoid exp overflow.
-        xy_loss = object_mask  * K.binary_crossentropy(raw_true_xy, raw_pred[..., 0:2], from_logits=True)
-        wh_loss = object_mask  * 0.5 * K.square(raw_true_wh - raw_pred[..., 2:4])
+        xy_loss = object_mask * box_loss_scale * K.binary_crossentropy(raw_true_xy, raw_pred[..., 0:2], from_logits=True)
+        wh_loss = object_mask * box_loss_scale * 0.5 * K.square(raw_true_wh - raw_pred[..., 2:4])
         confidence_loss = object_mask * K.binary_crossentropy(object_mask, raw_pred[..., 4:5], from_logits=True) + (1 - object_mask) * K.binary_crossentropy(object_mask, raw_pred[..., 4:5],
                                                                                                                                                              from_logits=True) * ignore_mask
-        class_loss = object_mask * K.binary_crossentropy(true_class_probs, raw_pred[..., 5:5 + num_classes], from_logits=True) * ignore_mask
-        polygon_loss_dist_L2 = object_mask * 0.5 * K.square(raw_true_polygon_dist - raw_pred[..., 5 + num_classes:5 + num_classes + NUM_ANGLES])
+        class_loss = object_mask * K.binary_crossentropy(true_class_probs, raw_pred[..., 5:5 + num_classes], from_logits=True)
+        polygon_loss_dist_L2 = object_mask * box_loss_scale * 0.5 * K.square(raw_true_polygon_dist - raw_pred[..., 5 + num_classes:5 + num_classes + NUM_ANGLES])
         # polygon_loss_dist_CE = object_mask  * 0.5 * K.binary_crossentropy(
         #     raw_true_polygon_dist , raw_pred[..., 5 + num_classes:5 + num_classes + NUM_ANGLES], from_logits=True)
         # polygon_loss_y = object_mask * vertices_mask * box_loss_scale * K.binary_crossentropy(raw_true_polygon_y, raw_pred[..., 5 + num_classes + 1:5 + num_classes + NUM_ANGLES3:3], from_logits=True)
