@@ -808,6 +808,8 @@ def _tensor_shape(tensor):
 
 def yolo_body(inputs, num_anchors, num_classes):
     """Create Poly-YOLO model CNN body in Keras."""
+
+    # this function return to create model for loss and prediction for evaluation need to check for codes
     # backbone and feature extraction  ---------->
 
     base_model = Xception(input_tensor=inputs, weights=None, include_top=False) # random initialization
@@ -844,12 +846,25 @@ def yolo_body(inputs, num_anchors, num_classes):
     print("NUM_ANGLES:", NUM_ANGLES)
     print("num_anchors:", num_anchors)
     print()
-    all = compose(
+    all_detection = compose(
         DarknetConv2D_BN_Mish(num_filters * 2, (3, 3)),
 
         DarknetConv2D(num_anchors * (num_classes + 5 + NUM_ANGLES), (1, 1)))(x)
     print("all.shape:", all.shape)
-    return Model(inputs, all)
+
+    # all_detection_box = all_detection[..., 0:4]
+    # all_detection_distance = all_detection[..., 5 + num_classes: 5 + num_classes + NUM_ANGLES]
+    # all_detection_effect =
+    mask_head = DarknetConv2D(num_filters * 2, (3, 3))(all_detection)
+    mask_feaurex2 = UpSampling2D(2, interpolation='bilinear')(mask_head)
+
+    # one more conv 128 feature
+    feature128 = DarknetConv2D_BN_Mish(64, (3, 3))(mask_feaurex2)
+    MaskPred128 = Conv2D(num_classes, 1, activation = 'sigmoid')(feature128)
+    MaskPred256 = UpSampling2D(2, interpolation='bilinear')(MaskPred128)
+    Model_detect = Model(inputs, all_detection)
+    Model_mask = Model(inputs, MaskPred256)
+    return Model_detect, Model_mask
 
 
 
@@ -1284,10 +1299,18 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.4):
 
     """
     num_layers = 1
-    yolo_outputs = args[:num_layers]
-    y_true = args[num_layers:]
+    yolo_outputs = args[:1]
+    mask_outputs = args[1:2]
+    y_true = args[2:3]
+    y_true_mask =  args[3:]
+    # calculate y_true_mask
+    mask_loss = K.binary_crossentropy(y_true_mask[0], mask_outputs[0], from_logits=False)
+
+
     print("yolo_outputs.shape", yolo_outputs)
+    print("mask_outputs.shape", mask_outputs)
     print("y_true.shape", y_true)
+    print("y_true_mask.shape", y_true_mask)
     g_y_true = y_true
     # define a input shape as a 2d shape= (imgH,imgW)*grid_size_multiplier = feature map shape  * 4 = (rawiput W, raw input H)
     input_shape = K.cast(K.shape(yolo_outputs[0])[1:3] * grid_size_multiplier, K.dtype(y_true[0]))
@@ -1403,7 +1426,7 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.4):
 
         # xy_loss round: 11   wh_loss round: 11      d_loss around: 10  polygon_dist_loss(L2: 30): 60   polar_diou_loss: 11
         # loss += (polygon_dist_loss)/ (K.sum(object_mask) + 1)*mf
-    return xy_loss, wh_loss, confidence_loss, polar_diou_loss, class_loss, polygon_dist_loss
+    return xy_loss, wh_loss, confidence_loss, polar_diou_loss, class_loss, polygon_dist_loss, mask_loss
 
 
 class YOLO(object):
@@ -1456,8 +1479,8 @@ class YOLO(object):
         try:
             self.yolo_model = load_model(model_path, compile=False)
         except:
-            self.yolo_model = yolo_body(Input(shape=(256, 256, 3)), anchors_per_level, num_classes)
-            self.yolo_model.load_weights(self.model_path)  # make sure model, anchors and classes match
+            self.yolo_model,_ = yolo_body(Input(shape=(256, 256, 3)), anchors_per_level, num_classes)
+            self.yolo_model.load_weights(self.model_path, by_name=True, skip_mismatch=True)  # make sure model, anchors and classes match
         else:
             # novy output
             assert self.yolo_model.layers[-1].output_shape[-1] == \
@@ -1548,7 +1571,7 @@ def my_Gnearator(images_list, masks_list, batch_size, input_shape, anchors, num_
     while True:
         image_data_list = []
         box_data_list = []
-        # mask_data = []
+        mask_data_list = []
         # raw_img_path =[]
         # raw_mask_path = []
         # # mypolygon_data = []
@@ -1600,13 +1623,15 @@ def my_Gnearator(images_list, masks_list, batch_size, input_shape, anchors, num_
             image_data_list.append(img)
             # box_data.append(box)
             box_data_list.append(box)
+            mask_data_list.append(aug_mask)
 
         image_batch = np.array(image_data_list)
         box_batch = np.array(box_data_list)
+        mask_batch =  np.array(mask_data_list)
         # preprocess the bbox into the regression targets
         y_true = my_preprocess_true_boxes_NPinterp(box_batch, input_shape, anchors, num_classes)
-        yield [image_batch, *y_true], \
-              [np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size)]
+        yield [image_batch, *y_true, mask_batch], \
+              [np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size)]
 
 
 def my_get_random_data(img_path, mask_path, input_shape, image_datagen, mask_datagen, train_or_test):
@@ -1663,8 +1688,9 @@ def my_get_random_data(img_path, mask_path, input_shape, image_datagen, mask_dat
 
     # normal the image ----------------->
     aug_image = aug_image / 255.0
-
-
+    aug_mask = aug_mask / 255.0
+    aug_mask =  np.expand_dims(aug_mask, -1)  # since in our case ,we only have one class, if multiple classes binary labels concate at the last dimension
+    # print("aug_mask.shape:", aug_mask.shape)
     return aug_image, box_data, myPolygon, aug_mask, annotation_line
 
 def encode_polygone(img_path, contours, MAX_VERTICES =1000):
@@ -1800,7 +1826,7 @@ if __name__ == "__main__":
 
 
     def _main():
-        project_name = 'P_Part1_BK_Exp8_Xception_DpolarIoUBoxscaleL2_loss_FA_AS14_{}'.format(model_index)
+        project_name = 'P_Part1_BK_Exp9_Xception_DpolarIoU_IgnoreL2Maskloss_FAugAS14_{}'.format(model_index)
 
         phase = 1
         print("current working dir:", os.getcwd())
@@ -1956,9 +1982,10 @@ if __name__ == "__main__":
             "confidence_loss" : lambda y_true, y_pred: y_pred,
             "polar_diou_loss" : lambda y_true, y_pred: y_pred,
             "class_loss" : lambda y_true, y_pred: y_pred,
-            "polygon_dist_loss": lambda y_true, y_pred: y_pred
+            "polygon_dist_loss": lambda y_true, y_pred: y_pred,
+            "mask_loss": lambda y_true, y_pred: y_pred
         }
-        lossWeights = {"xy_loss": 1.0, "wh_loss" : 1.0, "confidence_loss": 1.0, "polar_diou_loss": 1.0, "class_loss": 1.0, "polygon_dist_loss": 0.2}
+        lossWeights = {"xy_loss": 0.1, "wh_loss" : 0.1, "confidence_loss": 0.1, "polar_diou_loss": 0.3, "class_loss": 0.1, "polygon_dist_loss": 0.2, "mask_loss": 0.1}
         model.compile(optimizer=Adadelta(0.5), loss=losses, loss_weights=lossWeights)
 
         epochs = 100
@@ -1995,10 +2022,12 @@ if __name__ == "__main__":
         num_anchors = len(anchors)
         # CODE CHANGED FOR MY NP INTERP
         y_true = Input(shape=(h // grid_size_multiplier, w // grid_size_multiplier, anchors_per_level, num_classes + 5 + NUM_ANGLES))
+        y_true_mask = Input(shape=(256, 256, num_classes))
         print("anchors_per_level:", anchors_per_level)
         print("num_classes:", num_classes)
-        model_body = yolo_body(image_input, anchors_per_level, num_classes)
+        model_body, Model_mask = yolo_body(image_input, anchors_per_level, num_classes)
         print("model_body.output.shape",model_body.outputs)
+        print("Model_mask.output.shape", Model_mask.outputs)
         print('Create Poly-YOLO model with {} anchors and {} classes.'.format(num_anchors, num_classes))
 
         if load_pretrained:
@@ -2006,9 +2035,9 @@ if __name__ == "__main__":
             print('Load weights {}.'.format(weights_path))
 
 
-        xy_loss, wh_loss, confidence_loss, polar_diou_loss, class_loss, polygon_dist_loss = Lambda(yolo_loss, output_shape=(1,), name='yolo_loss',
+        xy_loss, wh_loss, confidence_loss, polar_diou_loss, class_loss, polygon_dist_loss, mask_loss = Lambda(yolo_loss, output_shape=(1,), name='yolo_loss',
                             arguments={'anchors': anchors, 'num_classes': num_classes, 'ignore_thresh': 0.5})(
-            [model_body.output, y_true])
+            [model_body.output, Model_mask.output, y_true, y_true_mask])
 
         # total_loss = Lambda(lambda x: x, name='total_loss')(loss)
         xy_loss = Lambda(lambda x: x, name='xy_loss')(xy_loss)
@@ -2017,11 +2046,11 @@ if __name__ == "__main__":
         polar_diou_loss = Lambda(lambda x: x, name='polar_diou_loss')(polar_diou_loss)
         class_loss = Lambda(lambda x: x, name='class_loss')(class_loss)
         polygon_dist_loss = Lambda(lambda x: x, name='polygon_dist_loss')(polygon_dist_loss)
-
+        mask_loss = Lambda(lambda x: x, name='mask_loss')(mask_loss)
         print("model_loss graph finished")
 
 
-        model = Model([model_body.input, y_true], [xy_loss, wh_loss, confidence_loss, polar_diou_loss, class_loss, polygon_dist_loss])
+        model = Model([model_body.input, y_true, y_true_mask], [xy_loss, wh_loss, confidence_loss, polar_diou_loss, class_loss, polygon_dist_loss, mask_loss])
 
         # print(model.summary())
         return model
