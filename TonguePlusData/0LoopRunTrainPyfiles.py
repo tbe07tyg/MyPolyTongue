@@ -54,10 +54,14 @@ except Exception as e:
 
 # # # PaperExp_Part1_Backbone_Exp6_EfficientNetB4
 # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp6_EfficientNetB4')
+#
+# # # P_Part1_Backbone_Exp7_Xception_Our_DpolarIoU_L2_loss
+# run_case('/TonguePlusData/P_Part1_Backbone_Exp7_Xception_Our_DpolarIoU_L2_loss')
 
-# # P_Part1_Backbone_Exp7_Xception_Our_DpolarIoU_L2_loss
-run_case('/TonguePlusData/P_Part1_Backbone_Exp7_Xception_Our_DpolarIoU_L2_loss')
 
+
+# # P_Part1_Backbone_Exp8_Xception_DpolarIoU_Ignore_L2_loss
+run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData/P_Part1_Backbone_Exp8_Xception_DpolarIoU_Ignore_L2_loss')
 
 
 
