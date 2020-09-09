@@ -60,8 +60,8 @@ except Exception as e:
 
 
 
-# # # P_Part1_Backbone_Exp8_Xception_DpolarIoU_Ignore_L2_loss
-# run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData/P_Part1_Backbone_Exp8_Xception_DpolarIoU_Ignore_L2_loss')
+# # # P_Part1_Backbone_Exp8_Xception_DpolarIoU_BoxScale_L2_loss
+# run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData/P_Part1_Backbone_Exp8_Xception_DpolarIoU_BoxScale_L2_loss')
 #
 
 
@@ -73,7 +73,7 @@ except Exception as e:
 # run_case('/TonguePlusData/PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large')
 #
 # Case 1  BaseExp
-run_case('/TonguePlusData/P_Part1_BK_Exp9_Xception_DpolarIoU_Ignore_L2_Mask_loss')
+run_case('/TonguePlusData/P_Part1_BK_Exp9_Xception_DpolarIoU_BoxScale_L2_Mask_loss')
 #
 # # # Case 1_2 BASE NO SAE
 # # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_1_2_base_noSAE')

@@ -1826,7 +1826,7 @@ if __name__ == "__main__":
 
 
     def _main():
-        project_name = 'P_Part1_BK_Exp9_Xception_DpolarIoU_IgnoreL2Maskloss_FAugAS14_{}'.format(model_index)
+        project_name = 'P_Part1_BK_Exp9_XceptionDpolarIoU_BoxScaleL2Mask_loss_FAugAS14_{}'.format(model_index)
 
         phase = 1
         print("current working dir:", os.getcwd())
