@@ -4,7 +4,7 @@ import os
 import time
 # need to change
 from glob import glob
-from TonguePlusData.P_Part1_BK_Exp9_Xception_DpolarIoU_BoxScale_L2_Mask_loss.P_Part1_BK_Exp9_Xception_DpolarIoU_Ignore_L2_Mask_loss_Train import YOLO, \
+from TonguePlusData.P_Part1_BK_Exp10_Xception_DpolarIoU_BoxScale_L2_MaskIoU_loss.P_Part1_BK_Exp10_Xception_DpolarIoU_BoxScale_L2_MaskIoU_loss_Train import YOLO, \
     get_anchors, my_get_random_data #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
 import sys
 
