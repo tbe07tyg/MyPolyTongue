@@ -356,15 +356,25 @@ if __name__ == '__main__':
     #            Saved_model_file_root=Saved_model_file_root,
     #            output_folder=output_folder)
 
+    # # backbone: exp 8 P_Part1_Backbone_Exp7_Xception_Our_DpolarIoU_L2_loss
+    # # paper experiemtns starts ---------------------->
+    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\FUllPolygonsFixedGen\\PaperExperiments\\P_Part1_Bk_Exp8_Xception_DpolarIoU_Ignore_L2_loss"
+    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_Part1_Backbone_Exp8_Xception_DpolarIoU_BoxScale_L2_loss"
+    # #
+    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\backbone\\XceptionDpolarIoUIgnoreL2_loss"  # the name path can not be too long
+    # infer_case(Inference_scripts_root=Inference_scripts_root,
+    #            Saved_model_file_root=Saved_model_file_root,
+    #            output_folder=output_folder)
+
     # backbone: exp 8 P_Part1_Backbone_Exp7_Xception_Our_DpolarIoU_L2_loss
     # paper experiemtns starts ---------------------->
-    Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\FUllPolygonsFixedGen\\PaperExperiments\\P_Part1_Bk_Exp8_Xception_DpolarIoU_Ignore_L2_loss"
-    Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_Part1_Backbone_Exp8_Xception_DpolarIoU_BoxScale_L2_loss"
+    Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\FUllPolygonsFixedGen\\PaperExperiments\\P_Part1_BK_Exp9_Xception_DpolarIoU_BoxScale_L2_Mask_loss"
+    Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_Part1_BK_Exp9_Xception_DpolarIoU_BoxScale_L2_Mask_loss"
     #
-    output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\backbone\\XceptionDpolarIoUIgnoreL2_loss"  # the name path can not be too long
+    output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\backbone\\Exp9_Xception_DpolarIoU_BoxScale_L2_Mask_loss"  # the name path can not be too long
     infer_case(Inference_scripts_root=Inference_scripts_root,
-               Saved_model_file_root=Saved_model_file_root,
-               output_folder=output_folder)
+       Saved_model_file_root=Saved_model_file_root,
+       output_folder=output_folder)
 
     # # CASE 5:  code test
     # Saved_model_file_root = "E:\\Projects\\logs\\tonguesSeg\\MyPolyTongue\\EXP_2_Mish"
