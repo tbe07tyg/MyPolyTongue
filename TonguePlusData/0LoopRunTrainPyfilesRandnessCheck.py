@@ -3,6 +3,7 @@ from glob import glob
 import numpy as np
 try:
     def run_case(file_dir,
+                 global_randomness_count,
                  rotation_range=90,
                  width_shift_range = 0.3,
                  height_shift_range = 0.3,
@@ -10,7 +11,9 @@ try:
                  shear_range=0.3,
                  brightness_range_start=0.5,
                  brightness_range_stop=0.3,
-                 max_run=5):
+                 max_run=5,
+
+                 ):
         """
         # rotation_range = 45
         # width_shift_range = 0.3
@@ -33,13 +36,15 @@ try:
             if file.endswith('Train.py'):
                 for i in range(max_run):
                     print("run file: {}  {} ".format(file, fileIdx))
-                    cmd = 'python ' + file + ' {} {} {} {} {} {} {} {}'.format(fileIdx,
+                    cmd = 'python ' + file + ' {} {} {} {} {} {} {} {} {}'.format(fileIdx,
                                                                             rotation_range,
                                                                             width_shift_range,
                                                                             height_shift_range,
                                                                             zoom_range,
                                                                             shear_range,
-                                                                            brightness_range_start, brightness_range_stop)
+                                                                            brightness_range_start, brightness_range_stop,
+                                                                            global_randomness_count
+                                                                                  )
                     print(cmd)
                     os.system(cmd)
                     fileIdx += 1
@@ -97,18 +102,30 @@ for i in range(10):
     brightness_range_start_in = brightness_range[i]
     brightness_range_stop_in = brightness_range[len(brightness_range)-1 - i]
     # brightness_range_in =  [brightness_range_start, brightness_range_stop]
-    if i ==4:
-        print("rotation_range_in:", rotation_range_in)
-        print("width_shift_range_in:", width_shift_range_in)
-        print("height_shift_range_in:", height_shift_range_in)
-        print("zoom_range_in:", zoom_range_in)
-        print("shear_range_in:", shear_range_in)
-        print("brightness_range_in:", [brightness_range_start_in, brightness_range_stop_in])
-        print()
+    # if i ==4:
+    #     print("rotation_range_in:", rotation_range_in)
+    #     print("width_shift_range_in:", width_shift_range_in)
+    #     print("height_shift_range_in:", height_shift_range_in)
+    #     print("zoom_range_in:", zoom_range_in)
+    #     print("shear_range_in:", shear_range_in)
+    #     print("brightness_range_in:", [brightness_range_start_in, brightness_range_stop_in])
+    #     print()
+
+    run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\P_Part2_RandomNess_Exp11_Methodexp8',
+             global_randomness_count=i,
+             rotation_range=rotation_range_in,
+             width_shift_range=width_shift_range_in,
+             height_shift_range=height_shift_range_in,
+             zoom_range=zoom_range_in,
+             shear_range=shear_range_in,
+             brightness_range_start=brightness_range_start_in,
+             brightness_range_stop=brightness_range_stop_in
+
+             )
 
 
-    #
-    # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_7_Mish_Best_Aug_reduced10Percent',
+    # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_Part2_RandomNess_Exp11_Methodexp8',
+    #          global_randomness_count= i,
     #          rotation_range=rotation_range_in,
     #          width_shift_range=width_shift_range_in,
     #          height_shift_range=height_shift_range_in,
@@ -116,5 +133,5 @@ for i in range(10):
     #          shear_range=shear_range_in,
     #          brightness_range_start=brightness_range_start_in,
     #          brightness_range_stop=brightness_range_stop_in
-
-             # )
+    #
+    #          )
