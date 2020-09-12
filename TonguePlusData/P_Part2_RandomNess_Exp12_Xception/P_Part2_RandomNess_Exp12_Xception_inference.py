@@ -4,7 +4,7 @@ import os
 import time
 # need to change
 from glob import glob
-from TonguePlusData.P_Part2_RandomNess_Exp11_Methodexp8.P_Part2_RandomNess_Exp11_Methodexp8_Train import YOLO, \
+from TonguePlusData.P_Part2_RandomNess_Exp12_Xception.P_Part2_RandomNess_Exp12_Xception_Train import YOLO, \
     get_anchors, my_get_random_data #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
 import sys
 
@@ -192,20 +192,23 @@ for test_path, mask_path in zip(test_input_paths,test_mask_paths):
 
     print("write image path")
     file.write(test_path + " ")
+
+    print(annotation_line)
+
+    # print(annotation_line, file=label_out)
+
     # browse all boxes
     for b in range(0, len(boxes)):
 
         # draw box and masks on the raw images:-------->
         f = translate_color(classes[b])
         points_to_draw = []
-        offset = len(polygons[b]) // 2  # this = NUM_ANGLES
-        # offset = NUM_ANGLES
+        offset = len(polygons[b]) // 3
+
         # filter bounding polygon vertices
-        print("polygons len:", len(polygons[b]))
-        print("offset")
-        for dst in range(0, offset):   # this = NUM_ANGLES LOOP TO GET (X,Y) pairs
-            # if polygons[b][dst + offset] > 0.3:
-            points_to_draw.append([int(polygons[b][dst]), int(polygons[b][dst + offset])])
+        for dst in range(0, len(polygons[b]) // 3):
+            if polygons[b][dst + offset * 2] > 0.3:
+                points_to_draw.append([int(polygons[b][dst]), int(polygons[b][dst + offset])])
 
         points_to_draw = np.asarray(points_to_draw)
         points_to_draw = points_to_draw.astype(np.int32)
@@ -224,13 +227,13 @@ for test_path, mask_path in zip(test_input_paths,test_mask_paths):
         str_to_write += str(scores[b]) + ","
         str_to_write += str(int(classes[b]))
 
-        offset = len(polygons[b]) // 2  # 72 for 24 vertexes. offset = 24
+        offset = len(polygons[b]) // 3  # 72 for 24 vertexes. offset = 24
         vertices = 0
-        for dst in range(0, len(polygons[b]) // 2):  # 下取整
-            # if polygons[b][dst + offset] > 0.2:
+        for dst in range(0, len(polygons[b]) // 3):  # 下取整
+            if polygons[b][dst + offset * 2] > 0.2:
 
-            str_to_write += "," + str(float(polygons[b][dst])) + "," + str(float(polygons[b][dst + offset]))
-            vertices += 1
+                str_to_write += "," + str(float(polygons[b][dst])) + "," + str(float(polygons[b][dst + offset]))
+                vertices += 1
         str_to_write += " "
         if vertices < 3:
             print("No mask found")
@@ -238,6 +241,8 @@ for test_path, mask_path in zip(test_input_paths,test_mask_paths):
             continue
         # print(str_to_write)
         file.write(str_to_write)
+
+
     file.write("\n")
 
     img = cv2.addWeighted(overlay, 0.4, background, 1 - 0.4, 0)
@@ -247,7 +252,5 @@ label_out.close()
 print('total detected boxes: ', total_boxes)
 print('imgs: ', imgs)
 print("avg fps:", sum(fps_list)/len(fps_list))
-
-
 with open(FPS_txt, 'a') as f:
-    f.write("saved_model_name {}, num_imgs {}, total_detected_box {}, avg_fps {}, std_fps {}\n".format (saved_model_name, imgs, total_boxes,np.array(fps_list).mean(), np.array(fps_list).std()))
+    f.write("saved_model_name {}, num_imgs {}, total_detected_box {}, avg_fps {}\n".format (saved_model_name, imgs, total_boxes, sum(fps_list)/len(fps_list)))
