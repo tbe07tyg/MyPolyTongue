@@ -93,7 +93,8 @@ brightness_range = np.linspace(0.5, 1.3, 20)
 # for rangeInterval in ranges:
 #
 #     print(len(rangeInterval))
-for i in range(10):
+for i in range(7,10):
+    print("i:",i)
     rotation_range_in = rotation_range[len(rotation_range)-1-i]
     width_shift_range_in = width_shift_range[len(width_shift_range)-1 - i]
     height_shift_range_in = width_shift_range[len(height_shift_range)-1 - i]
@@ -110,22 +111,9 @@ for i in range(10):
     #     print("shear_range_in:", shear_range_in)
     #     print("brightness_range_in:", [brightness_range_start_in, brightness_range_stop_in])
     #     print()
-
-    run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\P_Part2_RandomNess_Exp11_Methodexp8',
-             global_randomness_count=i,
-             rotation_range=rotation_range_in,
-             width_shift_range=width_shift_range_in,
-             height_shift_range=height_shift_range_in,
-             zoom_range=zoom_range_in,
-             shear_range=shear_range_in,
-             brightness_range_start=brightness_range_start_in,
-             brightness_range_stop=brightness_range_stop_in
-
-             )
-
-
-    # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_Part2_RandomNess_Exp11_Methodexp8',
-    #          global_randomness_count= i,
+    #
+    # run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\P_Part2_RandomNess_Exp11_Methodexp8',
+    #          global_randomness_count=i,
     #          rotation_range=rotation_range_in,
     #          width_shift_range=width_shift_range_in,
     #          height_shift_range=height_shift_range_in,
@@ -135,3 +123,16 @@ for i in range(10):
     #          brightness_range_stop=brightness_range_stop_in
     #
     #          )
+
+
+    run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_Part2_RandomNess_Exp11_Methodexp8',
+             global_randomness_count= i,
+             rotation_range=rotation_range_in,
+             width_shift_range=width_shift_range_in,
+             height_shift_range=height_shift_range_in,
+             zoom_range=zoom_range_in,
+             shear_range=shear_range_in,
+             brightness_range_start=brightness_range_start_in,
+             brightness_range_stop=brightness_range_stop_in
+
+             )
