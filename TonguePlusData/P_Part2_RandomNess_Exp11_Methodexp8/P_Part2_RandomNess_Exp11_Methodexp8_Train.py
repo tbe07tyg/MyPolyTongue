@@ -64,29 +64,29 @@ print("ANGLE_STEP:", ANGLE_STEP)
 # brightness_range=[0.5, 1.3]
 
 # random aug---------------------->
-
+ # need to comment when running the analyzing codes
 # for running the script
-model_index = sys.argv[1]
-
-rotation_range = int(float(sys.argv[2]))
-width_shift_range = float(sys.argv[3])
-height_shift_range = float(sys.argv[4])
-zoom_range = float(sys.argv[5])
-shear_range = float(sys.argv[6])
-brightness_range_start = float(sys.argv[7])  # sys.argv can not pass list
-brightness_range_stop = float(sys.argv[8])
-
-global_randomness_count = sys.argv[9]
-brightness_range = [float(brightness_range_start), float(brightness_range_stop)]
-print("input AUG----------------------->")
-print("rotation_range:", rotation_range)
-print("width_shift_range:", width_shift_range)
-print("height_shift_range:", height_shift_range)
-print("zoom_range:", zoom_range)
-print("shear_range:", shear_range)
-print("brightness_range_start:", brightness_range)
-print("input AUG----------------------->")
-horizontal_flip = True
+# model_index = sys.argv[1]
+#
+# rotation_range = int(float(sys.argv[2]))
+# width_shift_range = float(sys.argv[3])
+# height_shift_range = float(sys.argv[4])
+# zoom_range = float(sys.argv[5])
+# shear_range = float(sys.argv[6])
+# brightness_range_start = float(sys.argv[7])  # sys.argv can not pass list
+# brightness_range_stop = float(sys.argv[8])
+#
+# global_randomness_count = sys.argv[9]
+# brightness_range = [float(brightness_range_start), float(brightness_range_stop)]
+# print("input AUG----------------------->")
+# print("rotation_range:", rotation_range)
+# print("width_shift_range:", width_shift_range)
+# print("height_shift_range:", height_shift_range)
+# print("zoom_range:", zoom_range)
+# print("shear_range:", shear_range)
+# print("brightness_range_start:", brightness_range)
+# print("input AUG----------------------->")
+# horizontal_flip = True
 
 #--------------------------
 

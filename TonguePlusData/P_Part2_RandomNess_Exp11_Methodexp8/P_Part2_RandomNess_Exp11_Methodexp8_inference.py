@@ -122,12 +122,12 @@ anchors = get_anchors(anchors_path)
 input_shape = (256, 256)  # multiple of 32, hw
 
 # for validation dataset  # we need or label and masks are the same shape
-# test_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
-# test_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
+test_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
+test_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
 
 # # for validation dataset  # we need or label and masks are the same shape
-test_input_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\test_inputs/*')
-test_mask_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
+# test_input_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\test_inputs/*')
+# test_mask_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
 assert len(test_input_paths) == len(test_mask_paths), "test imgs and mask are not the same"
 print("total {} testsamples read".format(len(test_input_paths)))
 # create data_generator
