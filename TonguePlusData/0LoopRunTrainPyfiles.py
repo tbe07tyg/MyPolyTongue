@@ -71,9 +71,9 @@ except Exception as e:
 #
 
 
-
-# # Exp10_Xception_DpolarIoU_BoxScale_L2_MaskIoU_loss
-run_case('/TonguePlusData/Exp10_Xception_DpolarIoU_BoxScale_L2_MaskIoU_loss')
+#
+# # # Exp10_Xception_DpolarIoU_BoxScale_L2_MaskIoU_loss
+# run_case('/TonguePlusData/Exp10_Xception_DpolarIoU_BoxScale_L2_MaskIoU_loss')
 
 
 
@@ -121,8 +121,8 @@ run_case('/TonguePlusData/Exp10_Xception_DpolarIoU_BoxScale_L2_MaskIoU_loss')
 # #     # # Case 8 MISH NP INTERP
 # # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_8_Mish_WithMyDataNpInterpDistRegOnly')
 #
-#  # # Case11 EXP_11_E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAug
-# run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_11_2_Mish_SameAs11_1_withSimulatedDataset')
-#
+ # # Case11 EXP_11_E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAug
+run_case('E:\\Projects\\MyPolyTongue\\/TonguePlusData/P_Part1_BK_Exp13_MyXceptionAnchorFree_SimulatedData')
+
 # #     # # Case11 MISH NP INTERP
 # # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAug')
