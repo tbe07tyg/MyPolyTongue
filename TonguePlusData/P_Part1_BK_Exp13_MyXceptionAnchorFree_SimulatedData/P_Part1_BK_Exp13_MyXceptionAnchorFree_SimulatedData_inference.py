@@ -5,7 +5,7 @@ import time
 # need to change
 from glob import glob
 from TonguePlusData.P_Part1_BK_Exp13_MyXceptionAnchorFree_SimulatedData.P_Part1_BK_Exp13_MyXceptionAnchorFree_SimulatedData_Train import YOLO, \
-    get_anchors, my_get_random_data #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
+    my_get_random_data #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
 import sys
 
 
