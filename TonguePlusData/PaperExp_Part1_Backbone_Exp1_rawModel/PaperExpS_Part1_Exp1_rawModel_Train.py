@@ -1504,13 +1504,13 @@ def encode_polygone(img_path, contours, MAX_VERTICES =1000):
 
     return annotation_line, my_poly_list
 
-def decode_annotationline(encoded_annotationline, MAX_VERTICES=1000, max_boxes=80, ANGLE_STEP=5):
+def decode_annotationline(encoded_annotationline, MAX_VERTICES=1000, max_boxes=80):
     """
     :param encoded_annotationline: string for lines of img_path and objects c and its contours
     :return:
     """
-    NUM_ANGLES3 = int(360 // ANGLE_STEP * 3)  # 72 = (360/15)*3
-    NUM_ANGLES = int(360 // ANGLE_STEP)
+    # NUM_ANGLES3 = int(360 // ANGLE_STEP * 3)  # 72 = (360/15)*3
+    # NUM_ANGLES = int(360 // ANGLE_STEP)
 
     # preprocessing of lines from string  ---> very important otherwise can not well split
     annotation_line = encoded_annotationline.split()
