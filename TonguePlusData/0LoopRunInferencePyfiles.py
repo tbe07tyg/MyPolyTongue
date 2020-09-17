@@ -308,24 +308,23 @@ if __name__ == '__main__':
     # backbone: exp 3 RESNET1010V2
     # paper experiemtns starts ---------------------->
 
-    Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\ModelSaved\\PaperExp_Part1_Backbone_Exp3_ResNet101V2"
-    Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp3_ResNet101V2"
-    #
-    output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\Infer\\PaperExp3"
-    infer_case(Inference_scripts_root=Inference_scripts_root,
-               Saved_model_file_root=Saved_model_file_root,
-               output_folder=output_folder)
-
-    # # backbone: exp 4 InceptionV3
-    # # paper experiemtns starts ---------------------->
-    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\FUllPolygonsFixedGen\\PaperExperiments\\PaperExp_Part1_Backbone_Exp4_InceptionV3"
-    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp4_InceptionV3"
+    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\ModelSaved\\PaperExp_Part1_Backbone_Exp3_ResNet101V2"
+    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp3_ResNet101V2"
     # #
-    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\backbone\\PaperExp_Part1_Backbone_Exp4_InceptionV3"
+    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\Infer\\PaperExp3"
     # infer_case(Inference_scripts_root=Inference_scripts_root,
     #            Saved_model_file_root=Saved_model_file_root,
     #            output_folder=output_folder)
+
+    # # backbone: exp 4 InceptionV3
+    # # paper experiemtns starts ---------------------->
+    Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\ModelSaved\\PaperExp_Part1_Backbone_Exp4_InceptionV3"
+    Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp4_InceptionV3"
     #
+    output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\Infer\\PaperExp4"
+    infer_case(Inference_scripts_root=Inference_scripts_root,
+               Saved_model_file_root=Saved_model_file_root,
+               output_folder=output_folder)
     # # backbone: exp 5 InceptionV3
     # # paper experiemtns starts ---------------------->
     # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\FUllPolygonsFixedGen\\PaperExperiments\\PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large"
