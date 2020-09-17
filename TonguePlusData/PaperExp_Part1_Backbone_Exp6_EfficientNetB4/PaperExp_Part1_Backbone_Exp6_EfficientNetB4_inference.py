@@ -125,10 +125,10 @@ input_shape = (256, 256)  # multiple of 32, hw
 # test_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
 # test_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
 
-# # for validation dataset  # we need or label and masks are the same shape
+# for validation dataset  # we need or label and masks are the same shape
 test_input_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\test_inputs/*')
 test_mask_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
-assert len(test_input_paths) == len(test_mask_paths), "test imgs and mask are not the same"
+# assert len(test_input_paths) == len(test_mask_paths), "test imgs and mask are not the same"
 print("total {} testsamples read".format(len(test_input_paths)))
 # create data_generator
 #
@@ -253,4 +253,5 @@ print('total detected boxes: ', total_boxes)
 print('imgs: ', imgs)
 print("avg fps:", sum(fps_list)/len(fps_list))
 with open(FPS_txt, 'a') as f:
-    f.write("saved_model_name {}, num_imgs {}, total_detected_box {}, avg_fps {}\n".format (saved_model_name, imgs, total_boxes, sum(fps_list)/len(fps_list)))
+    f.write("saved_model_name {}, num_imgs {}, total_detected_box {}, avg_fps {}, std_fps {}\n".format (saved_model_name, imgs, total_boxes,np.array(fps_list).mean(), np.array(fps_list).std()))
+
