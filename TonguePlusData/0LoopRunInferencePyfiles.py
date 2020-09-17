@@ -327,23 +327,23 @@ if __name__ == '__main__':
     #            output_folder=output_folder)
     # # backbone: exp 5 PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large
     # # paper experiemtns starts ---------------------->
-    Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\ModelSaved\\PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large"
-    Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large"
-    #
-    output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\Infer\\PaperExp5"
-    infer_case(Inference_scripts_root=Inference_scripts_root,
-               Saved_model_file_root=Saved_model_file_root,
-               output_folder=output_folder)
-
-    # backbone: exp 6 PaperExp_Part1_Backbone_Exp6_EfficientNetB4
-    # # paper experiemtns starts ---------------------->
-    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\FUllPolygonsFixedGen\\PaperExperiments\\PaperExp_Part1_Backbone_Exp6_EfficientNetB4"
-    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp6_EfficientNetB4"
+    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\ModelSaved\\PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large"
+    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large"
     # #
-    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\backbone\\PaperExp_Part1_Backbone_Exp6_EfficientNetB4"
+    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\Infer\\PaperExp5"
     # infer_case(Inference_scripts_root=Inference_scripts_root,
     #            Saved_model_file_root=Saved_model_file_root,
     #            output_folder=output_folder)
+
+    # backbone: exp 6 PaperExp_Part1_Backbone_Exp6_EfficientNetB4
+    # # paper experiemtns starts ---------------------->
+    Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\ModelSaved\\PaperExp_Part1_Backbone_Exp6_EfficientNetB4"
+    Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp6_EfficientNetB4"
+    #
+    output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\Infer\\PaperExp6"
+    infer_case(Inference_scripts_root=Inference_scripts_root,
+               Saved_model_file_root=Saved_model_file_root,
+               output_folder=output_folder)
 
     #
     # # backbone: exp 7 P_Part1_Backbone_Exp7_Xception_Our_DpolarIoU_L2_loss
