@@ -15,7 +15,7 @@ try:
         :param rotation_rangemax_run:
         :return:
         """
-        fileIdx =1
+        fileIdx =2
         # for root, dirs, files in os.walk(file_dir):
         #     print(files, "to be run")
         #     for i in files:
@@ -80,7 +80,8 @@ except Exception as e:
 
 
 
-
+# # # P_PartF_BK_FinalFull_CioUDMaskDicePolarDiouConfidence
+run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData/P_PartF_BK_FinalFull_CioUDMaskDicePolarDiouConfidence')
 
 
 
@@ -123,9 +124,9 @@ except Exception as e:
 #
 # #     # # Case 8 MISH NP INTERP
 # # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_8_Mish_WithMyDataNpInterpDistRegOnly')
-#
- # # Case11 EXP_11_E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAug
-run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData/P_PartF_BK_FinalFull_CioUDMaskDicePolarDiouConfidence')
+# #
+#  # # Case11 EXP_11_E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAug
+# run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData/P_PartF_BK_FinalFull_CioUDMaskDicePolarDiouConfidence')
 
 # #     # # Case11 MISH NP INTERP
 # # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAug')

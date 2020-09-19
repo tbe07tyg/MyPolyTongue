@@ -357,20 +357,29 @@ if __name__ == '__main__':
 
 
 
-    # # My method --- ----------------------> P_PartF_BK_FinalNoMask_CioUDPolarDioU
-    Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\ModelSaved\\P_PartF_BK_FinalNoMask_CioUDPolarDioU"
-    Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_PartF_BK_FinalNoMask_CioUDPolarDioU"
-    #
-    output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\Infer\\P_PartF_BK_FinalNoMask_CioUDPolarDioU"
-    infer_case(Inference_scripts_root=Inference_scripts_root,
-               Saved_model_file_root=Saved_model_file_root,
-               output_folder=output_folder)
+    # # # My method --- ----------------------> P_PartF_BK_FinalNoMask_CioUDPolarDioU
+    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\ModelSaved\\P_PartF_BK_FinalNoMask_CioUDPolarDioU"
+    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_PartF_BK_FinalNoMask_CioUDPolarDioU"
+    # #
+    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\Infer\\P_PartF_BK_FinalNoMask_CioUDPolarDioU"
+    # infer_case(Inference_scripts_root=Inference_scripts_root,
+    #            Saved_model_file_root=Saved_model_file_root,
+    #            output_folder=output_folder)
 
-    # P_PartF_BK_FinalNoMask_CioUDPolarDioUSAEBeforeAdd
-    Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\ModelSaved\\P_PartF_BK_FinalNoMask_CioUDPolarDioUSAEBeforeAdd"
-    Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_PartF_BK_FinalNoMask_CioUDPolarDioUSAEBeforeAdd"
+    # # P_PartF_BK_FinalNoMask_CioUDPolarDioUSAEBeforeAdd
+    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\ModelSaved\\P_PartF_BK_FinalNoMask_CioUDPolarDioUSAEBeforeAdd"
+    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_PartF_BK_FinalNoMask_CioUDPolarDioUSAEBeforeAdd"
+    # #
+    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\Infer\\P_PartF_BK_FinalNoMask_CioUDPolarDioUSAEBeforeAdd"
+    # infer_case(Inference_scripts_root=Inference_scripts_root,
+    #            Saved_model_file_root=Saved_model_file_root,
+    #            output_folder=output_folder)
+
+    # P_PartF_BK_FinalFull_CioUDMaskDicePolarDiouConfidence
+    Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\ModelSaved\\P_PartF_BK_FinalFull_CioUDMaskDicePolarDiouConfidence"
+    Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_PartF_BK_FinalFull_CioUDMaskDicePolarDiouConfidence"
     #
-    output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\Infer\\P_PartF_BK_FinalNoMask_CioUDPolarDioUSAEBeforeAdd"
+    output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\Infer\\P_PartF_BK_FinalFull_Conf"
     infer_case(Inference_scripts_root=Inference_scripts_root,
                Saved_model_file_root=Saved_model_file_root,
                output_folder=output_folder)

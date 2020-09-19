@@ -1898,7 +1898,10 @@ if __name__ == "__main__":
 
 
     def _main():
-        project_name = 'P_Part1_BK_Exp14_CioUDMaskDicePolarDioU_FAugAS14_{}'.format(model_index)
+        initial_lr = 0.25
+        reduce_factor = 0.25
+
+        project_name = 'P_OurRF{}_ILr{}_CioUDMaskDicePolarDioU_FAAS14_{}'.format(reduce_factor, initial_lr, model_index)
 
         phase = 1
         print("current working dir:", os.getcwd())
@@ -1947,10 +1950,9 @@ if __name__ == "__main__":
         # "plot and save model"
         # plot_model(model, to_file='model.png', show_shapes= True)
 
-
         checkpoint = ModelCheckpoint(log_dir + 'ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5',
                                      monitor='val_loss', save_weights_only=True, save_best_only=True, period=1, verbose=1)
-        reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, verbose=1, delta=0.03)
+        reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=reduce_factor, patience=3, verbose=1)
         early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1)
         # custom callback
         plotCallBack = TrainingPlotCallback(save_path= plot_folder)
@@ -1963,26 +1965,26 @@ if __name__ == "__main__":
 
         # for my data generator
         # for train dataset
-        # train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
-        # train_mask_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
-        # print("len of train imgs:", len(train_input_paths))
-        #
-        # assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
-        # # for validation dataset  # we need or label and masks are the same shape
-        # val_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
-        # val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
-        # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
-        #
-        # # # # # # # # # # # for train dataset for the lab
-        train_input_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\inputs/*')
-        train_mask_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\binary_labels/*.jpg')
+        train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
+        train_mask_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
         print("len of train imgs:", len(train_input_paths))
 
         assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
         # for validation dataset  # we need or label and masks are the same shape
-        val_input_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\test_inputs/*')
-        val_mask_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
+        val_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
+        val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
         assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
+
+        # # # # # # # # # # # # for train dataset for the lab
+        # train_input_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\inputs/*')
+        # train_mask_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\binary_labels/*.jpg')
+        # print("len of train imgs:", len(train_input_paths))
+        #
+        # assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
+        # # for validation dataset  # we need or label and masks are the same shape
+        # val_input_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\test_inputs/*')
+        # val_mask_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
+        # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
 
         print("total {} training samples read".format(len(train_input_paths)))
         print("total {} val samples read".format(len(val_input_paths)))
@@ -2056,7 +2058,7 @@ if __name__ == "__main__":
             "mask_Diceloss": lambda y_true, y_pred: y_pred
         }
         lossWeights = {"ciou_loss": 1, "confidence_loss": 1, "polar_diou_loss": 1, "class_loss": 1,  "mask_Diceloss": 1}
-        model.compile(optimizer=Adadelta(0.5), loss=losses, loss_weights=lossWeights)
+        model.compile(optimizer=Adadelta(initial_lr), loss=losses, loss_weights=lossWeights)
 
         epochs = 100
 
