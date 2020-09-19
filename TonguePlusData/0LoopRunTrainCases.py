@@ -1,7 +1,7 @@
 import os
 from glob import glob
 try:
-    def run_case(file_dir, max_run=5):
+    def run_case(file_dir, max_run=5, fileIdx=1):
         """
         # rotation_range = 45
         # width_shift_range = 0.3
@@ -15,7 +15,7 @@ try:
         :param rotation_rangemax_run:
         :return:
         """
-        fileIdx =1
+
         # for root, dirs, files in os.walk(file_dir):
         #     print(files, "to be run")
         #     for i in files:
@@ -59,15 +59,26 @@ except Exception as e:
 # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp6_EfficientNetB4')
 # #
 
+# # My method cases:
+# case_list = ['C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_PartF_BK_FinalFull_CioUDMaskDicePolarDioU',
+#              'C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_PartF_BK_FinalNoMask_CioUDPolarDioU',
+#              'C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_PartF_BK_FinalNoMask_CioUDPolarDioUSAEBeforeAdd'
+#              ]
+# count =0
+# for each_case in case_list:
+#     count=+1
+#     if count==1:
+#         run_case(each_case, max_run=5, fileIdx=3)
+#     else:
+#         run_case(each_case)
+
 # My method cases:
-case_list = ['C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_PartF_BK_FinalFull_CioUDMaskDicePolarDioU',
-             'C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_PartF_BK_FinalNoMask_CioUDPolarDioU',
+case_list = ['C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_PartF_BK_FinalNoMask_CioUDPolarDioU',
              'C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_PartF_BK_FinalNoMask_CioUDPolarDioUSAEBeforeAdd'
              ]
 
 for each_case in case_list:
     run_case(each_case)
-
 
  # # Case11 EXP_11_E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAug
 # run_case('E:\\Projects\\MyPolyTongue\\/TonguePlusData/P_Part1_BK_Exp13_MyXceptionAnchorFree_SimulatedData')

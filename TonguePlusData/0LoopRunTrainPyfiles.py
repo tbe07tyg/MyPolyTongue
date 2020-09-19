@@ -52,8 +52,8 @@ except Exception as e:
 # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp4_InceptionV3')
 #
 # #
-# # PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large
-run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large')
+# # # PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large
+# run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large')
 
 # # # PaperExp_Part1_Backbone_Exp6_EfficientNetB4
 # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp6_EfficientNetB4')
@@ -125,7 +125,7 @@ run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_
 # # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_8_Mish_WithMyDataNpInterpDistRegOnly')
 #
  # # Case11 EXP_11_E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAug
-# run_case('E:\\Projects\\MyPolyTongue\\/TonguePlusData/P_Part1_BK_Exp13_MyXceptionAnchorFree_SimulatedData')
+run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData/P_PartF_BK_FinalFull_CioUDMaskDicePolarDiouConfidence')
 
 # #     # # Case11 MISH NP INTERP
 # # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAug')
