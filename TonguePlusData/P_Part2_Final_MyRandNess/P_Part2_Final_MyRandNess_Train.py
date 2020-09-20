@@ -54,14 +54,44 @@ ANGLE_STEP  = 14 #that means Poly-YOLO will detect 360/15=24 vertices per polygo
 NUM_ANGLES  = int(360 // ANGLE_STEP) # 24
 print("ANGLE_STEP:", ANGLE_STEP)
 
-# for mydatagenerator aug
-rotation_range = 90
-width_shift_range = 0.3
-height_shift_range = 0.3
-zoom_range = 0.2
-shear_range=0.35
-horizontal_flip=True
-brightness_range=[0.5, 1.3]
+# # for mydatagenerator aug
+# rotation_range = 90
+# width_shift_range = 0.3
+# height_shift_range = 0.3
+# zoom_range = 0.2
+# shear_range=0.35
+# horizontal_flip=True
+# brightness_range=[0.5, 1.3]
+#
+# random aug---------------------->
+#  need to comment when running the analyzing codes
+# for running the script
+model_index = sys.argv[1]
+
+rotation_range = int(float(sys.argv[2]))
+width_shift_range = float(sys.argv[3])
+height_shift_range = float(sys.argv[4])
+zoom_range = float(sys.argv[5])
+shear_range = float(sys.argv[6])
+brightness_range_start = float(sys.argv[7])  # sys.argv can not pass list
+brightness_range_stop = float(sys.argv[8])
+
+global_randomness_count = sys.argv[9]
+brightness_range = [float(brightness_range_start), float(brightness_range_stop)]
+print("input AUG----------------------->")
+print("rotation_range:", rotation_range)
+print("width_shift_range:", width_shift_range)
+print("height_shift_range:", height_shift_range)
+print("zoom_range:", zoom_range)
+print("shear_range:", shear_range)
+print("brightness_range_start:", brightness_range)
+print("input AUG----------------------->")
+horizontal_flip = True
+
+# --------------------------
+
+
+
 
 
 grid_size_multiplier = 4 #that is resolution of the output scale compared with input. So it is 1/4
@@ -1393,7 +1423,6 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.4):
     polar_diou_loss =0
     class_loss =0
     polygon_dist_loss =0
-    monitor_loss =0
     m = K.shape(yolo_outputs[0])[0]  # batch size, tensor
     mf = K.cast(m, K.dtype(yolo_outputs[0]))
     for layer in range(num_layers):
@@ -1496,10 +1525,10 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.4):
         polar_diou_loss = tf.reduce_mean(tf.reduce_sum(object_mask *dist_scale_weights* (1 - Polar_diou), axis=[1, 2, 3, 4]))
 
         # loss += (xy_loss + wh_loss + confidence_loss + polar_diou_loss + class_loss + 0.2 * polygon_dist_loss)/ (K.sum(object_mask) + 1)
-        monitor_loss = polar_diou_loss +  ciou_loss
+
         # xy_loss round: 11   wh_loss round: 11      d_loss around: 10  polygon_dist_loss(L2: 30): 60   polar_diou_loss: 11
         # loss += (polygon_dist_loss)/ (K.sum(object_mask) + 1)*mf
-    return monitor_loss, ciou_loss, confidence_loss, polar_diou_loss, class_loss, mask_loss
+    return ciou_loss, confidence_loss, polar_diou_loss, class_loss, mask_loss
 
 
 class YOLO(object):
@@ -1704,7 +1733,7 @@ def my_Gnearator(images_list, masks_list, batch_size, input_shape, anchors, num_
         # preprocess the bbox into the regression targets
         y_true = my_preprocess_true_boxes_NPinterp(box_batch, input_shape, anchors, num_classes)
         yield [image_batch, *y_true, mask_batch], \
-              [np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size)]
+              [np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size)]
 
 
 def my_get_random_data(img_path, mask_path, input_shape, image_datagen, mask_datagen, train_or_test):
@@ -1899,10 +1928,19 @@ if __name__ == "__main__":
 
 
     def _main():
-        initial_lr = 0.5
-        reduce_factor = 0.5
 
-        project_name = 'P_OurRF{}_ILr{}_CioUDMaskDicePolarDioU_FAAS14_{}'.format(reduce_factor, initial_lr, model_index)
+
+
+        project_name = 'rd{}\\MyFinal_{}_Aug_rr{}_wsr{:.2f}_hsr{:.2f}_zr{:.2f}_sr{:.2f}_br{:.2f}_{:.2f}'.format(global_randomness_count,
+                                                                                                                           model_index,
+                                                                                                       rotation_range,
+                                                                                                  width_shift_range,
+                                                                                                       height_shift_range,
+                                                                                                  zoom_range,
+                                                                                                  shear_range ,
+                                                                                                  brightness_range[0],
+                                                                                                         brightness_range[1]
+                                                                                                         )
 
         phase = 1
         print("current working dir:", os.getcwd())
@@ -1951,9 +1989,10 @@ if __name__ == "__main__":
         # "plot and save model"
         # plot_model(model, to_file='model.png', show_shapes= True)
 
+
         checkpoint = ModelCheckpoint(log_dir + 'ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5',
-                                     monitor='val_monitor_loss_loss', save_weights_only=True, save_best_only=True, period=1, verbose=1)
-        reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=reduce_factor, patience=3, verbose=1)
+                                     monitor='val_loss', save_weights_only=True, save_best_only=True, period=1, verbose=1)
+        reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, verbose=1, delta=0.03)
         early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1)
         # custom callback
         plotCallBack = TrainingPlotCallback(save_path= plot_folder)
@@ -1965,7 +2004,7 @@ if __name__ == "__main__":
                                                              embeddings_metadata=None)
 
         # for my data generator
-        # # for train dataset
+        # for train dataset
         # train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
         # train_mask_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
         # print("len of train imgs:", len(train_input_paths))
@@ -1975,8 +2014,8 @@ if __name__ == "__main__":
         # val_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
         # val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
         # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
-
-        # # # # # # # # # # # # # for train dataset for the lab
+        #
+        # # # # # # # # # # # for train dataset for the lab
         train_input_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\inputs/*')
         train_mask_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\binary_labels/*.jpg')
         print("len of train imgs:", len(train_input_paths))
@@ -2052,15 +2091,14 @@ if __name__ == "__main__":
         # lambda y_true, y_pred: y_pred  ---> lambda input(y_true, y_pred): output(y_pred)
 
         losses = {
-            "monitor_loss":lambda y_true, y_pred: y_pred,
             "ciou_loss" : lambda y_true, y_pred: y_pred,
             "confidence_loss" : lambda y_true, y_pred: y_pred,
             "polar_diou_loss" : lambda y_true, y_pred: y_pred,
             "class_loss" : lambda y_true, y_pred: y_pred,
             "mask_Diceloss": lambda y_true, y_pred: y_pred
         }
-        lossWeights = {"monitor_loss": 1, "ciou_loss": 0, "confidence_loss": 1, "polar_diou_loss": 0, "class_loss": 1,  "mask_Diceloss": 1}
-        model.compile(optimizer=Adadelta(initial_lr), loss=losses, loss_weights=lossWeights)
+        lossWeights = {"ciou_loss": 1, "confidence_loss": 1, "polar_diou_loss": 1, "class_loss": 1,  "mask_Diceloss": 1}
+        model.compile(optimizer=Adadelta(0.5), loss=losses, loss_weights=lossWeights)
 
         epochs = 100
 
@@ -2109,14 +2147,13 @@ if __name__ == "__main__":
             print('Load weights {}.'.format(weights_path))
 
 
-        monitor_loss, ciou_loss, confidence_loss, polar_diou_loss, class_loss, mask_Diceloss = Lambda(yolo_loss, output_shape=(1,), name='yolo_loss',
+        ciou_loss, confidence_loss, polar_diou_loss, class_loss, mask_Diceloss = Lambda(yolo_loss, output_shape=(1,), name='yolo_loss',
                             arguments={'anchors': anchors, 'num_classes': num_classes, 'ignore_thresh': 0.5})(
             [model_body.output, Model_mask.output, y_true, y_true_mask])
 
         # total_loss = Lambda(lambda x: x, name='total_loss')(loss)
         # xy_loss = Lambda(lambda x: x, name='xy_loss')(xy_loss)
         # wh_loss = Lambda(lambda x: x, name='wh_loss')(wh_loss)
-        monitor_loss = Lambda(lambda x: x, name='monitor_loss')(monitor_loss)
         ciou_loss = Lambda(lambda x: x, name='ciou_loss')(ciou_loss)
         confidence_loss = Lambda(lambda x: x, name='confidence_loss')(confidence_loss)
         polar_diou_loss = Lambda(lambda x: x, name='polar_diou_loss')(polar_diou_loss)
@@ -2126,7 +2163,7 @@ if __name__ == "__main__":
         print("model_loss graph finished")
 
 
-        model = Model([model_body.input, y_true, y_true_mask], [monitor_loss, ciou_loss, confidence_loss, polar_diou_loss, class_loss, mask_Diceloss])
+        model = Model([model_body.input, y_true, y_true_mask], [ciou_loss, confidence_loss, polar_diou_loss, class_loss, mask_Diceloss])
 
         # print(model.summary())
         return model
