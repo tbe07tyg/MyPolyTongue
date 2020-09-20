@@ -15,7 +15,7 @@ try:
         :param rotation_rangemax_run:
         :return:
         """
-        fileIdx =2
+        fileIdx =1
         # for root, dirs, files in os.walk(file_dir):
         #     print(files, "to be run")
         #     for i in files:
@@ -79,9 +79,13 @@ except Exception as e:
 # run_case('/TonguePlusData/Exp10_Xception_DpolarIoU_BoxScale_L2_MaskIoU_loss')
 
 
+#
+# # # # P_PartF_BK_FinalFull_CioUDMaskDicePolarDiouConfidence
+# run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData/P_PartF_BK_FinalFull_CioUDMaskDicePolarDiouConfidence')
+
 
 # # # P_PartF_BK_FinalFull_CioUDMaskDicePolarDiouConfidence
-run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData/P_PartF_BK_FinalFull_CioUDMaskDicePolarDiouConfidence')
+run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData/P_OurFinal_CioUDMaskDicePolarDioU')
 
 
 
