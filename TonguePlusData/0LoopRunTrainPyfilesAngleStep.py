@@ -40,7 +40,7 @@ except Exception as e:
 
 # Paper real experiments start:  -------------------------------->
 
-AngleSteps = np.linspace(0.1, 14, 10)
+AngleSteps = np.linspace(1, 14, 10)
 print("angle_steps:", AngleSteps)
 for angle_step in AngleSteps:
     # # # P_PartF_BK_FinalFull_CioUDMaskDicePolarDiouConfidence

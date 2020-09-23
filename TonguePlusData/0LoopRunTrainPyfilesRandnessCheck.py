@@ -86,7 +86,7 @@ except Exception as e:
 rotation_range = np.linspace(0, 90, 10)
 width_shift_range = np.linspace(0, 0.3, 10)
 height_shift_range = np.linspace(0, 0.3, 10)
-zoom_range = np.linspace(0, 0.3, 10)
+zoom_range = np.linspace(0, 0.2, 10)
 shear_range = np.linspace(0, 0.35, 10)
 brightness_range = np.linspace(0.5, 1.3, 20)
 # ranges = [rotation_range,width_shift_range, height_shift_range, zoom_range,shear_range, brightness_range]
