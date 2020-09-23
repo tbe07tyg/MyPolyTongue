@@ -55,13 +55,13 @@ NUM_ANGLES  = int(360 // float(ANGLE_STEP)) # 24
 print("ANGLE_STEP:", ANGLE_STEP)
 
 # for mydatagenerator aug
-rotation_range = 90
-width_shift_range = 0.3
-height_shift_range = 0.3
+rotation_range = 60.0
+width_shift_range = 0.2
+height_shift_range =0.2
 zoom_range = 0.2
-shear_range=0.35
+shear_range = 0.23333333333333334
 horizontal_flip=True
-brightness_range=[0.5, 1.3]
+brightness_range=[0.6263157894736842, 1.1736842105263157]
 
 
 grid_size_multiplier = 4 #that is resolution of the output scale compared with input. So it is 1/4
@@ -1898,7 +1898,7 @@ if __name__ == "__main__":
 
 
     def _main():
-        project_name = 'P_Part1_BK_Exp14_CioUDMaskDicePolarDioU_FAug_AS{}_{}'.format(ANGLE_STEP,model_index)
+        project_name = 'AS{}\\P_Part1_BK_Exp14_CioUDMaskDicePolarDioU_FAug_{}'.format(ANGLE_STEP,model_index)
 
         phase = 1
         print("current working dir:", os.getcwd())
