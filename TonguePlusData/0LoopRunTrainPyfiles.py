@@ -85,8 +85,12 @@ except Exception as e:
 
 
 # # # P_PartF_BK_FinalFull_CioUDMaskDicePolarDiouConfidence
-run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData/P_OurFinal_CioUDMaskDicePolarDioU')
+# run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData/P_OurFinal_CioUDMaskDicePolarDioU')
 
+
+
+# # # Previous the all detection features in model is wrong, redo the experiment  P_PartF_BK_FinalFull_CioUDMaskDicePolarDioUFixedV2
+run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData/P_PartF_BK_FinalFull_CioUDMaskDicePolarDioUFixedV2')
 
 
 

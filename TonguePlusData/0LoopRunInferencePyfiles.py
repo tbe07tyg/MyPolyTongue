@@ -383,12 +383,21 @@ if __name__ == '__main__':
     # infer_case(Inference_scripts_root=Inference_scripts_root,
     #            Saved_model_file_root=Saved_model_file_root,
     #            output_folder=output_folder)
-
-    # P_PartF_BK_FinalFull_CioUDMaskDicePolarDiouConfidence
-    Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\ModelSaved\\P_OurFinal_CioUDMaskDicePolarDioU"
-    Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_OurFinal_CioUDMaskDicePolarDioU"
     #
-    output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\Infer\\P_PartF_BK_Final"
+    # # P_PartF_BK_FinalFull_CioUDMaskDicePolarDiouConfidence
+    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\ModelSaved\\P_OurFinal_CioUDMaskDicePolarDioU"
+    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_OurFinal_CioUDMaskDicePolarDioU"
+    # #
+    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\Infer\\P_PartF_BK_Final"
+    # infer_case(Inference_scripts_root=Inference_scripts_root,
+    #            Saved_model_file_root=Saved_model_file_root,
+    #            output_folder=output_folder)
+
+    # ReCheckMyMethod
+    Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\MyMethodRedo\\ModeSaved\\P_PartF_BK_FinalFull_CioUDMaskDicePolarDioUFixedV2"
+    Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_PartF_BK_FinalFull_CioUDMaskDicePolarDioUFixedV2"
+    #
+    output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\MyMethodRedo\\Infer\\MyMethodAllDetect"
     infer_case(Inference_scripts_root=Inference_scripts_root,
                Saved_model_file_root=Saved_model_file_root,
                output_folder=output_folder)
