@@ -873,7 +873,7 @@ def yolo_body(inputs, num_anchors, num_classes):
     mask_feaurex2 = UpSampling2D(2, interpolation='bilinear')(mask_head)
 
     # one more conv 128 featuref
-    feature128 = DarknetConv2D_BN_Mish(64, (3, 3))(mask_feaurex2)
+    feature128 = DarknetConv2D_BN_Leaky(64, (3, 3))(mask_feaurex2)
     MaskPred128 = Conv2D(num_classes, 1, activation = 'sigmoid')(feature128)
     MaskPred256 = UpSampling2D(2, interpolation='bilinear')(MaskPred128)
 
