@@ -25,8 +25,11 @@ try:
         :param file_dir:
         :param rotation_rangemax_run:
         :return:
-        """
-        fileIdx =1
+        # """
+        if global_randomness_count ==100:
+            fileIdx =3
+        else:
+            fileIdx = 1
         # for root, dirs, files in os.walk(file_dir):
         #     print(files, "to be run")
         #     for i in files:
@@ -86,7 +89,7 @@ except Exception as e:
 rotation_range = np.linspace(0, 90, 10)
 width_shift_range = np.linspace(0, 0.3, 10)
 height_shift_range = np.linspace(0, 0.3, 10)
-zoom_range = np.linspace(0, 0.2, 10)
+zoom_range = np.linspace(0, 0.3, 10)
 shear_range = np.linspace(0, 0.35, 10)
 brightness_range = np.linspace(0.5, 1.3, 20)
 # ranges = [rotation_range,width_shift_range, height_shift_range, zoom_range,shear_range, brightness_range]
@@ -125,7 +128,7 @@ for i in range(10):
     #          )
 
 
-    run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_Part2_RandomNess_Exp12_Xception',
+    run_case('F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\MyProject\\TonguePlusData\\P_PartF_Final_FixedV2_RandomNess',
              global_randomness_count= i,
              rotation_range=rotation_range_in,
              width_shift_range=width_shift_range_in,

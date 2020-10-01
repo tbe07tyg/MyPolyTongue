@@ -4,7 +4,7 @@ import os
 import time
 # need to change
 from glob import glob
-from TonguePlusData.P_Part2_Final_MyRandNess.P_Part2_Final_MyRandNess_Train import YOLO, \
+from TonguePlusData.P_PartF_FinaRedol_YoloFixedV2_RandomNess.P_PartF_Final_YoloFixedV2_RandomNess_Train import YOLO, \
     get_anchors, my_get_random_data #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
 import sys
 
