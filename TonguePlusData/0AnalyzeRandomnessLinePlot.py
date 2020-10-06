@@ -85,53 +85,53 @@ try:
         print("found {} top cases".format(len(all_Top_cases)))
         print("all_Top_cases:", all_Top_cases)
         count =0
-        # for each_top_case in all_Top_cases:
-        #     # count += 1
-        #     # if count ==1:
-        #     #     continue
-        #
-        #     case_name = os.path.basename(each_top_case)
-        #
-        #
-        #     infer_script_path_list= []
-        #     print("current check case:", each_top_case)
-        #     all_contents = glob(each_top_case + '/*')
-        #     print("all contents in current top case:", all_contents)
-        #
-        #     all_sub_roots = [path for path in all_contents if os.path.isdir(path)]
-        #     print("all_sub_root_folders in current top case:", all_sub_roots)
-        #
-        #     infer_scripts =  [path for path in all_contents if path.endswith("inference.py")]
-        #     print("infer_script in current top case:",infer_scripts )
-        #     infer_script_name =  os.path.basename(infer_scripts[0])
-        #     print("infer_script_name:", infer_script_name)
-        #     # search in the inference root: try to find the inference script in current working directory
-        #     for root, dirs, files in os.walk(inference_folder):
-        #         for file in files:
-        #             if infer_script_name in file:
-        #                 infer_script_path = root +'/'+ file
-        #                 print("found the corresponding inference script file in current working dir:", infer_script_path)
-        #                 infer_script_path_list.append(infer_script_path)
-        #     sorted_all_sub_roots =  []
-        #     eval_means = []
-        #     eval_stds = []
-        #     for each_root in all_sub_roots:
-        #         root_name =  os.path.basename(each_root)
-        #         print("root name:", root_name)
-        #         re_digits = re.findall(r'\d+', root_name)  # reg search digits in string
-        #         print("re_digits:", re_digits)
-        #         root_index =  int(re_digits[-1])
-        #         group_root_withIndex =  (root_index, each_root)
-        #         sorted_all_sub_roots.append(group_root_withIndex)
-        #     print("paired root index:",sorted_all_sub_roots )
-        #     sorted_all_sub_roots = sorted(sorted_all_sub_roots)
-        #     print("sorted paired root index:", sorted_all_sub_roots)
-        #     for index, root in sorted_all_sub_roots:
-        #         print("index:", index)
-        #         print("root:", root)
-        #         root_name = os.path.basename(root)
-        #         # start to evaluate for each
-        #         evaluate_sub_folder(root, infer_script_path_list[0], inferenc_summary_txt, output_folder + "/"+ case_name + "/" + root_name)
+        for each_top_case in all_Top_cases:
+            # count += 1
+            # if count ==1:
+            #     continue
+
+            case_name = os.path.basename(each_top_case)
+
+
+            infer_script_path_list= []
+            print("current check case:", each_top_case)
+            all_contents = glob(each_top_case + '/*')
+            print("all contents in current top case:", all_contents)
+
+            all_sub_roots = [path for path in all_contents if os.path.isdir(path)]
+            print("all_sub_root_folders in current top case:", all_sub_roots)
+
+            infer_scripts =  [path for path in all_contents if path.endswith("inference.py")]
+            print("infer_script in current top case:",infer_scripts )
+            infer_script_name =  os.path.basename(infer_scripts[0])
+            print("infer_script_name:", infer_script_name)
+            # search in the inference root: try to find the inference script in current working directory
+            for root, dirs, files in os.walk(inference_folder):
+                for file in files:
+                    if infer_script_name in file:
+                        infer_script_path = root +'/'+ file
+                        print("found the corresponding inference script file in current working dir:", infer_script_path)
+                        infer_script_path_list.append(infer_script_path)
+            sorted_all_sub_roots =  []
+            eval_means = []
+            eval_stds = []
+            for each_root in all_sub_roots:
+                root_name =  os.path.basename(each_root)
+                print("root name:", root_name)
+                re_digits = re.findall(r'\d+', root_name)  # reg search digits in string
+                print("re_digits:", re_digits)
+                root_index =  int(re_digits[-1])
+                group_root_withIndex =  (root_index, each_root)
+                sorted_all_sub_roots.append(group_root_withIndex)
+            print("paired root index:",sorted_all_sub_roots )
+            sorted_all_sub_roots = sorted(sorted_all_sub_roots)
+            print("sorted paired root index:", sorted_all_sub_roots)
+            for index, root in sorted_all_sub_roots:
+                print("index:", index)
+                print("root:", root)
+                root_name = os.path.basename(root)
+                # start to evaluate for each
+                evaluate_sub_folder(root, infer_script_path_list[0], inferenc_summary_txt, output_folder + "/"+ case_name + "/" + root_name)
 
         # finish generating all txt data ...................for coco evaluate..---->
         # select txt according to top cases name:
@@ -148,105 +148,105 @@ try:
         for inferd_case_dir in infered_Top_cases:  # case level
             case_name = os.path.basename(inferd_case_dir)
             print("case name:", case_name)
-            # infered_sub_aug_cases = [path for path in glob(inferd_case_dir + '/*') if os.path.isdir(path)]
-            # print("infered_sub_aug_cases:", infered_sub_aug_cases)
+            infered_sub_aug_cases = [path for path in glob(inferd_case_dir + '/*') if os.path.isdir(path)]
+            print("infered_sub_aug_cases:", infered_sub_aug_cases)
+
+
+
+
+            # for sort order only
+            sorted_all_sub_infered_roots = []
+
+            for each_root in infered_sub_aug_cases:
+                root_name = os.path.basename(each_root)
+                print("root name:", root_name)
+                re_digits = re.findall(r'\d+', root_name)  # reg search digits in string
+                print("re_digits:", re_digits)
+                root_index = int(re_digits[-1])
+                group_root_withIndex = (root_index, each_root)
+                sorted_all_sub_infered_roots.append(group_root_withIndex)
+
+            sorted_all_sub_infered_roots = sorted(sorted_all_sub_infered_roots)
+            print("sorted_all_sub_infered_roots:", sorted_all_sub_infered_roots)
+
+
+            # start real estimate
+            summary_for_plot = []
+
+            for index, infered_sub_root in sorted_all_sub_infered_roots:
+                print("index:", index)
+                print("infered_sub_root:", infered_sub_root)
+                infered_sub_root_name = os.path.basename(infered_sub_root)
+                # start to find the txt result from sub inferred root
+                pred_txt_list = []
+                label_txt_list = []
+                for root, dirs, files in os.walk(infered_sub_root):
+                    for i in files:
+                        if "predictResult" in i:
+                            print("root", root)
+                            print("dirs", dirs)
+                            print("files", i)
+                            pred_txt_list.append(root + '/' + i)
+                        if "labelResult" in i:
+                            label_txt_list.append(root + '/' + i)
+                print("pred_txt_list:", pred_txt_list)
+                print("label_txt_list:", label_txt_list)
+
+                # start coco evlauate for one aug case
+                # start to evaluate:
+                eval_types_list =["bbox", "segm"]
+
+                for type in eval_types_list:
+                    AP_5to95_list = []
+                    AP_5_list = []
+                    AP_75_list = []
+                    with open(inferenc_summary_txt, 'a') as f:
+                        f.write("\n")
+                    for pred, gt in zip(pred_txt_list, label_txt_list):
+                        print("pred:", pred)
+                        # this neeed to be changed for the lab computer gt:
+                        # gt = os.path.dirname(os.path.realpath(__file__)) + "/myTongueTestLab.txt"
+                        # gt = os.path.dirname(os.path.realpath(__file__)) + "/myTongueTest.txt"  # for labe top
+                        print("cwd", os.path.dirname(os.path.realpath(__file__)))
+
+                        yolo_to_coco(pred, gt, class_path)
+                        mean_s=coco_eval(type)
+                        print("tyep:", type)
+                        print("mean_s:", mean_s)
+
+                        # write to our txt
+                        AP_5to95=mean_s[0]
+                        AP_5 = mean_s[1]
+                        AP_75 = mean_s[2]
+                        print("AP_5to95", AP_5to95)
+                        print("AP_5", AP_5)
+                        print("AP_75", AP_75)
+                        # AP_5to95_list.append(AP_5to95)
+                        # AP_5_list.append(AP_5)
+                        # AP_75_list.append(AP_75)
+
+                    # # with open(inferenc_summary_paper_need_txt, 'a') as f:
+                    # m_AP_5to95 = np.array(AP_5to95_list).mean()
+                    # std_AP_5to95 = np.array(AP_5to95_list).std()
+                    #
+                    # m_AP_5 = np.array(AP_5_list).mean()
+                    # std_AP_5 = np.array(AP_5_list).std()
+                    #
+                    # m_AP_75 = np.array(AP_75_list).mean()
+                    # std_AP_75 = np.array(AP_75_list).std()
+                        summary_for_plot.append([index, case_count, infered_sub_root_name, type, AP_5to95, AP_5,AP_75])
+                        # content= 'type {}, AP_5to95_m(AP_5to95_std)|AP_5_m(AP_5_std)|AP_75_m(AP_75_std) ' \
+                        #          '{:.3f}({:.3f})|{:.3f}({:.3f})|{:.3f}({:.3f})\n'.format(type, m_AP_5to95, std_AP_5to95, m_AP_5, std_AP_5, m_AP_75, std_AP_75)
+                        # f.write(content)
+
+            data_to_plot = DataFrame(summary_for_plot, columns=["x","top_case",'infered_sub_root', 'type',
+                                                                "$\mathregular{mAP_{0.5, 0.95}}$",
+                                                                "$\mathregular{mAP_{0.5}}$",
+                                                                "$\mathregular{mAP_{0.75}}$"])
+            print("plot_summary data:",data_to_plot )
+            # save to the disk for avoid next run long time analyze:
+            data_to_plot.to_pickle("randomness_case_"+ case_name)
             #
-            #
-            #
-            #
-            # # for sort order only
-            # sorted_all_sub_infered_roots = []
-            #
-            # for each_root in infered_sub_aug_cases:
-            #     root_name = os.path.basename(each_root)
-            #     print("root name:", root_name)
-            #     re_digits = re.findall(r'\d+', root_name)  # reg search digits in string
-            #     print("re_digits:", re_digits)
-            #     root_index = int(re_digits[-1])
-            #     group_root_withIndex = (root_index, each_root)
-            #     sorted_all_sub_infered_roots.append(group_root_withIndex)
-            #
-            # sorted_all_sub_infered_roots = sorted(sorted_all_sub_infered_roots)
-            # print("sorted_all_sub_infered_roots:", sorted_all_sub_infered_roots)
-            #
-            #
-            # # start real estimate
-            # summary_for_plot = []
-            #
-            # for index, infered_sub_root in sorted_all_sub_infered_roots:
-            #     print("index:", index)
-            #     print("infered_sub_root:", infered_sub_root)
-            #     infered_sub_root_name = os.path.basename(infered_sub_root)
-            #     # start to find the txt result from sub inferred root
-            #     pred_txt_list = []
-            #     label_txt_list = []
-            #     for root, dirs, files in os.walk(infered_sub_root):
-            #         for i in files:
-            #             if "predictResult" in i:
-            #                 print("root", root)
-            #                 print("dirs", dirs)
-            #                 print("files", i)
-            #                 pred_txt_list.append(root + '/' + i)
-            #             if "labelResult" in i:
-            #                 label_txt_list.append(root + '/' + i)
-            #     print("pred_txt_list:", pred_txt_list)
-            #     print("label_txt_list:", label_txt_list)
-            #
-            #     # start coco evlauate for one aug case
-            #     # start to evaluate:
-            #     eval_types_list =["bbox", "segm"]
-            #
-            #     for type in eval_types_list:
-            #         AP_5to95_list = []
-            #         AP_5_list = []
-            #         AP_75_list = []
-            #         with open(inferenc_summary_txt, 'a') as f:
-            #             f.write("\n")
-            #         for pred, gt in zip(pred_txt_list, label_txt_list):
-            #             print("pred:", pred)
-            #             # this neeed to be changed for the lab computer gt:
-            #             # gt = os.path.dirname(os.path.realpath(__file__)) + "/myTongueTestLab.txt"
-            #             # gt = os.path.dirname(os.path.realpath(__file__)) + "/myTongueTest.txt"  # for labe top
-            #             print("cwd", os.path.dirname(os.path.realpath(__file__)))
-            #
-            #             yolo_to_coco(pred, gt, class_path)
-            #             mean_s=coco_eval(type)
-            #             print("tyep:", type)
-            #             print("mean_s:", mean_s)
-            #
-            #             # write to our txt
-            #             AP_5to95=mean_s[0]
-            #             AP_5 = mean_s[1]
-            #             AP_75 = mean_s[2]
-            #             print("AP_5to95", AP_5to95)
-            #             print("AP_5", AP_5)
-            #             print("AP_75", AP_75)
-            #             # AP_5to95_list.append(AP_5to95)
-            #             # AP_5_list.append(AP_5)
-            #             # AP_75_list.append(AP_75)
-            #
-            #         # # with open(inferenc_summary_paper_need_txt, 'a') as f:
-            #         # m_AP_5to95 = np.array(AP_5to95_list).mean()
-            #         # std_AP_5to95 = np.array(AP_5to95_list).std()
-            #         #
-            #         # m_AP_5 = np.array(AP_5_list).mean()
-            #         # std_AP_5 = np.array(AP_5_list).std()
-            #         #
-            #         # m_AP_75 = np.array(AP_75_list).mean()
-            #         # std_AP_75 = np.array(AP_75_list).std()
-            #             summary_for_plot.append([index, case_count, infered_sub_root_name, type, AP_5to95, AP_5,AP_75])
-            #             # content= 'type {}, AP_5to95_m(AP_5to95_std)|AP_5_m(AP_5_std)|AP_75_m(AP_75_std) ' \
-            #             #          '{:.3f}({:.3f})|{:.3f}({:.3f})|{:.3f}({:.3f})\n'.format(type, m_AP_5to95, std_AP_5to95, m_AP_5, std_AP_5, m_AP_75, std_AP_75)
-            #             # f.write(content)
-            #
-            # data_to_plot = DataFrame(summary_for_plot, columns=["x","top_case",'infered_sub_root', 'type',
-            #                                                     "$\mathregular{mAP_{0.5, 0.95}}$",
-            #                                                     "$\mathregular{mAP_{0.5}}$",
-            #                                                     "$\mathregular{mAP_{0.75}}$"])
-            # print("plot_summary data:",data_to_plot )
-            # # save to the disk for avoid next run long time analyze:
-            # data_to_plot.to_pickle("randomness_case_"+ case_name)
-            # #
             #
             # ## Analyzing is finished. ------------------->
             # # read_from_disk and start to plot:
@@ -555,10 +555,10 @@ if __name__ == '__main__':
 
     # Case1  Exp Mish inference
     # Codes and logs folder
-    Saved_model_file_root =  "E:\\MyWritings\\Tongue\\2020IEEE\\TMI\\ExperimentsResult\\RandomNess\\RedoRandNess"
+    Saved_model_file_root =  "F:\\randomNess\\TonguePolayPaper1"
     # Inference_scripts_root = "E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_2_Mish"
 
-    output_folder =  "E:\\MyWritings\\Tongue\\2020IEEE\\TMI\\ExperimentsResult\\RandomNess\\Re_Output"
+    output_folder =  "F:\\randomNess\\outputs"
     infer_case(Saved_model_file_root=Saved_model_file_root,
            output_folder= output_folder,
                inference_folder= "E:\\Projects\\MyPolyTongue\\TonguePlusData",

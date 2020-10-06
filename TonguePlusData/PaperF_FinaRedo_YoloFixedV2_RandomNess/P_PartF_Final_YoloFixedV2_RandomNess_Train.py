@@ -65,30 +65,30 @@ print("ANGLE_STEP:", ANGLE_STEP)
 #
 # random aug---------------------->
 #  need to comment when running the analyzing codes
-# for running the script
-model_index = sys.argv[1]
-
-rotation_range = int(float(sys.argv[2]))
-width_shift_range = float(sys.argv[3])
-height_shift_range = float(sys.argv[4])
-zoom_range = float(sys.argv[5])
-shear_range = float(sys.argv[6])
-brightness_range_start = float(sys.argv[7])  # sys.argv can not pass list
-brightness_range_stop = float(sys.argv[8])
-
-global_randomness_count = sys.argv[9]
-brightness_range = [float(brightness_range_start), float(brightness_range_stop)]
-print("input AUG----------------------->")
-print("rotation_range:", rotation_range)
-print("width_shift_range:", width_shift_range)
-print("height_shift_range:", height_shift_range)
-print("zoom_range:", zoom_range)
-print("shear_range:", shear_range)
-print("brightness_range_start:", brightness_range)
-print("input AUG----------------------->")
-horizontal_flip = True
-
-# --------------------------
+# # for running the script
+# model_index = sys.argv[1]
+#
+# rotation_range = int(float(sys.argv[2]))
+# width_shift_range = float(sys.argv[3])
+# height_shift_range = float(sys.argv[4])
+# zoom_range = float(sys.argv[5])
+# shear_range = float(sys.argv[6])
+# brightness_range_start = float(sys.argv[7])  # sys.argv can not pass list
+# brightness_range_stop = float(sys.argv[8])
+#
+# global_randomness_count = sys.argv[9]
+# brightness_range = [float(brightness_range_start), float(brightness_range_stop)]
+# print("input AUG----------------------->")
+# print("rotation_range:", rotation_range)
+# print("width_shift_range:", width_shift_range)
+# print("height_shift_range:", height_shift_range)
+# print("zoom_range:", zoom_range)
+# print("shear_range:", shear_range)
+# print("brightness_range_start:", brightness_range)
+# print("input AUG----------------------->")
+# horizontal_flip = True
+#
+# # --------------------------
 
 
 
@@ -1999,14 +1999,14 @@ if __name__ == "__main__":
         # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
         #
         # # # # # # # # # # # for train dataset for the lab
-        train_input_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\inputs/*')
-        train_mask_paths = glob('F:\\dataset\\tongue_dataset_tang_plus\\binary_labels/*.jpg')
+        train_input_paths = glob('C:\\MyProjects\\data\\tonguePoly\\train\\input/*')
+        train_mask_paths = glob('C:\\MyProjects\\data\\tonguePoly\\train\\label/*.jpg')
         print("len of train imgs:", len(train_input_paths))
 
         assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
         # for validation dataset  # we need or label and masks are the same shape
-        val_input_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\test_inputs/*')
-        val_mask_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
+        val_input_paths = glob('C:\\MyProjects\\data\\tonguePoly\\test\\input/*')
+        val_mask_paths = glob('C:\\MyProjects\\data\\tonguePoly\\test\\label/*.jpg')
         assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
 
         print("total {} training samples read".format(len(train_input_paths)))
