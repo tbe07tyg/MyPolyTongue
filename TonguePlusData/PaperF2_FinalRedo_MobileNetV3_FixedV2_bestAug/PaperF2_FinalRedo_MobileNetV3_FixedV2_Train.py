@@ -42,8 +42,8 @@ import numpy as np
 from glob import glob
 from tensorflow.keras.preprocessing import image as krs_image
 import cv2
-from tensorflow.keras.applications.xception import Xception
-
+# from tensorflow.keras.applications.inception_v3 import InceptionV3
+from TonguePlusData.PaperF2_FinalRedo_MobileNetV3_FixedV2_bestAug.PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large_Model import build_mobilenet_v3
 
 
 np.set_printoptions(precision=3, suppress=True)
@@ -811,16 +811,22 @@ def yolo_body(inputs, num_anchors, num_classes):
 
     # this function return to create model for loss and prediction for evaluation need to check for codes
     # backbone and feature extraction  ---------->
-
-    base_model = Xception(input_tensor=inputs, weights=None, include_top=False) # random initialization
+    print("input.shape:", inputs.shape[1:])
+    base_model = build_mobilenet_v3(inputs, num_classes=1, model_type='large', pooling_type='avg', include_top=False)
     # extract features from each block end: ["add", "add_1", "add_10", "add_11"]
+    tiny = base_model.get_layer('add').output   # 64x64 : 1/4
+    small = base_model.get_layer('add_2').output  # 32x32 : 1/8
+    medium = base_model.get_layer('add_6').output  # 16x16 : 1/16
+    big = base_model.get_layer('add_7').output  # 8x8 : 1/32
+
+
+        # tiny, small, medium, big = darknet_body(inputs)
+    # # # check the layer names
+    # for i, layer in enumerate(base_model.layers):
+    #     print(i, layer.name)
     # base_model.summary()
 
-    tiny = base_model.get_layer('add').output
-    small = base_model.get_layer('add_1').output
-    medium = base_model.get_layer('add_10').output
-    big = base_model.get_layer('add_11').output
-
+    # Neck  ------------------------>
     base = 6
     tiny   = DarknetConv2D_BN_Mish(base*32, (1, 1))(tiny)
     small  = DarknetConv2D_BN_Mish(base*32, (1, 1))(small)
@@ -1896,12 +1902,14 @@ def get_anchors(anchors_path):
 if __name__ == "__main__":
 
     """
-    Retrain the YOLO model for your own dataset.
+    Retrain the YOLO model for you
+    
+    r own dataset.
     """
 
 
     def _main():
-        project_name = 'PaperF2_FinalRedo_Xception_FixedV2_bestAug_{}'.format(model_index)
+        project_name = 'PaperF2_FinalRedo_MobileNetV3_FixedV2_{}'.format(model_index)
 
         phase = 1
         print("current working dir:", os.getcwd())
@@ -1964,8 +1972,8 @@ if __name__ == "__main__":
                                                              embeddings_freq=0, embeddings_layer_names=None,
                                                              embeddings_metadata=None)
 
-        # # for my data generator
-        # # # for train dataset
+        # for my data generator
+        # # for train dataset
         # train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
         # train_mask_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
         # print("len of train imgs:", len(train_input_paths))
@@ -1974,8 +1982,8 @@ if __name__ == "__main__":
         # # for validation dataset  # we need or label and masks are the same shape
         # val_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
         # val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
-        # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
-
+        # # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
+        #
         # # # # # # # # # # # for train dataset for the lab
         # # # # # # # # # # # for train dataset for the lab
         train_input_paths = glob('C:\\MyProjects\\data\\tonguePoly\\train\\input/*')

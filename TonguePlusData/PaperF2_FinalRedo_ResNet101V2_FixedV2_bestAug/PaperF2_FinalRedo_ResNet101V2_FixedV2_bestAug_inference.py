@@ -4,7 +4,7 @@ import os
 import time
 # need to change
 from glob import glob
-from TonguePlusData.PaperF2_FinalRedo_Xception_FixedV2_bestAug.PaperF2_FinalRedo_Xception_FixedV2_bestAug_Train import YOLO, \
+from TonguePlusData.PaperF2_FinalRedo_ResNet101V2_FixedV2_bestAug.PaperF2_FinalRedo_ResNet101V2_FixedV2_bestAug_Train import YOLO, \
     get_anchors, my_get_random_data #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
 import sys
 
@@ -125,9 +125,8 @@ input_shape = (256, 256)  # multiple of 32, hw
 # test_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
 # test_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
 
-# # for validation dataset  # we need or label and masks are the same shape
-test_input_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\test_inputs/*')
-test_mask_paths = glob('F:\\dataset\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
+test_input_paths = glob('C:\\MyProjects\\data\\tonguePoly\\test\\input/*')
+test_mask_paths = glob('C:\\MyProjects\\data\\tonguePoly\\test\\label/*.jpg')
 assert len(test_input_paths) == len(test_mask_paths), "test imgs and mask are not the same"
 print("total {} testsamples read".format(len(test_input_paths)))
 # create data_generator
@@ -168,9 +167,13 @@ for test_path, mask_path in zip(test_input_paths,test_mask_paths):
 
     # realize prediciction using poly-yolo
     # polygon_xy = np.zeros([polygons.shape[0], 2 * NUM_ANGLES])
-    startx = time.time()
+    startx = time.perf_counter()
     box, score, classs, polygons = trained_model.detect_image(input_img,input_shape)
-    tmp_fps = 1.0 / (time.time() - startx)
+    endtx = time.perf_counter()
+    print("startx:", startx)
+    print("endtx:", endtx)
+
+    tmp_fps = 1.0 / (endtx - startx)
     print('Prediction speed: ', tmp_fps, 'fps')
     fps_list.append(tmp_fps)
     # example, hw to reshape reshape y1,x1,y2,x2 into x1,y1,x2,y2

@@ -1965,27 +1965,27 @@ if __name__ == "__main__":
 
         # for my data generator
         # # for train dataset
-        # train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
-        # train_mask_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
-        # print("len of train imgs:", len(train_input_paths))
-        #
-        # assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
-        # # for validation dataset  # we need or label and masks are the same shape
-        # val_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
-        # val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
-        # # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
-        #
-        # # # # # # # # # # # for train dataset for the lab
-        # # # # # # # # # # # for train dataset for the lab
-        train_input_paths = glob('C:\\MyProjects\\data\\tonguePoly\\train\\input/*')
-        train_mask_paths = glob('C:\\MyProjects\\data\\tonguePoly\\train\\label/*.jpg')
+        train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
+        train_mask_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
         print("len of train imgs:", len(train_input_paths))
 
         assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
         # for validation dataset  # we need or label and masks are the same shape
-        val_input_paths = glob('C:\\MyProjects\\data\\tonguePoly\\test\\input/*')
-        val_mask_paths = glob('C:\\MyProjects\\data\\tonguePoly\\test\\label/*.jpg')
-        assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
+        val_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
+        val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
+        # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
+
+        # # # # # # # # # # # for train dataset for the lab
+        # # # # # # # # # # # # for train dataset for the lab
+        # train_input_paths = glob('C:\\MyProjects\\data\\tonguePoly\\train\\input/*')
+        # train_mask_paths = glob('C:\\MyProjects\\data\\tonguePoly\\train\\label/*.jpg')
+        # print("len of train imgs:", len(train_input_paths))
+        #
+        # assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
+        # # for validation dataset  # we need or label and masks are the same shape
+        # val_input_paths = glob('C:\\MyProjects\\data\\tonguePoly\\test\\input/*')
+        # val_mask_paths = glob('C:\\MyProjects\\data\\tonguePoly\\test\\label/*.jpg')
+        # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
 
         print("total {} training samples read".format(len(train_input_paths)))
         print("total {} val samples read".format(len(val_input_paths)))
