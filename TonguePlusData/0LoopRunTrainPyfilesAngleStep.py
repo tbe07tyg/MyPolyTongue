@@ -44,8 +44,8 @@ AngleSteps = np.linspace(1, 14, 10)
 print("angle_steps:", AngleSteps)
 for angle_step in AngleSteps:
     # # # P_PartF_BK_FinalFull_CioUDMaskDicePolarDiouConfidence
-    run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData/P_PartF_BK_MyFinal_AngleStep', angle_step=angle_step)
-    # run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData/P_PartF_BK_MyFinal_AngleStep', angle_step=angle_step)
+    # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData/P_PartF_BK_MyFinal_AngleStep', angle_step=angle_step)
+    run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData/PaperF3_FinalRedo_Xception_FixedV2_bestAug_AngleStepCheck', angle_step=angle_step)
 
 # # #
 # # Case 1  BaseExp

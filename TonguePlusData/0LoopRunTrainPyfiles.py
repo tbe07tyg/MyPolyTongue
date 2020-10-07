@@ -90,7 +90,7 @@ except Exception as e:
 
 
 # # # Previous the all detection features in model is wrong, redo the experiment  P_PartF_BK_FinalFull_CioUDMaskDicePolarDioUFixedV2
-run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData/P_PartF_BK_FinalFull_CioUDMaskDicePolarDioUFixedV2')
+# run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData/P_PartF_BK_FinalFull_CioUDMaskDicePolarDioUFixedV2')
 
 
 
@@ -134,7 +134,7 @@ run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData/P_PartF_BK_FinalFull_CioU
 # # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_8_Mish_WithMyDataNpInterpDistRegOnly')
 # #
 #  # # Case11 EXP_11_E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAug
-# run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData/P_PartF_BK_FinalFull_CioUDMaskDicePolarDiouConfidence')
+run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData/PaperF2_FinalRedo_EfficientNetB4_FixedV2_bestAug')
 
 # #     # # Case11 MISH NP INTERP
 # # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAug')
