@@ -73,8 +73,8 @@ except Exception as e:
 #         run_case(each_case)
 
 # My method cases:
-case_list = ['C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_PartF_BK_FinalNoMask_CioUDPolarDioU',
-             'C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_PartF_BK_FinalNoMask_CioUDPolarDioUSAEBeforeAdd'
+case_list = ['C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF2_FinalRedo_Xception_FixedV2_bestAug',
+             'C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF2_FinalRedo_ResNet101V2_FixedV2_bestAug'
              ]
 
 for each_case in case_list:
