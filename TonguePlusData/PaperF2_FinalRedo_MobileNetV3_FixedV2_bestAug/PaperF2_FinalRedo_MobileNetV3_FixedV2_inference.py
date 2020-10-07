@@ -4,7 +4,7 @@ import os
 import time
 # need to change
 from glob import glob
-from TonguePlusData.PaperF2_FinalRedo_InceptionV3_FixedV2_bestAug.PaperF2_FinalRedo_InceptionV3_bestAug_Train import YOLO, \
+from TonguePlusData.PaperF2_FinalRedo_MobileNetV3_FixedV2_bestAug.PaperF2_FinalRedo_MobileNetV3_FixedV2_Train import YOLO, \
     get_anchors, my_get_random_data #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
 import sys
 

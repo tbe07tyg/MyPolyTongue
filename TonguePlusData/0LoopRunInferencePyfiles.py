@@ -393,14 +393,14 @@ if __name__ == '__main__':
     #            Saved_model_file_root=Saved_model_file_root,
     #            output_folder=output_folder)
 
-    # ReCheckMyMethod
-    Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\MyMethodRedo\\ModeSaved\\P_PartF_BK_FinalFull_CioUDMaskDicePolarDioUFixedV2"
-    Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_PartF_BK_FinalFull_CioUDMaskDicePolarDioUFixedV2"
-    #
-    output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\MyMethodRedo\\Infer\\MyMethodAllDetect"
-    infer_case(Inference_scripts_root=Inference_scripts_root,
-               Saved_model_file_root=Saved_model_file_root,
-               output_folder=output_folder)
+    # # ReCheckMyMethod
+    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\MyMethodRedo\\ModeSaved\\P_PartF_BK_FinalFull_CioUDMaskDicePolarDioUFixedV2"
+    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_PartF_BK_FinalFull_CioUDMaskDicePolarDioUFixedV2"
+    # #
+    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\MyMethodRedo\\Infer\\MyMethodAllDetect"
+    # infer_case(Inference_scripts_root=Inference_scripts_root,
+    #            Saved_model_file_root=Saved_model_file_root,
+    #            output_folder=output_folder)
 
     #
     # # backbone: exp 7 P_Part1_Backbone_Exp7_Xception_Our_DpolarIoU_L2_loss
@@ -452,3 +452,30 @@ if __name__ == '__main__':
     # infer_case(Inference_scripts_root=Inference_scripts_root,
     #            Saved_model_file_root=Saved_model_file_root,
     #            output_folder=output_folder)
+
+    #
+    # # redo fixed v2 backbone
+    # Saved_model_file_root = "F:\\backbone\\PaperF2_FinalRedo_Xception_FixedV2_bestAug"
+    # Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF2_FinalRedo_Xception_FixedV2_bestAug"
+    # #
+    # output_folder = "F:\\backbone\\outputs"  # the name path can not be too long
+    # infer_case(Inference_scripts_root=Inference_scripts_root,
+    #            Saved_model_file_root=Saved_model_file_root,
+    #            output_folder=output_folder)
+
+    # Saved_model_file_root = "F:\\backbone\\PaperF2_FinalRedo_ResNet101V2_FixedV2_bestAug"
+    # Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF2_FinalRedo_ResNet101V2_FixedV2_bestAug"
+    # #
+    # output_folder = "F:\\backbone\\outputs\\resnet101v2"  # the name path can not be too long
+    # infer_case(Inference_scripts_root=Inference_scripts_root,
+    #            Saved_model_file_root=Saved_model_file_root,
+    #            output_folder=output_folder)
+
+    Saved_model_file_root = "F:\\backbone\\PaperF2_FinalRedo_InceptionV3_FixedV2_bestAug"
+    Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF2_FinalRedo_InceptionV3_FixedV2_bestAug"
+    #
+    output_folder = "F:\\backbone\\outputs\\InceptionV3"  # the name path can not be too long
+    infer_case(Inference_scripts_root=Inference_scripts_root,
+               Saved_model_file_root=Saved_model_file_root,
+               output_folder=output_folder)
+

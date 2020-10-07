@@ -71,11 +71,17 @@ except Exception as e:
 #         run_case(each_case, max_run=5, fileIdx=3)
 #     else:
 #         run_case(each_case)
+#
+# # My method cases:
+# case_list = ['C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF2_FinalRedo_Xception_FixedV2_bestAug',
+#              'C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF2_FinalRedo_ResNet101V2_FixedV2_bestAug'
+#              ]
+#
+# for each_case in case_list:
+#     run_case(each_case)
 
 # My method cases:
-case_list = ['C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF2_FinalRedo_Xception_FixedV2_bestAug',
-             'C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF2_FinalRedo_ResNet101V2_FixedV2_bestAug'
-             ]
+case_list = ['C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF2_FinalRedo_MobileNetV3_FixedV2_bestAug']
 
 for each_case in case_list:
     run_case(each_case)
