@@ -471,10 +471,10 @@ if __name__ == '__main__':
     #            Saved_model_file_root=Saved_model_file_root,
     #            output_folder=output_folder)
 
-    Saved_model_file_root = "F:\\backbone\\PaperF2_FinalRedo_InceptionV3_FixedV2_bestAug"
-    Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF2_FinalRedo_InceptionV3_FixedV2_bestAug"
+    Saved_model_file_root = "F:\\backbone\\PaperF2_FinaRedo_YoloFixedV2_WithoutMask"
+    Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF2_FinaRedo_YoloFixedV2_WithoutMask"
     #
-    output_folder = "F:\\backbone\\outputs\\InceptionV3"  # the name path can not be too long
+    output_folder = "F:\\backbone\\outputs\\NoMask"  # the name path can not be too long
     infer_case(Inference_scripts_root=Inference_scripts_root,
                Saved_model_file_root=Saved_model_file_root,
                output_folder=output_folder)
