@@ -2,7 +2,7 @@ import os
 from glob import glob
 import numpy as np
 try:
-    def run_case(file_dir, angle_step, max_run=5):
+    def run_case(file_dir,global_randomness_count, angle_step, max_run=5):
         """
         # rotation_range = 45
         # width_shift_range = 0.3
@@ -16,7 +16,10 @@ try:
         :param rotation_rangemax_run:
         :return:
         """
-        fileIdx =1
+        if global_randomness_count == 8:
+            fileIdx = 3
+        else:
+            fileIdx = 1
         # for root, dirs, files in os.walk(file_dir):
         #     print(files, "to be run")
         #     for i in files:
@@ -40,12 +43,16 @@ except Exception as e:
 
 # Paper real experiments start:  -------------------------------->
 
-AngleSteps = np.linspace(1, 14, 10)
+AngleSteps = np.linspace(0.5, 13, 10)
 print("angle_steps:", AngleSteps)
-for angle_step in AngleSteps:
+for i, angle_step in enumerate(AngleSteps):
+    print("i:", i)
+    print("angle_step", angle_step)
+    if i < 8:
+        continue
     # # # P_PartF_BK_FinalFull_CioUDMaskDicePolarDiouConfidence
-    # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData/P_PartF_BK_MyFinal_AngleStep', angle_step=angle_step)
-    run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData/PaperF3_FinalRedo_Xception_FixedV2_bestAug_AngleStepCheck', angle_step=angle_step)
+    run_case('C:\\MyProjects\\projectFiles\\TonguePlusData/PaperF3_FinalRedo_Xception_FixedV2_bestAug_AngleStepCheck',i , angle_step=angle_step)
+    # run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData/PaperF3_FinalRedo_Xception_FixedV2_bestAug_AngleStepCheck', angle_step=angle_step)
 
 # # #
 # # Case 1  BaseExp
