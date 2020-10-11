@@ -18,6 +18,7 @@ import tensorflow.keras.backend as K
 import numpy as np
 import tensorflow as tf
 from PIL import Image
+from skimage.draw import random_shapes
 from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint, ReduceLROnPlateau, EarlyStopping, Callback
 from tensorflow.keras.layers import Layer
 from tensorflow.keras.layers import Conv2D, Add, ZeroPadding2D, UpSampling2D, Concatenate
@@ -53,8 +54,8 @@ ANGLE_STEP  = 14 #that means Poly-YOLO will detect 360/15=24 vertices per polygo
 # print("NUM_ANGLES3:", NUM_ANGLES3)
 NUM_ANGLES  = int(360 // ANGLE_STEP) # 24
 print("ANGLE_STEP:", ANGLE_STEP)
-
-# # for mydatagenerator aug
+max_boxes =  80
+# for mydatagenerator aug
 rotation_range = 50.0
 width_shift_range = 0.16666666666666666
 height_shift_range = 0.16666666666666666
@@ -62,36 +63,6 @@ zoom_range = 0.16666666666666666
 shear_range= 0.19444444444444445
 horizontal_flip=True
 brightness_range=[0.6684210526315789, 1.131578947368421]
-#
-# random aug---------------------->
-#  need to comment when running the analyzing codes
-# for running the script
-model_index = sys.argv[1]
-#
-# rotation_range = int(float(sys.argv[2]))
-# width_shift_range = float(sys.argv[3])
-# height_shift_range = float(sys.argv[4])
-# zoom_range = float(sys.argv[5])
-# shear_range = float(sys.argv[6])
-# brightness_range_start = float(sys.argv[7])  # sys.argv can not pass list
-# brightness_range_stop = float(sys.argv[8])
-#
-# global_randomness_count = sys.argv[9]
-# brightness_range = [float(brightness_range_start), float(brightness_range_stop)]
-# print("input AUG----------------------->")
-# print("rotation_range:", rotation_range)
-# print("width_shift_range:", width_shift_range)
-# print("height_shift_range:", height_shift_range)
-# print("zoom_range:", zoom_range)
-# print("shear_range:", shear_range)
-# print("brightness_range_start:", brightness_range)
-# print("input AUG----------------------->")
-# horizontal_flip = True
-#
-# # --------------------------
-
-
-
 
 
 grid_size_multiplier = 4 #that is resolution of the output scale compared with input. So it is 1/4
@@ -100,6 +71,8 @@ anchors_per_level = 9 #single scale and nine anchors
 # for running the script
 model_index =  sys.argv[1]
 
+# for check random shape binary masks
+root =  "E:\\dataset\\Tongue\\random_shape_multipleMasks"
 # def mish(x):
 #     return x * tf.math.tanh(tf.math.softplus(x))
 class Mish(Layer):
@@ -761,7 +734,16 @@ def DarknetConv2D(*args, **kwargs):
     return Conv2D(*args, **darknet_conv_kwargs)
 
 
-def DarknetConv2D_BN_Leaky(*args, **kwargs):
+# def DarknetConv2D_BN_Leaky(*args, **kwargs):
+#     """Darknet Convolution2D followed by BatchNormalization and LeakyReLU."""
+#     no_bias_kwargs = {'use_bias': False}
+#     no_bias_kwargs.update(kwargs)
+#     return compose(
+#         DarknetConv2D(*args, **no_bias_kwargs),
+#         BatchNormalization(),
+#         LeakyReLU(alpha=0.1))
+
+def DarknetConv2D_BN_Mish(*args, **kwargs):
     """Darknet Convolution2D followed by BatchNormalization and LeakyReLU."""
     no_bias_kwargs = {'use_bias': False}
     no_bias_kwargs.update(kwargs)
@@ -775,11 +757,11 @@ def resblock_body(x, num_filters, num_blocks):
     '''A series of resblocks starting with a downsampling Convolution2D'''
     # Darknet uses left and top padding instead of 'same' mode
     x = ZeroPadding2D(((1, 0), (1, 0)))(x)
-    x = DarknetConv2D_BN_Leaky(num_filters, (3, 3), strides=(2, 2))(x)
+    x = DarknetConv2D_BN_Mish(num_filters, (3, 3), strides=(2, 2))(x)
     for i in range(num_blocks):
         y = compose(
-            DarknetConv2D_BN_Leaky(num_filters // 2, (1, 1)),
-            DarknetConv2D_BN_Leaky(num_filters, (3, 3)))(x)
+            DarknetConv2D_BN_Mish(num_filters // 2, (1, 1)),
+            DarknetConv2D_BN_Mish(num_filters, (3, 3)))(x)
         y = squeeze_excite_block(y)
         x = Add()([x, y])
     return x
@@ -795,7 +777,7 @@ def squeeze_excite_block(tensor, ratio=16):
     se = GlobalAveragePooling2D()(init)
     se = Reshape(se_shape)(se)
     se = Dense(filters // ratio, kernel_initializer='he_normal', use_bias=False)(se)
-    se = LeakyReLU(alpha=0.1)(se)
+    se = Mish()(se)
     se = Dense(filters, activation='sigmoid', kernel_initializer='he_normal', use_bias=False)(se)
 
     if K.image_data_format() == 'channels_first':
@@ -810,32 +792,43 @@ def _tensor_shape(tensor):
 
 
 
-def darknet_body(x):
-    '''Darknent body having 52 Convolution2D layers'''
-    base = 6  # YOLOv3 has base=8, we have less parameters
-    x = DarknetConv2D_BN_Leaky(base * 4, (3, 3))(x)
-    x = resblock_body(x, base * 8, 1)
-    x = resblock_body(x, base * 16, 2)
-    tiny = x
-    x = resblock_body(x, base * 32, 8)
-    small = x
-    x = resblock_body(x, base * 64, 8)
-    medium = x
-    x = resblock_body(x, base * 128, 8)
-    big = x
-    return tiny, small, medium, big
+# def darknet_body(x):
+#     '''Darknent body having 52 Convolution2D layers'''
+#     base = 6  # YOLOv3 has base=8, we have less parameters
+#     x = DarknetConv2D_BN_Leaky(base * 4, (3, 3))(x)
+#     x = resblock_body(x, base * 8, 1)
+#     x = resblock_body(x, base * 16, 2)
+#     tiny = x
+#     x = resblock_body(x, base * 32, 8)
+#     small = x
+#     x = resblock_body(x, base * 64, 8)
+#     medium = x
+#     x = resblock_body(x, base * 128, 8)
+#     big = x
+#     return tiny, small, medium, big
 
 
 
 def yolo_body(inputs, num_anchors, num_classes):
     """Create Poly-YOLO model CNN body in Keras."""
-    tiny, small, medium, big = darknet_body(inputs)
+
+    # this function return to create model for loss and prediction for evaluation need to check for codes
+    # backbone and feature extraction  ---------->
+
+    base_model = Xception(input_tensor=inputs, weights=None, include_top=False) # random initialization
+    # extract features from each block end: ["add", "add_1", "add_10", "add_11"]
+    # base_model.summary()
+
+    tiny = base_model.get_layer('add').output
+    small = base_model.get_layer('add_1').output
+    medium = base_model.get_layer('add_10').output
+    big = base_model.get_layer('add_11').output
 
     base = 6
-    tiny   = DarknetConv2D_BN_Leaky(base*32, (1, 1))(tiny)
-    small  = DarknetConv2D_BN_Leaky(base*32, (1, 1))(small)
-    medium = DarknetConv2D_BN_Leaky(base*32, (1, 1))(medium)
-    big    = DarknetConv2D_BN_Leaky(base*32, (1, 1))(big)
+    tiny   = DarknetConv2D_BN_Mish(base*32, (1, 1))(tiny)
+    small  = DarknetConv2D_BN_Mish(base*32, (1, 1))(small)
+    medium = DarknetConv2D_BN_Mish(base*32, (1, 1))(medium)
+    big    = DarknetConv2D_BN_Mish(base*32, (1, 1))(big)
 
     #stairstep upsamplig
     all = Add()([medium, UpSampling2D(2,interpolation='bilinear')(big)])
@@ -847,9 +840,9 @@ def yolo_body(inputs, num_anchors, num_classes):
     num_filters = base*32
 
     x = compose(
-        DarknetConv2D_BN_Leaky(num_filters, (1, 1)),
-        DarknetConv2D_BN_Leaky(num_filters * 2, (3, 3)),
-        DarknetConv2D_BN_Leaky(num_filters, (1, 1)))(all)
+        DarknetConv2D_BN_Mish(num_filters, (1, 1)),
+        DarknetConv2D_BN_Mish(num_filters * 2, (3, 3)),
+        DarknetConv2D_BN_Mish(num_filters, (1, 1)))(all)
     print("x.shape:", x.shape)
     print()
     print("num_classes:", num_classes)
@@ -857,11 +850,11 @@ def yolo_body(inputs, num_anchors, num_classes):
     print("num_anchors:", num_anchors)
     print()
     all_detection = compose(
-        DarknetConv2D_BN_Leaky(num_filters * 2, (3, 3)),
+        DarknetConv2D_BN_Mish(num_filters * 2, (3, 3)),
 
         DarknetConv2D(num_anchors * (num_classes + 5 + NUM_ANGLES), (1, 1)))(x)
     print("all.shape:", all.shape)
-    # Model_detect = Model(inputs, all_detection)
+    Model_detect = Model(inputs, all_detection)
     # box related detection
     # all_detection = tf.reshape(
     #     all_detection, [-1, all_detection.shape[1], all_detection.shape[2], num_anchors, num_classes + 5 + NUM_ANGLES],
@@ -869,16 +862,16 @@ def yolo_body(inputs, num_anchors, num_classes):
     # bbox_related = all_detection[..., 0:4]
     # dist_related =  all_detection[..., 5 + num_classes: 5 + num_classes + NUM_ANGLES]
     # bbox_mask_head =  concatenate([bbox_related, dist_related], axis=-1)
-    # mask_head = DarknetConv2D(num_filters * 2, (3, 3))(bbox_mask_head)
-    # mask_feaurex2 = UpSampling2D(2, interpolation='bilinear')(mask_head)
-    #
-    # # one more conv 128 featuref
-    # feature128 = DarknetConv2D_BN_Mish(64, (3, 3))(mask_feaurex2)
-    # MaskPred128 = Conv2D(num_classes, 1, activation = 'sigmoid')(feature128)
-    # MaskPred256 = UpSampling2D(2, interpolation='bilinear')(MaskPred128)
-    Model_detect = Model(inputs, all_detection)
-    # Model_mask = Model(inputs, MaskPred256)
-    return Model_detect
+    mask_head = DarknetConv2D(num_filters * 2, (3, 3))(all_detection)
+    mask_feaurex2 = UpSampling2D(2, interpolation='bilinear')(mask_head)
+
+    # one more conv 128 featuref
+    feature128 = DarknetConv2D_BN_Mish(64, (3, 3))(mask_feaurex2)
+    MaskPred128 = Conv2D(num_classes, 1, activation = 'sigmoid')(feature128)
+    MaskPred256 = UpSampling2D(2, interpolation='bilinear')(MaskPred128)
+
+    Model_mask = Model(inputs, MaskPred256)
+    return Model_detect, Model_mask
 
 
 
@@ -1382,18 +1375,18 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.4):
     """
     num_layers = 1
     yolo_outputs = args[:1]
-    # mask_outputs = args[1:2]
-    y_true = args[1:2]
-    # y_true_mask =  args[3:]
+    mask_outputs = args[1:2]
+    y_true = args[2:3]
+    y_true_mask =  args[3:]
     # calculate y_true_mask
     # mask_loss = K.binary_crossentropy(y_true_mask[0], mask_outputs[0], from_logits=False)
 
 
 
     print("yolo_outputs.shape", yolo_outputs)
-    # print("mask_outputs.shape", mask_outputs)
+    print("mask_outputs.shape", mask_outputs)
     print("y_true.shape", y_true)
-    # print("y_true_mask.shape", y_true_mask)
+    print("y_true_mask.shape", y_true_mask)
     g_y_true = y_true
     # define a input shape as a 2d shape= (imgH,imgW)*grid_size_multiplier = feature map shape  * 4 = (rawiput W, raw input H)
     input_shape = K.cast(K.shape(yolo_outputs[0])[1:3] * grid_size_multiplier, K.dtype(y_true[0]))
@@ -1485,8 +1478,8 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.4):
         # distance loss
         # polygon_loss_dist_L2 = object_mask * box_loss_scale * 0.5 * K.square(raw_true_polygon_dist - raw_pred[..., 5 + num_classes:5 + num_classes + NUM_ANGLES])
 
-        # # mask dice:
-        # mask_loss = box_loss_scale * dice_loss(y_true_mask[0], mask_outputs[0])
+        # mask dice:
+        mask_loss = box_loss_scale * dice_loss(y_true_mask[0], mask_outputs[0])
 
         print("finised losses for each image")
         # there is a weight for special masks losses and also weighted focal according to the confidences score in total for each image ,then * for the enirebatch
@@ -1511,7 +1504,7 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.4):
 
         # xy_loss round: 11   wh_loss round: 11      d_loss around: 10  polygon_dist_loss(L2: 30): 60   polar_diou_loss: 11
         # loss += (polygon_dist_loss)/ (K.sum(object_mask) + 1)*mf
-    return ciou_loss, confidence_loss, polar_diou_loss, class_loss
+    return ciou_loss, confidence_loss, polar_diou_loss, class_loss, mask_loss
 
 
 class YOLO(object):
@@ -1564,7 +1557,7 @@ class YOLO(object):
         try:
             self.yolo_model = load_model(model_path, compile=False)
         except:
-            self.yolo_model = yolo_body(Input(shape=(256, 256, 3)), anchors_per_level, num_classes)
+            self.yolo_model,_ = yolo_body(Input(shape=(256, 256, 3)), anchors_per_level, num_classes)
             self.yolo_model.load_weights(self.model_path, by_name=True)  # make sure model, anchors and classes match
         else:
             # novy output
@@ -1583,7 +1576,7 @@ class YOLO(object):
                                                      score_threshold=self.score, iou_threshold=self.iou)
         return boxes, scores, classes, polygons
 
-    def detect_image(self, image, raw_shape):
+    def detect_image(self, image, raw_shape, polygon_xy):
         image = np.expand_dims(image, 0)  # for input model
         print("image.shape：", image.shape)
         # if self.model_image_size != (None, None):
@@ -1603,9 +1596,9 @@ class YOLO(object):
                 K.learning_phase(): 0
             })
 
-
+        #
         # get
-        polygon_xy = np.zeros([polygons.shape[0], 2 * NUM_ANGLES])
+        # polygon_xy = np.zeros([polygons.shape[0], 2 * NUM_ANGLES])
         for b in range(0, out_boxes.shape[0]):
             cy = (out_boxes[b, 0] + out_boxes[b, 2]) // 2
             cx = (out_boxes[b, 1] + out_boxes[b, 3]) // 2
@@ -1716,12 +1709,109 @@ def my_Gnearator(images_list, masks_list, batch_size, input_shape, anchors, num_
         # preprocess the bbox into the regression targets
         y_true = my_preprocess_true_boxes_NPinterp(box_batch, input_shape, anchors, num_classes)
         yield [image_batch, *y_true, mask_batch], \
-              [np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size)]
+              [np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size)]
+
+def encode_polygone0(img_path, contours, label, input_shape,MAX_VERTICES =1000):
+    "give polygons and encode as angle, ditance , probability"
+    # print("random shape labels:", label)
+    skipped = 0
+    polygons_line = ''
+    c = 0
+    my_poly_list =[]
+
+    # Generate masks for each cls
+    GT_MASK0 = np.zeros([input_shape[0], input_shape[1]])
+    GT_MASK1 = np.zeros([input_shape[0], input_shape[1]])
+    GT_MASK2 = np.zeros([input_shape[0], input_shape[1]])
+    GT_MASK3 = np.zeros([input_shape[0], input_shape[1]])
+
+    # for i, each_polygons in enumerate(my_poly_list):
+    #     print("each_polygons.shape:", each_polygons.shape)
+    #
+    #     cv2.fillPoly(GT_MASK, np.int32([each_polygons]), color=(255))
+    #     cv2.imwrite(root + "/{}_input".format(image_name) + '.jpg', aug_image)
+    #     cv2.imwrite(root + "/{}_{}".format(image_name, i) + '.jpg', GT_MASK*255)
+    #     print("mask:range:",GT_MASK.min(), GT_MASK.max())
+    for obj in contours:
+
+        # print(obj.shape)
+        myPolygon = obj.reshape([-1, 2])
+        # print("mypolygon:", myPolygon.shape)
+        if myPolygon.shape[0] > MAX_VERTICES:
+            print()
+            print("too many polygons")
+            break
+        my_poly_list.append(myPolygon)
+
+        min_x = sys.maxsize
+        max_x = 0
+        min_y = sys.maxsize
+        max_y = 0
+        polygon_line = ''
+
+        # for po
+        for x, y in myPolygon:
+            # print("({}, {})".format(x, y))
+            if x > max_x: max_x = x
+            if y > max_y: max_y = y
+            if x < min_x: min_x = x
+            if y < min_y: min_y = y
+            polygon_line += ',{},{}'.format(x, y)
+        if max_x - min_x <= 1.0 or max_y - min_y <= 1.0:
+            skipped += 1
+            continue
+        for i, each in enumerate(label): # for each object search one time
+            str_cls = each[0]
+            bbox = each[1]
+            label_p1 =  bbox[0]
+            # label_p2 =  bbox[1]
+            # print(str_cls)
+            # print("label:", label_p1, label_p2)
+            # calculate distance of bbox
+            obj_p1 = (min_y, max_y)
+            # obj_p2 = (min_x, max_x)
+            # print("found:", obj_p1, obj_p2)
+            # pointx = (min_x, max_x)
+            # print(label_p1- obj_p1)
+            d1 = np.sqrt(np.power(label_p1[0]-obj_p1[0], 2) + np.power(label_p1[1]-obj_p1[1], 2))
+            # print(d1)
+            if d1 < 2:
+                c = str_cls
+                # print("found cls:", c)
+
+                # get cls number according to c
+                c =  check_randomShape_cls(c)
+                # print("final cls:", c)
+                if c==0:
+                    cv2.fillPoly(GT_MASK0, np.int32([myPolygon]), color=(255))
+                elif c==1:
+                    cv2.fillPoly(GT_MASK1, np.int32([myPolygon]), color=(255))
+                elif c==2:
+                    cv2.fillPoly(GT_MASK2, np.int32([myPolygon]), color=(255))
+                else :
+                    cv2.fillPoly(GT_MASK3, np.int32([myPolygon]), color=(255))
+
+            # d1 = np.sqrt
+            # print("d:", d)
+            # pointy= ()
+        # print("min_x, min_y, max_x, max_y:", min_x, min_y, max_x, max_y)
+        polygons_line += ' {},{},{},{},{}'.format(min_x, min_y, max_x, max_y, c) + polygon_line
+
+
+    GT_MASK0 = np.expand_dims(GT_MASK0, -1)
+    GT_MASK1 = np.expand_dims(GT_MASK1, -1)
+    GT_MASK2 = np.expand_dims(GT_MASK2, -1)
+    GT_MASK3 = np.expand_dims(GT_MASK3, -1)
+    all_masks = np.concatenate([GT_MASK0, GT_MASK1, GT_MASK2, GT_MASK3], -1)
+    # print("all_masks shape:", all_masks.shape)
+    annotation_line = img_path + polygons_line
+
+    return annotation_line, my_poly_list, all_masks
 
 
 def my_get_random_data(img_path, mask_path, input_shape, image_datagen, mask_datagen, train_or_test):
     # load data ------------------------>
-    # image_name = os.path.basename(img_path).replace('.JPG', '')
+    image_name = os.path.basename(img_path).replace('.JPG', '')
     # mask_name = os.path.basename(mask_path).replace('.JPG', '')
     # print("img name:", image_name)
     # print("mask name:", mask_name)
@@ -1740,51 +1830,329 @@ def my_get_random_data(img_path, mask_path, input_shape, image_datagen, mask_dat
 
         aug_image = image_datagen.random_transform(image, seed=seed)
 
-        aug_mask = mask_datagen.random_transform(mask, seed=seed)
+        mask =  mask.copy().astype(np.uint8)
+        # print("raw mask shape:", mask.shape)
+        # print("raw mask range:", mask.min(), mask.max())
+        # find multi regions from single tongue binary:
+        ret, thresh = cv2.threshold(mask, 127, 255, 0)  # this require the numpy array has to be the uint8 type
+        image, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+        selected_coutours = []
+        for x in range(len(contours)):
+            # print("countour x:", x, contours[x].shape)
+            if contours[x].shape[0] > 5:  # require one contour at lest 5 polygons(360/40=9)
+                selected_coutours.append(contours[x])
+        # print("# selected_coutours:", len(selected_coutours))
 
-        copy_mask = aug_mask.copy().astype(np.uint8)
+        all_regions, cls_names = find_regions(selected_coutours, input_shape)
+        print("found all regions:", len(all_regions))
+        print("found all cls_names:", len(cls_names))
+        assert   len(all_regions) == len(cls_names), "regions and clses not matched"
+        # print("region shape:", all_regions[0].shape)
+        # print("region range:", all_regions[0].min(), all_regions[0].max())
+        new_contours = []
+        new_aug_mask = []
+        new_cls_names = []
+        for i, each_mask in  enumerate(all_regions):
+            each_aug_mask = mask_datagen.random_transform(each_mask, seed=seed)
+            # cv2.imwrite(root + "/{}_{}".format(image_name, 1) + '.jpg', each_aug_mask)
+
+            ret, each_thresh = cv2.threshold(each_aug_mask.astype(np.uint8), 127, 255, 0)  # this require the numpy array has to be the uint8 type
+            image, region_contour, hierarchy = cv2.findContours(each_thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+            print("region_contour", len(region_contour))
+            if len(region_contour) > 0:
+                new_aug_mask.append(each_aug_mask)
+                new_contours.append(region_contour[0])
+                new_cls_names.append(cls_names[i])
+            else:
+                new_aug_mask.append(each_aug_mask)
+
+        # generate polylines for new countours
+        annotation_line, my_poly_list = encode_polygone(img_path, new_contours, new_cls_names)
+
+        # aug_mask
+        # new_aug_mask = np.squeeze(np.array(new_aug_mask)).reshape([input_shape[0], input_shape[1], -1])
+        # print("new_aug_mask.shape", new_aug_mask.shape)
+
+        new_aug_mask = np.array(new_aug_mask)
+        # print("new_aug_mask.shape", new_aug_mask.shape)
+        new_aug_mask = np.transpose(new_aug_mask,
+                                    (3, 1, 2, 0))
+        new_aug_mask = np.squeeze(new_aug_mask)
     else:
         # print("Test no aug")
         aug_image = image
-        copy_mask = mask.copy().astype(np.uint8)
+        mask = mask.copy().astype(np.uint8)
+        # print("raw mask shape:", mask.shape)
+        # print("raw mask range:", mask.min(), mask.max())
+        # find multi regions from single tongue binary:
+        ret, thresh = cv2.threshold(mask, 127, 255, 0)  # this require the numpy array has to be the uint8 type
+        image, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+        selected_coutours = []
+        for x in range(len(contours)):
+            # print("countour x:", x, contours[x].shape)
+            if contours[x].shape[0] > 5:  # require one contour at lest 5 polygons(360/40=9)
+                selected_coutours.append(contours[x])
+        # print("# selected_coutours:", len(selected_coutours))
 
-    # print("mask shape after aug:", np.squeeze(aug_mask).shape)
-    # aug_image = krs_image.img_to_array(aug_image)
-    # aug_mask = krs_image.img_to_array(aug_mask)
-    # find polygons with augmask ------------------------------------>
-    # imgray = cv2.cvtColor(np.squeeze(copy_mask), cv2.COLOR_BGR2GRAY)
-    # print(copy_mask)
-    ret, thresh = cv2.threshold(copy_mask, 127, 255, 0)  # this require the numpy array has to be the uint8 type
-    aug_mask =thresh
-    image, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-    selected_coutours = []
-    for x in range(len(contours)):
-        # print("countour x:", x, contours[x].shape)
-        if contours[x].shape[0] > 8:  # require one contour at lest 8 polygons(360/40=9)
-            selected_coutours.append(contours[x])
-    # print("# selected_coutours:", len(selected_coutours))
+        all_regions, cls_names = find_regions(selected_coutours, input_shape)
+        print("found all regions:", len(all_regions))
+        # print("found all cls_names:", len(cls_names))
+        # print("region shape:", all_regions[0].shape)
+        # print("region range:", all_regions[0].min(), all_regions[0].max())
+        new_contours = []
+        new_aug_mask = []
+        new_cls_names = []
+        for i, each_mask in enumerate(all_regions):
+            # each_aug_mask = mask_datagen.random_transform(each_mask, seed=seed)
+            # cv2.imwrite(root + "/{}_{}".format(image_name, 1) + '.jpg', each_aug_mask)
+            # new_aug_mask.append(each_mask)
+            ret, each_thresh = cv2.threshold(each_mask.astype(np.uint8), 127, 255,
+                                             0)  # this require the numpy array has to be the uint8 type
+            image, region_contour, hierarchy = cv2.findContours(each_thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+            if len(region_contour) > 0:
+                new_aug_mask.append(each_mask)
+                new_contours.append(region_contour[0])
+                new_cls_names.append(cls_names[i])
+            else:
+                new_aug_mask.append(each_mask)
 
+                # generate polylines for new countours
+        annotation_line, my_poly_list = encode_polygone(img_path, new_contours, new_cls_names)
 
+        # aug_mask
+        # new_aug_mask = np.squeeze(np.array(new_aug_mask)).reshape([input_shape[0], input_shape[1], -1])
+        # print("new_aug_mask.shape", new_aug_mask.shape)
 
-    # encode contours into annotation lines ---->
-    annotation_line, myPolygon = encode_polygone(img_path, selected_coutours)
+        new_aug_mask = np.array(new_aug_mask)
+        # print("new_aug_mask.shape", new_aug_mask.shape)
+        new_aug_mask = np.transpose(new_aug_mask,
+                                    (3, 1, 2, 0))
+        new_aug_mask = np.squeeze(new_aug_mask)
+
+    ## all back backgound
+    # GT_MASK = np.zeros([input_shape[0], input_shape[1]])
+    # Generate binary masks for each objects ---------------->
+    # for i, each_polygons in enumerate(my_poly_list):
+    #     print("each_polygons.shape:", each_polygons.shape)
+    #
+    # # check the generate input and classes masks------------------------->
+    #
+    # cv2.imwrite(root + "/{}_input".format(image_name) + '.jpg', aug_image)
+    # for i in range(new_aug_mask.shape[-1]):
+    #     temp_mask =  new_aug_mask[:,:,i]
+    #     print("temp_mask.shape:", temp_mask.shape)
+    #     cv2.imwrite(root + "/{}_{}".format(image_name, i) + '.jpg', new_aug_mask[:,:,i])
+    # for i in range(new_aug_mask.shape[0]):
+    #     temp_mask = new_aug_mask[:, :, i]
+    #     print("temp_mask.shape:", temp_mask.shape)
+    #     cv2.imwrite(root + "/{}_{}".format(image_name, i) + '.jpg', new_aug_mask[i, :, :])
+        # print("mask:range:",new_aug_mask[:,:,i].min(), new_aug_mask[:,:,i].max())
+    # print("my_poly_list:", my_poly_list)
     # decode contours annotation line into distance
     box_data = My_bilinear_decode_annotationlineNP_inter(annotation_line)
 
     # normal the image ----------------->
     aug_image = aug_image / 255.0
-    aug_mask = aug_mask / 255.0
-    aug_mask =  np.expand_dims(aug_mask, -1)  # since in our case ,we only have one class, if multiple classes binary labels concate at the last dimension
+    aug_mask = new_aug_mask / 255.0
+    # aug_mask =  np.expand_dims(aug_mask, -1)  # since in our case ,we only have one class, if multiple classes binary labels concate at the last dimension
     # print("aug_mask.shape:", aug_mask.shape)
-    return aug_image, box_data, myPolygon, aug_mask, annotation_line
+    return aug_image, box_data, my_poly_list, aug_mask, annotation_line
 
-def encode_polygone(img_path, contours, MAX_VERTICES =1000):
+def check_tongueRegion_cls(cls):
+    class_mapping = {'Kidney': 0,
+                     'Stomach': 1,
+                     'Liver0': 2,
+                     'Liver1': 3,
+                     'Lung': 4
+                     }
+    if cls in class_mapping.keys():
+        return class_mapping[cls]
+    else:
+        return None
+
+def find_regions(contours, input_shape):
+    "give polygons and encode as angle, ditance , probability"
+
+    # Position Threshold for regions
+    pos_th = 0.2
+    # Generate masks for each cls
+    GT_MASK0 = np.zeros([input_shape[0], input_shape[1]])
+    GT_MASK1 = np.zeros([input_shape[0], input_shape[1]])
+    GT_MASK2 = np.zeros([input_shape[0], input_shape[1]])
+    GT_MASK3 = np.zeros([input_shape[0], input_shape[1]])
+    GT_MASK4 = np.zeros([input_shape[0], input_shape[1]])
+    # for i, each_polygons in enumerate(my_poly_list):
+    #     print("each_polygons.shape:", each_polygons.shape)
+    #
+    #     cv2.fillPoly(GT_MASK, np.int32([each_polygons]), color=(255))
+    #     cv2.imwrite(root + "/{}_input".format(image_name) + '.jpg', aug_image)
+    #     cv2.imwrite(root + "/{}_{}".format(image_name, i) + '.jpg', GT_MASK*255)
+    #     print("mask:range:",GT_MASK.min(), GT_MASK.max())
+    all_regions = []
+    cls_names = []
+    for obj in contours:
+
+        # print(obj.shape)
+        myPolygon = obj.reshape([-1, 2])
+
+        # from entire polygon to seperate 5 polygons for different regions ==============================>
+        myPolygon_temp = myPolygon
+        # print("myPolygon_temp.shape:", myPolygon_temp.shape)
+
+        min_x = myPolygon_temp[:, 0].min()
+        min_y = myPolygon_temp[:, 1].min()
+        max_x = myPolygon_temp[:, 0].max()
+        max_y = myPolygon_temp[:, 1].max()
+
+        # print("min_x, min_y, max_x, max_y:", min_x, min_y, max_x, max_y)
+        # # create mask seperately
+        # raw_ptx = pts = np.array([[min_x, min_y],[max_x, min_y],
+        #                           [min_x, max_y],[max_x, max_y]])
+        # print("raw_ptx.shape", raw_ptx.shape)
+        # raw_ptx = raw_ptx.reshape((-1, 1, 2))
+        # print("raw_ptx.shape", raw_ptx.shape)
+
+
+
+        # calculate the largest width and height
+
+        w_x = max_x - min_x
+        h_y = max_y - min_y
+        pos_x_51 = pos_th * w_x
+        pos_y_51 = pos_th * h_y
+        # print("pos_x_51:", pos_x_51)
+        # print("pos_y_51:", pos_y_51)
+
+        th1 = (min_x + pos_x_51, min_y + pos_y_51)
+        th2 = (max_x - pos_x_51, min_y + pos_y_51)
+        th3 = (min_x + pos_x_51, max_y - pos_y_51)
+        th4 = (max_x - pos_x_51, max_y - pos_y_51)
+        # print("th1:", th1)
+        # print("th2:", th2)
+        # print("th3:", th3)
+        # print("th4:", th4)
+
+        # top Kidney ----------------> 0
+        th11 = (th1[0] - 1, th1[1] - 1)
+        # th31 = (th3[0] - 1, th3[1] - 1)
+        # print(myPolygon[0][:, 0] <= th13[0])
+        poly_top_Kidney_index = np.where(myPolygon[:, 1] < th11[1])
+        # print("poly_top_Kidney_index:", poly_top_Kidney_index)
+        # print("myPolygon.shape:", myPolygon.shape)
+        top_Kidney_poly = myPolygon[poly_top_Kidney_index[0], :]
+        # th11 = np.reshape(np.array(th11), [1, 1, -1])
+        # print(" th11.shape", th11)
+        # print("top_Kidney_poly:", top_Kidney_poly.shape)
+        cv2.fillPoly(GT_MASK0, np.int32([top_Kidney_poly]), color=(255))
+        cls_names.append('Kidney')
+        all_regions.append(np.expand_dims(GT_MASK0,-1))
+
+        # Bottom Lung ---------------->
+        th34 = (th3[0] + 1, th3[1] + 1)
+        # th31 = (th3[0] - 1, th3[1] - 1)
+        # print(myPolygon[0][:, 0] <= th13[0])
+        poly_Lung_index = np.where(myPolygon[:, 1] > th34[1])
+        # print("poly_Lung_index:", poly_Lung_index)
+        # print("myPolygon.shape:", myPolygon.shape)
+        Lung_poly = myPolygon[poly_Lung_index[0], :]
+        # th34 = np.reshape(np.array(th34), [1, 1, -1])
+        # print(" th34.shape", th34)
+        # print("Lung_poly:", Lung_poly.shape)
+        min_Lung_x = Lung_poly[:, 0].min()
+        max_Lung_x = Lung_poly[:, 0].max()
+        min_Lung_y = Lung_poly[:, 1].min()
+        max_Lung_y = Lung_poly[:, 1].max()
+        cv2.fillPoly(GT_MASK1, np.int32([Lung_poly]), color=(255))
+        cls_names.append('Lung')
+        all_regions.append(np.expand_dims(GT_MASK1,-1))
+        # left liver ---------------->
+        th13 = (th1[0] - 1, th1[1] + 1)
+        th31 = (min_Lung_x - 1, min_Lung_y - 1)
+        # print(myPolygon[:, 0] <= th13[0])
+        poly_left_liver_index = np.where((myPolygon[:, 0] <= th13[0]) &
+                                         (myPolygon[:, 1] >= th13[1]) &
+                                         (myPolygon[:, 1] <= th31[1]) &
+                                         (myPolygon[:, 0] <= th31[0]))
+        # print("poly_left_liver_index:", poly_left_liver_index)
+        # print("myPolygon.shape:", myPolygon.shape)
+        left_liver_poly = myPolygon[poly_left_liver_index[0], :]
+        th13 = np.reshape(np.array(th13), [1, -1])
+        # th31 = np.reshape(np.array(th31), [1, -1])
+        # print("th13.shape", th13)
+        # print("left_liver_poly:", left_liver_poly)
+        left_liver_poly = np.concatenate([left_liver_poly, th13], axis=0).astype(int)
+        # print("left_liver_poly:", left_liver_poly.shape)
+        cv2.fillPoly(GT_MASK2, np.int32([left_liver_poly]), color=(255))
+        cls_names.append('Liver0')
+        all_regions.append(np.expand_dims(GT_MASK2, -1))
+        # right liver ---------------->
+        th24 = (th2[0] + 1, th2[1] + 1)
+        th42 = (max_Lung_x + 1, min_Lung_y - 1)
+        poly_right_liver_index = np.where(
+            (myPolygon[:, 0] >= th24[0]) &
+            (myPolygon[:, 1] >= th24[1]) &
+            (myPolygon[:, 1] <= th42[1]))
+        # print("poly_right_liver_index:", poly_right_liver_index)
+        # print("myPolygon.shape:", myPolygon.shape)
+        right_liver_poly = myPolygon[poly_right_liver_index[0], :]
+        th24 = np.reshape(np.array(th24), [1, -1])
+        # print("th24.shape", th24)
+        # print("right_liver_poly:", right_liver_poly)
+        right_liver_poly = np.concatenate([right_liver_poly, th24], axis=0).astype(int)
+        # print(" right_liver_poly:", right_liver_poly.shape)
+        cv2.fillPoly(GT_MASK3, np.int32([right_liver_poly]), color=(255))
+        cls_names.append('Liver1')
+        all_regions.append(np.expand_dims(GT_MASK3, -1))
+        # Stomach ---------------->
+        th14 = (th1[0] + 1, th1[1] + 1)
+        th23 = (th2[0] - 1, th2[1] + 1)
+        th1423 = ((th14[0] + th23[0]) / 2, (th14[1] + th23[1]) / 2)
+        th32 = (min_Lung_x + 1, min_Lung_y - 1)
+        th41 = (max_Lung_x - 1, min_Lung_y - 1)
+        th2341 = ((th41[0] + th23[0]) / 2, (th41[1] + th23[1]) / 2)
+        th4132 = ((th41[0] + th32[0]) / 2, (th41[1] + th32[1]) / 2)
+        th3214 = ((th14[0] + th32[0]) / 2, (th14[1] + th32[1]) / 2)
+        # poly_Stomach_index = np.where(
+        #     (myPolygon[0][:, 0] >= th14[0]) & (myPolygon[0][:, 1] >= th14[1]) & (myPolygon[0][:, 0] <= th41[1]) & (myPolygon[0][:, 1] <= th41[1]))
+        # print("poly_Stomach_index:", poly_Stomach_index)
+        # print("myPolygon.shape:", myPolygon.shape)
+        # Stomach_poly = myPolygon[:, poly_Stomach_index[0], :]
+
+        th14 = np.reshape(np.array(th14), [1, -1])
+        th23 = np.reshape(np.array(th23), [1, -1])
+        th32 = np.reshape(np.array(th32), [1, -1])
+        th41 = np.reshape(np.array(th41), [1, -1])
+
+        th1423 = np.reshape(np.array(th1423), [1, -1])
+        th2341 = np.reshape(np.array(th2341), [1, -1])
+        th4132 = np.reshape(np.array(th4132), [1, -1])
+        th3214 = np.reshape(np.array(th3214), [1, -1])
+        # # print("th24.shape", th24)
+        # print("Stomach_poly:", right_liver_poly)
+        Stomach_poly = np.concatenate([th14, th1423, th23, th2341, th41, th4132, th32, th3214], axis=0).astype(int)
+        # print("Stomach_poly:", Stomach_poly.shape)
+        cv2.fillPoly(GT_MASK4, np.int32([Stomach_poly]), color=(255))
+        cls_names.append('Stomach')
+        all_regions.append(np.expand_dims(GT_MASK4, -1))
+
+        #=========================================>
+
+    # GT_MASK0 = np.expand_dims(GT_MASK0, -1)
+    # GT_MASK1 = np.expand_dims(GT_MASK1, -1)
+    # GT_MASK2 = np.expand_dims(GT_MASK2, -1)
+    # GT_MASK3 = np.expand_dims(GT_MASK3, -1)
+    # all_masks = np.concatenate([GT_MASK0, GT_MASK1, GT_MASK2, GT_MASK3], -1)
+
+    return all_regions, cls_names
+
+def encode_polygone(img_path, contours, cls_names, MAX_VERTICES =1000):
     "give polygons and encode as angle, ditance , probability"
     skipped = 0
     polygons_line = ''
-    c = 0
+    c = None
     my_poly_list =[]
-    for obj in contours:
+    for obj, cls in zip(contours, cls_names):
+        c = check_tongueRegion_cls(cls)
         # print(obj.shape)
         myPolygon = obj.reshape([-1, 2])
         # print("mypolygon:", myPolygon.shape)
@@ -1817,6 +2185,217 @@ def encode_polygone(img_path, contours, MAX_VERTICES =1000):
     annotation_line = img_path + polygons_line
 
     return annotation_line, my_poly_list
+
+# def encode_polygone_multi_unfinished(img_path, contours, input_shape,MAX_VERTICES =1000):
+#     "give polygons and encode as angle, ditance , probability"
+#     # print("random shape labels:", label)
+#     skipped = 0
+#     polygons_line = ''
+#     c = 0
+#     my_poly_list =[]
+#     pos_th = 0.2
+#     # Generate masks for each cls
+#     GT_MASK0 = np.zeros([input_shape[0], input_shape[1]])
+#     GT_MASK1 = np.zeros([input_shape[0], input_shape[1]])
+#     GT_MASK2 = np.zeros([input_shape[0], input_shape[1]])
+#     GT_MASK3 = np.zeros([input_shape[0], input_shape[1]])
+#
+#     # for i, each_polygons in enumerate(my_poly_list):
+#     #     print("each_polygons.shape:", each_polygons.shape)
+#     #
+#     #     cv2.fillPoly(GT_MASK, np.int32([each_polygons]), color=(255))
+#     #     cv2.imwrite(root + "/{}_input".format(image_name) + '.jpg', aug_image)
+#     #     cv2.imwrite(root + "/{}_{}".format(image_name, i) + '.jpg', GT_MASK*255)
+#     #     print("mask:range:",GT_MASK.min(), GT_MASK.max())
+#     for obj in contours:
+#         cls_names = []
+#         # print(obj.shape)
+#         myPolygon = obj.reshape([-1, 2])
+#
+#         # from entire polygon to seperate 5 polygons for different regions ==============================>
+#         myPolygon_temp = myPolygon
+#         print("myPolygon_temp.shape:", myPolygon_temp.shape)
+#
+#         min_x = myPolygon_temp[:, 0].min()
+#         min_y = myPolygon_temp[:, 1].min()
+#         max_x = myPolygon_temp[:, 0].max()
+#         max_y = myPolygon_temp[:, 1].max()
+#
+#         # print("min_x, min_y, max_x, max_y:", min_x, min_y, max_x, max_y)
+#         # # create mask seperately
+#         # raw_ptx = pts = np.array([[min_x, min_y],[max_x, min_y],
+#         #                           [min_x, max_y],[max_x, max_y]])
+#         # print("raw_ptx.shape", raw_ptx.shape)
+#         # raw_ptx = raw_ptx.reshape((-1, 1, 2))
+#         # print("raw_ptx.shape", raw_ptx.shape)
+#
+#         # Position Threshold for regions
+#         pos_th = 0.2
+#         # calculate the largest width and height
+#
+#         w_x = max_x - min_x
+#         h_y = max_y - min_y
+#         pos_x_51 = pos_th * w_x
+#         pos_y_51 = pos_th * h_y
+#         # print("pos_x_51:", pos_x_51)
+#         # print("pos_y_51:", pos_y_51)
+#
+#         th1 = (min_x + pos_x_51, min_y + pos_y_51)
+#         th2 = (max_x - pos_x_51, min_y + pos_y_51)
+#         th3 = (min_x + pos_x_51, max_y - pos_y_51)
+#         th4 = (max_x - pos_x_51, max_y - pos_y_51)
+#         # print("th1:", th1)
+#         # print("th2:", th2)
+#         # print("th3:", th3)
+#         # print("th4:", th4)
+#
+#         # top Kidney ----------------> 0
+#         th11 = (th1[0] - 1, th1[1] - 1)
+#         # th31 = (th3[0] - 1, th3[1] - 1)
+#         # print(myPolygon[0][:, 0] <= th13[0])
+#         poly_top_Kidney_index = np.where(myPolygon[:, 1] < th11[1])
+#         # print("poly_top_Kidney_index:", poly_top_Kidney_index)
+#         # print("myPolygon.shape:", myPolygon.shape)
+#         top_Kidney_poly = myPolygon[poly_top_Kidney_index[0], :]
+#         # th11 = np.reshape(np.array(th11), [1, 1, -1])
+#         # print(" th11.shape", th11)
+#         print("top_Kidney_poly:", top_Kidney_poly.shape)
+#         cv2.fillPoly(GT_MASK0, np.int32([top_Kidney_poly]), color=(255))
+#         cls_names.append('Kidney')
+#         # Bottom Lung ---------------->
+#         th34 = (th3[0] + 1, th3[1] + 1)
+#         # th31 = (th3[0] - 1, th3[1] - 1)
+#         # print(myPolygon[0][:, 0] <= th13[0])
+#         poly_Lung_index = np.where(myPolygon[:, 1] > th34[1])
+#         # print("poly_Lung_index:", poly_Lung_index)
+#         # print("myPolygon.shape:", myPolygon.shape)
+#         Lung_poly = myPolygon[poly_Lung_index[0], :]
+#         # th34 = np.reshape(np.array(th34), [1, 1, -1])
+#         # print(" th34.shape", th34)
+#         print("Lung_poly:", Lung_poly.shape)
+#         min_Lung_x = Lung_poly[:, 0].min()
+#         max_Lung_x = Lung_poly[:, 0].max()
+#         min_Lung_y = Lung_poly[:, 1].min()
+#         max_Lung_y = Lung_poly[:, 1].max()
+#         cv2.fillPoly(GT_MASK1, np.int32([Lung_poly]), color=(255))
+#         cls_names.append('Lung')
+#
+#         # left liver ---------------->
+#         th13 = (th1[0] - 1, th1[1] + 1)
+#         th31 = (min_Lung_x - 1, min_Lung_y - 1)
+#         # print(myPolygon[:, 0] <= th13[0])
+#         poly_left_liver_index = np.where((myPolygon[:, 0] <= th13[0]) &
+#                                          (myPolygon[:, 1] >= th13[1]) &
+#                                          (myPolygon[:, 1] <= th31[1]) &
+#                                          (myPolygon[:, 0] <= th31[0]))
+#         # print("poly_left_liver_index:", poly_left_liver_index)
+#         # print("myPolygon.shape:", myPolygon.shape)
+#         left_liver_poly = myPolygon[poly_left_liver_index[0], :]
+#         th13 = np.reshape(np.array(th13), [1, -1])
+#         # th31 = np.reshape(np.array(th31), [1, -1])
+#         # print("th13.shape", th13)
+#         # print("left_liver_poly:", left_liver_poly)
+#         left_liver_poly = np.concatenate([left_liver_poly, th13], axis=0).astype(int)
+#         print("left_liver_poly:", left_liver_poly.shape)
+#         cv2.fillPoly(GT_MASK2, np.int32([left_liver_poly]), color=(255))
+#         cls_names.append('Liver0')
+#         # right liver ---------------->
+#         th24 = (th2[0] + 1, th2[1] + 1)
+#         th42 = (max_Lung_x + 1, min_Lung_y - 1)
+#         poly_right_liver_index = np.where(
+#             (myPolygon[:, 0] >= th24[0]) &
+#             (myPolygon[:, 1] >= th24[1]) &
+#             (myPolygon[:, 1] <= th42[1]))
+#         # print("poly_right_liver_index:", poly_right_liver_index)
+#         # print("myPolygon.shape:", myPolygon.shape)
+#         right_liver_poly = myPolygon[poly_right_liver_index[0], :]
+#         th24 = np.reshape(np.array(th24), [1, -1])
+#         # print("th24.shape", th24)
+#         # print("right_liver_poly:", right_liver_poly)
+#         right_liver_poly = np.concatenate([right_liver_poly, th24], axis=0).astype(int)
+#         print(" right_liver_poly:", right_liver_poly.shape)
+#         cv2.fillPoly(GT_MASK2, np.int32([right_liver_poly]), color=(255))
+#         cls_names.append('Liver1')
+#
+#         # Stomach ---------------->
+#         th14 = (th1[0] + 1, th1[1] + 1)
+#         th23 = (th2[0] - 1, th2[1] + 1)
+#         th1423 = ((th14[0] + th23[0]) / 2, (th14[1] + th23[1]) / 2)
+#         th32 = (min_Lung_x + 1, min_Lung_y - 1)
+#         th41 = (max_Lung_x - 1, min_Lung_y - 1)
+#         th2341 = ((th41[0] + th23[0]) / 2, (th41[1] + th23[1]) / 2)
+#         th4132 = ((th41[0] + th32[0]) / 2, (th41[1] + th32[1]) / 2)
+#         th3214 = ((th14[0] + th32[0]) / 2, (th14[1] + th32[1]) / 2)
+#         # poly_Stomach_index = np.where(
+#         #     (myPolygon[0][:, 0] >= th14[0]) & (myPolygon[0][:, 1] >= th14[1]) & (myPolygon[0][:, 0] <= th41[1]) & (myPolygon[0][:, 1] <= th41[1]))
+#         # print("poly_Stomach_index:", poly_Stomach_index)
+#         # print("myPolygon.shape:", myPolygon.shape)
+#         # Stomach_poly = myPolygon[:, poly_Stomach_index[0], :]
+#
+#         th14 = np.reshape(np.array(th14), [1, -1])
+#         th23 = np.reshape(np.array(th23), [1, -1])
+#         th32 = np.reshape(np.array(th32), [1, -1])
+#         th41 = np.reshape(np.array(th41), [1, -1])
+#
+#         th1423 = np.reshape(np.array(th1423), [1, -1])
+#         th2341 = np.reshape(np.array(th2341), [1, -1])
+#         th4132 = np.reshape(np.array(th4132), [1, -1])
+#         th3214 = np.reshape(np.array(th3214), [1, -1])
+#         # # print("th24.shape", th24)
+#         # print("Stomach_poly:", right_liver_poly)
+#         Stomach_poly = np.concatenate([th14, th1423, th23, th2341, th41, th4132, th32, th3214], axis=0).astype(int)
+#         print("Stomach_poly:", Stomach_poly.shape)
+#         cv2.fillPoly(GT_MASK3, np.int32([right_liver_poly]), color=(255))
+#         cls_names.append('Stomach')
+#         all_polygons = [top_Kidney_poly, Lung_poly, left_liver_poly, right_liver_poly, Stomach_poly]
+#
+#         #=========================================>
+#
+#         #
+#         for cls_name, myPolygon in zip(cls_names, all_polygons):
+#             c = check_randomShape_cls(cls_name)
+#             print("c:", c)
+#         # print("mypolygon:", myPolygon.shape)
+#             if myPolygon.shape[0] > MAX_VERTICES:
+#                 print()
+#                 print("too many polygons")
+#                 break
+#             if myPolygon.shape[0] <5:
+#                 print()
+#                 print("too few polygons")
+#                 break
+#             my_poly_list.append(myPolygon)
+#
+#             min_x = sys.maxsize
+#             max_x = 0
+#             min_y = sys.maxsize
+#             max_y = 0
+#             polygon_line = ''
+#
+#             # for po
+#             for x, y in myPolygon:
+#                 # print("({}, {})".format(x, y))
+#                 if x > max_x: max_x = x
+#                 if y > max_y: max_y = y
+#                 if x < min_x: min_x = x
+#                 if y < min_y: min_y = y
+#                 polygon_line += ',{},{}'.format(x, y)
+#             if max_x - min_x <= 1.0 or max_y - min_y <= 1.0:
+#                 skipped += 1
+#                 continue
+#
+#             polygons_line += ' {},{},{},{},{}'.format(min_x, min_y, max_x, max_y, c) + polygon_line
+#
+#
+#     GT_MASK0 = np.expand_dims(GT_MASK0, -1)
+#     GT_MASK1 = np.expand_dims(GT_MASK1, -1)
+#     GT_MASK2 = np.expand_dims(GT_MASK2, -1)
+#     GT_MASK3 = np.expand_dims(GT_MASK3, -1)
+#     all_masks = np.concatenate([GT_MASK0, GT_MASK1, GT_MASK2, GT_MASK3], -1)
+#     # print("all_masks shape:", all_masks.shape)
+#     annotation_line = img_path + polygons_line
+#
+#     return annotation_line, my_poly_list, all_masks
 
 def My_bilinear_decode_annotationlineNP_inter(encoded_annotationline, MAX_VERTICES=1000, max_boxes=80):
     """
@@ -1911,12 +2490,7 @@ if __name__ == "__main__":
 
 
     def _main():
-
-        # proj
-        # ect_name ="1"
-
-
-        project_name = 'PaperF2_FinaRedo_YoloFixedV2_WithoutMask_{}'.format(model_index)
+        project_name = 'PaperF5_FinalRedo_Xception_FixedV2_bestAug_MultiRegions_{}'.format(model_index)
 
         phase = 1
         print("current working dir:", os.getcwd())
@@ -1949,6 +2523,7 @@ if __name__ == "__main__":
         classes_path = current_file_dir_path+'/yolo_classesTongue.txt'
         anchors_path = current_file_dir_path+'/yolo_anchorsTongue.txt'
         class_names = get_classes(classes_path)
+        print(classes_path)
         num_classes = len(class_names)
         anchors = get_anchors(anchors_path)  # shape [# of anchors, 2]
 
@@ -1979,28 +2554,29 @@ if __name__ == "__main__":
                                                              embeddings_freq=0, embeddings_layer_names=None,
                                                              embeddings_metadata=None)
 
-        # for my data generator
-        # # for train dataset
-        # train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
-        # train_mask_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
-        # print("len of train imgs:", len(train_input_paths))
-        #
-        # assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
-        # # for validation dataset  # we need or label and masks are the same shape
-        # val_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
-        # val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
-        # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
-        #
-        # # # # # # # # # # # for train dataset for the lab
-        train_input_paths = glob('C:\\MyProjects\\data\\tonguePoly\\train\\input/*')
-        train_mask_paths = glob('C:\\MyProjects\\data\\tonguePoly\\train\\label/*.jpg')
+        # # for my data generator
+        # # # for train dataset
+        train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
+        train_mask_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
         print("len of train imgs:", len(train_input_paths))
 
         assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
         # for validation dataset  # we need or label and masks are the same shape
-        val_input_paths = glob('C:\\MyProjects\\data\\tonguePoly\\test\\input/*')
-        val_mask_paths = glob('C:\\MyProjects\\data\\tonguePoly\\test\\label/*.jpg')
+        val_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
+        val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
         assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
+
+        # # # # # # # # # # # for train dataset for the lab
+        # # # # # # # # # # # # for train dataset for the lab
+        # train_input_paths = glob('C:\\MyProjects\\data\\tonguePoly\\train\\input/*')
+        # train_mask_paths = glob('C:\\MyProjects\\data\\tonguePoly\\train\\label/*.jpg')
+        # print("len of train imgs:", len(train_input_paths))
+        #
+        # assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
+        # # for validation dataset  # we need or label and masks are the same shape
+        # val_input_paths = glob('C:\\MyProjects\\data\\tonguePoly\\test\\input/*')
+        # val_mask_paths = glob('C:\\MyProjects\\data\\tonguePoly\\test\\label/*.jpg')
+        # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
 
         print("total {} training samples read".format(len(train_input_paths)))
         print("total {} val samples read".format(len(val_input_paths)))
@@ -2071,8 +2647,9 @@ if __name__ == "__main__":
             "confidence_loss" : lambda y_true, y_pred: y_pred,
             "polar_diou_loss" : lambda y_true, y_pred: y_pred,
             "class_loss" : lambda y_true, y_pred: y_pred,
+            "mask_Diceloss": lambda y_true, y_pred: y_pred
         }
-        lossWeights = {"ciou_loss": 1, "confidence_loss": 1, "polar_diou_loss": 1, "class_loss": 1}
+        lossWeights = {"ciou_loss": 1, "confidence_loss": 1, "polar_diou_loss": 1, "class_loss": 1,  "mask_Diceloss": 1}
         model.compile(optimizer=Adadelta(0.5), loss=losses, loss_weights=lossWeights)
 
         epochs = 100
@@ -2112,9 +2689,9 @@ if __name__ == "__main__":
         y_true_mask = Input(shape=(256, 256, num_classes))
         print("anchors_per_level:", anchors_per_level)
         print("num_classes:", num_classes)
-        model_body= yolo_body(image_input, anchors_per_level, num_classes)
+        model_body, Model_mask = yolo_body(image_input, anchors_per_level, num_classes)
         print("model_body.output.shape",model_body.outputs)
-        # print("Model_mask.output.shape", Model_mask.outputs)
+        print("Model_mask.output.shape", Model_mask.outputs)
         print('Create Poly-YOLO model with {} anchors and {} classes.'.format(num_anchors, num_classes))
 
         if load_pretrained:
@@ -2122,9 +2699,9 @@ if __name__ == "__main__":
             print('Load weights {}.'.format(weights_path))
 
 
-        ciou_loss, confidence_loss, polar_diou_loss, class_loss = Lambda(yolo_loss, output_shape=(1,), name='yolo_loss',
+        ciou_loss, confidence_loss, polar_diou_loss, class_loss, mask_Diceloss = Lambda(yolo_loss, output_shape=(1,), name='yolo_loss',
                             arguments={'anchors': anchors, 'num_classes': num_classes, 'ignore_thresh': 0.5})(
-            [model_body.output, y_true])
+            [model_body.output, Model_mask.output, y_true, y_true_mask])
 
         # total_loss = Lambda(lambda x: x, name='total_loss')(loss)
         # xy_loss = Lambda(lambda x: x, name='xy_loss')(xy_loss)
@@ -2134,11 +2711,11 @@ if __name__ == "__main__":
         polar_diou_loss = Lambda(lambda x: x, name='polar_diou_loss')(polar_diou_loss)
         class_loss = Lambda(lambda x: x, name='class_loss')(class_loss)
         # polygon_dist_loss = Lambda(lambda x: x, name='polygon_dist_loss')(polygon_dist_loss)
-        # mask_Diceloss = Lambda(lambda x: x, name='mask_Diceloss')(mask_Diceloss)
-        # print("model_loss graph finished")
+        mask_Diceloss = Lambda(lambda x: x, name='mask_Diceloss')(mask_Diceloss)
+        print("model_loss graph finished")
 
 
-        model = Model([model_body.input, y_true, y_true_mask], [ciou_loss, confidence_loss, polar_diou_loss, class_loss])
+        model = Model([model_body.input, y_true, y_true_mask], [ciou_loss, confidence_loss, polar_diou_loss, class_loss, mask_Diceloss])
 
         # print(model.summary())
         return model

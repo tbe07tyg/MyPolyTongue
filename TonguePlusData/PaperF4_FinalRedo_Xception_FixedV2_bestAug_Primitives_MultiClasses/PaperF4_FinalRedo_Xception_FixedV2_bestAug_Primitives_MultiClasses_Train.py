@@ -18,6 +18,7 @@ import tensorflow.keras.backend as K
 import numpy as np
 import tensorflow as tf
 from PIL import Image
+from skimage.draw import random_shapes
 from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint, ReduceLROnPlateau, EarlyStopping, Callback
 from tensorflow.keras.layers import Layer
 from tensorflow.keras.layers import Conv2D, Add, ZeroPadding2D, UpSampling2D, Concatenate
@@ -53,8 +54,8 @@ ANGLE_STEP  = 14 #that means Poly-YOLO will detect 360/15=24 vertices per polygo
 # print("NUM_ANGLES3:", NUM_ANGLES3)
 NUM_ANGLES  = int(360 // ANGLE_STEP) # 24
 print("ANGLE_STEP:", ANGLE_STEP)
-
-# # for mydatagenerator aug
+max_boxes =  80
+# for mydatagenerator aug
 rotation_range = 50.0
 width_shift_range = 0.16666666666666666
 height_shift_range = 0.16666666666666666
@@ -62,36 +63,6 @@ zoom_range = 0.16666666666666666
 shear_range= 0.19444444444444445
 horizontal_flip=True
 brightness_range=[0.6684210526315789, 1.131578947368421]
-#
-# random aug---------------------->
-#  need to comment when running the analyzing codes
-# for running the script
-model_index = sys.argv[1]
-#
-# rotation_range = int(float(sys.argv[2]))
-# width_shift_range = float(sys.argv[3])
-# height_shift_range = float(sys.argv[4])
-# zoom_range = float(sys.argv[5])
-# shear_range = float(sys.argv[6])
-# brightness_range_start = float(sys.argv[7])  # sys.argv can not pass list
-# brightness_range_stop = float(sys.argv[8])
-#
-# global_randomness_count = sys.argv[9]
-# brightness_range = [float(brightness_range_start), float(brightness_range_stop)]
-# print("input AUG----------------------->")
-# print("rotation_range:", rotation_range)
-# print("width_shift_range:", width_shift_range)
-# print("height_shift_range:", height_shift_range)
-# print("zoom_range:", zoom_range)
-# print("shear_range:", shear_range)
-# print("brightness_range_start:", brightness_range)
-# print("input AUG----------------------->")
-# horizontal_flip = True
-#
-# # --------------------------
-
-
-
 
 
 grid_size_multiplier = 4 #that is resolution of the output scale compared with input. So it is 1/4
@@ -100,6 +71,8 @@ anchors_per_level = 9 #single scale and nine anchors
 # for running the script
 model_index =  sys.argv[1]
 
+# for check random shape binary masks
+root =  "E:\\dataset\\Tongue\\random_shape_multipleMasks"
 # def mish(x):
 #     return x * tf.math.tanh(tf.math.softplus(x))
 class Mish(Layer):
@@ -761,7 +734,16 @@ def DarknetConv2D(*args, **kwargs):
     return Conv2D(*args, **darknet_conv_kwargs)
 
 
-def DarknetConv2D_BN_Leaky(*args, **kwargs):
+# def DarknetConv2D_BN_Leaky(*args, **kwargs):
+#     """Darknet Convolution2D followed by BatchNormalization and LeakyReLU."""
+#     no_bias_kwargs = {'use_bias': False}
+#     no_bias_kwargs.update(kwargs)
+#     return compose(
+#         DarknetConv2D(*args, **no_bias_kwargs),
+#         BatchNormalization(),
+#         LeakyReLU(alpha=0.1))
+
+def DarknetConv2D_BN_Mish(*args, **kwargs):
     """Darknet Convolution2D followed by BatchNormalization and LeakyReLU."""
     no_bias_kwargs = {'use_bias': False}
     no_bias_kwargs.update(kwargs)
@@ -775,11 +757,11 @@ def resblock_body(x, num_filters, num_blocks):
     '''A series of resblocks starting with a downsampling Convolution2D'''
     # Darknet uses left and top padding instead of 'same' mode
     x = ZeroPadding2D(((1, 0), (1, 0)))(x)
-    x = DarknetConv2D_BN_Leaky(num_filters, (3, 3), strides=(2, 2))(x)
+    x = DarknetConv2D_BN_Mish(num_filters, (3, 3), strides=(2, 2))(x)
     for i in range(num_blocks):
         y = compose(
-            DarknetConv2D_BN_Leaky(num_filters // 2, (1, 1)),
-            DarknetConv2D_BN_Leaky(num_filters, (3, 3)))(x)
+            DarknetConv2D_BN_Mish(num_filters // 2, (1, 1)),
+            DarknetConv2D_BN_Mish(num_filters, (3, 3)))(x)
         y = squeeze_excite_block(y)
         x = Add()([x, y])
     return x
@@ -795,7 +777,7 @@ def squeeze_excite_block(tensor, ratio=16):
     se = GlobalAveragePooling2D()(init)
     se = Reshape(se_shape)(se)
     se = Dense(filters // ratio, kernel_initializer='he_normal', use_bias=False)(se)
-    se = LeakyReLU(alpha=0.1)(se)
+    se = Mish()(se)
     se = Dense(filters, activation='sigmoid', kernel_initializer='he_normal', use_bias=False)(se)
 
     if K.image_data_format() == 'channels_first':
@@ -810,32 +792,43 @@ def _tensor_shape(tensor):
 
 
 
-def darknet_body(x):
-    '''Darknent body having 52 Convolution2D layers'''
-    base = 6  # YOLOv3 has base=8, we have less parameters
-    x = DarknetConv2D_BN_Leaky(base * 4, (3, 3))(x)
-    x = resblock_body(x, base * 8, 1)
-    x = resblock_body(x, base * 16, 2)
-    tiny = x
-    x = resblock_body(x, base * 32, 8)
-    small = x
-    x = resblock_body(x, base * 64, 8)
-    medium = x
-    x = resblock_body(x, base * 128, 8)
-    big = x
-    return tiny, small, medium, big
+# def darknet_body(x):
+#     '''Darknent body having 52 Convolution2D layers'''
+#     base = 6  # YOLOv3 has base=8, we have less parameters
+#     x = DarknetConv2D_BN_Leaky(base * 4, (3, 3))(x)
+#     x = resblock_body(x, base * 8, 1)
+#     x = resblock_body(x, base * 16, 2)
+#     tiny = x
+#     x = resblock_body(x, base * 32, 8)
+#     small = x
+#     x = resblock_body(x, base * 64, 8)
+#     medium = x
+#     x = resblock_body(x, base * 128, 8)
+#     big = x
+#     return tiny, small, medium, big
 
 
 
 def yolo_body(inputs, num_anchors, num_classes):
     """Create Poly-YOLO model CNN body in Keras."""
-    tiny, small, medium, big = darknet_body(inputs)
+
+    # this function return to create model for loss and prediction for evaluation need to check for codes
+    # backbone and feature extraction  ---------->
+
+    base_model = Xception(input_tensor=inputs, weights=None, include_top=False) # random initialization
+    # extract features from each block end: ["add", "add_1", "add_10", "add_11"]
+    # base_model.summary()
+
+    tiny = base_model.get_layer('add').output
+    small = base_model.get_layer('add_1').output
+    medium = base_model.get_layer('add_10').output
+    big = base_model.get_layer('add_11').output
 
     base = 6
-    tiny   = DarknetConv2D_BN_Leaky(base*32, (1, 1))(tiny)
-    small  = DarknetConv2D_BN_Leaky(base*32, (1, 1))(small)
-    medium = DarknetConv2D_BN_Leaky(base*32, (1, 1))(medium)
-    big    = DarknetConv2D_BN_Leaky(base*32, (1, 1))(big)
+    tiny   = DarknetConv2D_BN_Mish(base*32, (1, 1))(tiny)
+    small  = DarknetConv2D_BN_Mish(base*32, (1, 1))(small)
+    medium = DarknetConv2D_BN_Mish(base*32, (1, 1))(medium)
+    big    = DarknetConv2D_BN_Mish(base*32, (1, 1))(big)
 
     #stairstep upsamplig
     all = Add()([medium, UpSampling2D(2,interpolation='bilinear')(big)])
@@ -847,9 +840,9 @@ def yolo_body(inputs, num_anchors, num_classes):
     num_filters = base*32
 
     x = compose(
-        DarknetConv2D_BN_Leaky(num_filters, (1, 1)),
-        DarknetConv2D_BN_Leaky(num_filters * 2, (3, 3)),
-        DarknetConv2D_BN_Leaky(num_filters, (1, 1)))(all)
+        DarknetConv2D_BN_Mish(num_filters, (1, 1)),
+        DarknetConv2D_BN_Mish(num_filters * 2, (3, 3)),
+        DarknetConv2D_BN_Mish(num_filters, (1, 1)))(all)
     print("x.shape:", x.shape)
     print()
     print("num_classes:", num_classes)
@@ -857,11 +850,11 @@ def yolo_body(inputs, num_anchors, num_classes):
     print("num_anchors:", num_anchors)
     print()
     all_detection = compose(
-        DarknetConv2D_BN_Leaky(num_filters * 2, (3, 3)),
+        DarknetConv2D_BN_Mish(num_filters * 2, (3, 3)),
 
         DarknetConv2D(num_anchors * (num_classes + 5 + NUM_ANGLES), (1, 1)))(x)
     print("all.shape:", all.shape)
-    # Model_detect = Model(inputs, all_detection)
+    Model_detect = Model(inputs, all_detection)
     # box related detection
     # all_detection = tf.reshape(
     #     all_detection, [-1, all_detection.shape[1], all_detection.shape[2], num_anchors, num_classes + 5 + NUM_ANGLES],
@@ -869,16 +862,16 @@ def yolo_body(inputs, num_anchors, num_classes):
     # bbox_related = all_detection[..., 0:4]
     # dist_related =  all_detection[..., 5 + num_classes: 5 + num_classes + NUM_ANGLES]
     # bbox_mask_head =  concatenate([bbox_related, dist_related], axis=-1)
-    # mask_head = DarknetConv2D(num_filters * 2, (3, 3))(bbox_mask_head)
-    # mask_feaurex2 = UpSampling2D(2, interpolation='bilinear')(mask_head)
-    #
-    # # one more conv 128 featuref
-    # feature128 = DarknetConv2D_BN_Mish(64, (3, 3))(mask_feaurex2)
-    # MaskPred128 = Conv2D(num_classes, 1, activation = 'sigmoid')(feature128)
-    # MaskPred256 = UpSampling2D(2, interpolation='bilinear')(MaskPred128)
-    Model_detect = Model(inputs, all_detection)
-    # Model_mask = Model(inputs, MaskPred256)
-    return Model_detect
+    mask_head = DarknetConv2D(num_filters * 2, (3, 3))(all_detection)
+    mask_feaurex2 = UpSampling2D(2, interpolation='bilinear')(mask_head)
+
+    # one more conv 128 featuref
+    feature128 = DarknetConv2D_BN_Mish(64, (3, 3))(mask_feaurex2)
+    MaskPred128 = Conv2D(num_classes, 1, activation = 'sigmoid')(feature128)
+    MaskPred256 = UpSampling2D(2, interpolation='bilinear')(MaskPred128)
+
+    Model_mask = Model(inputs, MaskPred256)
+    return Model_detect, Model_mask
 
 
 
@@ -1382,18 +1375,18 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.4):
     """
     num_layers = 1
     yolo_outputs = args[:1]
-    # mask_outputs = args[1:2]
-    y_true = args[1:2]
-    # y_true_mask =  args[3:]
+    mask_outputs = args[1:2]
+    y_true = args[2:3]
+    y_true_mask =  args[3:]
     # calculate y_true_mask
     # mask_loss = K.binary_crossentropy(y_true_mask[0], mask_outputs[0], from_logits=False)
 
 
 
     print("yolo_outputs.shape", yolo_outputs)
-    # print("mask_outputs.shape", mask_outputs)
+    print("mask_outputs.shape", mask_outputs)
     print("y_true.shape", y_true)
-    # print("y_true_mask.shape", y_true_mask)
+    print("y_true_mask.shape", y_true_mask)
     g_y_true = y_true
     # define a input shape as a 2d shape= (imgH,imgW)*grid_size_multiplier = feature map shape  * 4 = (rawiput W, raw input H)
     input_shape = K.cast(K.shape(yolo_outputs[0])[1:3] * grid_size_multiplier, K.dtype(y_true[0]))
@@ -1485,8 +1478,8 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.4):
         # distance loss
         # polygon_loss_dist_L2 = object_mask * box_loss_scale * 0.5 * K.square(raw_true_polygon_dist - raw_pred[..., 5 + num_classes:5 + num_classes + NUM_ANGLES])
 
-        # # mask dice:
-        # mask_loss = box_loss_scale * dice_loss(y_true_mask[0], mask_outputs[0])
+        # mask dice:
+        mask_loss = box_loss_scale * dice_loss(y_true_mask[0], mask_outputs[0])
 
         print("finised losses for each image")
         # there is a weight for special masks losses and also weighted focal according to the confidences score in total for each image ,then * for the enirebatch
@@ -1511,7 +1504,7 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.4):
 
         # xy_loss round: 11   wh_loss round: 11      d_loss around: 10  polygon_dist_loss(L2: 30): 60   polar_diou_loss: 11
         # loss += (polygon_dist_loss)/ (K.sum(object_mask) + 1)*mf
-    return ciou_loss, confidence_loss, polar_diou_loss, class_loss
+    return ciou_loss, confidence_loss, polar_diou_loss, class_loss, mask_loss
 
 
 class YOLO(object):
@@ -1564,7 +1557,7 @@ class YOLO(object):
         try:
             self.yolo_model = load_model(model_path, compile=False)
         except:
-            self.yolo_model = yolo_body(Input(shape=(256, 256, 3)), anchors_per_level, num_classes)
+            self.yolo_model,_ = yolo_body(Input(shape=(256, 256, 3)), anchors_per_level, num_classes)
             self.yolo_model.load_weights(self.model_path, by_name=True)  # make sure model, anchors and classes match
         else:
             # novy output
@@ -1583,7 +1576,7 @@ class YOLO(object):
                                                      score_threshold=self.score, iou_threshold=self.iou)
         return boxes, scores, classes, polygons
 
-    def detect_image(self, image, raw_shape):
+    def detect_image(self, image, raw_shape, polygon_xy):
         image = np.expand_dims(image, 0)  # for input model
         print("image.shape：", image.shape)
         # if self.model_image_size != (None, None):
@@ -1603,9 +1596,9 @@ class YOLO(object):
                 K.learning_phase(): 0
             })
 
-
+        #
         # get
-        polygon_xy = np.zeros([polygons.shape[0], 2 * NUM_ANGLES])
+        # polygon_xy = np.zeros([polygons.shape[0], 2 * NUM_ANGLES])
         for b in range(0, out_boxes.shape[0]):
             cy = (out_boxes[b, 0] + out_boxes[b, 2]) // 2
             cx = (out_boxes[b, 1] + out_boxes[b, 3]) // 2
@@ -1716,12 +1709,12 @@ def my_Gnearator(images_list, masks_list, batch_size, input_shape, anchors, num_
         # preprocess the bbox into the regression targets
         y_true = my_preprocess_true_boxes_NPinterp(box_batch, input_shape, anchors, num_classes)
         yield [image_batch, *y_true, mask_batch], \
-              [np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size)]
+              [np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size), np.zeros(batch_size)]
 
 
 def my_get_random_data(img_path, mask_path, input_shape, image_datagen, mask_datagen, train_or_test):
     # load data ------------------------>
-    # image_name = os.path.basename(img_path).replace('.JPG', '')
+    image_name = os.path.basename(img_path).replace('.JPG', '')
     # mask_name = os.path.basename(mask_path).replace('.JPG', '')
     # print("img name:", image_name)
     # print("mask name:", mask_name)
@@ -1748,14 +1741,20 @@ def my_get_random_data(img_path, mask_path, input_shape, image_datagen, mask_dat
         aug_image = image
         copy_mask = mask.copy().astype(np.uint8)
 
-    # print("mask shape after aug:", np.squeeze(aug_mask).shape)
-    # aug_image = krs_image.img_to_array(aug_image)
-    # aug_mask = krs_image.img_to_array(aug_mask)
-    # find polygons with augmask ------------------------------------>
-    # imgray = cv2.cvtColor(np.squeeze(copy_mask), cv2.COLOR_BGR2GRAY)
-    # print(copy_mask)
-    ret, thresh = cv2.threshold(copy_mask, 127, 255, 0)  # this require the numpy array has to be the uint8 type
-    aug_mask =thresh
+    img, label = random_shapes((256, 256), max_shapes=10, min_size=20,  max_size=180, intensity_range=((0, 255),))
+    # img, label = random_shapes((256, 256), min_size=40, intensity_range=((0, 255),), random_seed=pri_seed)
+    # print("random shape labels:", label)
+    added_img = 255 - img
+    gray = cv2.cvtColor(added_img, cv2.COLOR_BGR2GRAY)
+    # print("labels:", label)
+
+    # aug_image =  added_img
+    aug_image = aug_image / 2 + added_img
+    ret, thresh = cv2.threshold(gray, 0.00001, 255, 0)  # this require the numpy array has to be the uint8 type
+    aug_mask = thresh
+
+
+    # ret, thresh = cv2.threshold(copy_mask, 127, 255, 0)  # this require the numpy array has to be the uint8 type
     image, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     selected_coutours = []
     for x in range(len(contours)):
@@ -1767,24 +1766,65 @@ def my_get_random_data(img_path, mask_path, input_shape, image_datagen, mask_dat
 
 
     # encode contours into annotation lines ---->
-    annotation_line, myPolygon = encode_polygone(img_path, selected_coutours)
+    annotation_line, my_poly_list, all_masks = encode_polygone(img_path, selected_coutours, label, input_shape)
+
+    ## all back backgound
+    # GT_MASK = np.zeros([input_shape[0], input_shape[1]])
+    # Generate binary masks for each objects ---------------->
+    # for i, each_polygons in enumerate(my_poly_list):
+    #     print("each_polygons.shape:", each_polygons.shape)
+    #
+    # # check the generate input and classes masks------------------------->
+    # cv2.imwrite(root + "/{}_input".format(image_name) + '.jpg', aug_image)
+    # for i in range(all_masks.shape[-1]):
+    #     cv2.imwrite(root + "/{}_{}".format(image_name, i) + '.jpg', all_masks[:,:,i])
+    #     print("mask:range:",GT_MASK.min(), GT_MASK.max())
+    # print("my_poly_list:", my_poly_list)
     # decode contours annotation line into distance
     box_data = My_bilinear_decode_annotationlineNP_inter(annotation_line)
 
     # normal the image ----------------->
     aug_image = aug_image / 255.0
-    aug_mask = aug_mask / 255.0
-    aug_mask =  np.expand_dims(aug_mask, -1)  # since in our case ,we only have one class, if multiple classes binary labels concate at the last dimension
+    aug_mask = all_masks / 255.0
+    # aug_mask =  np.expand_dims(aug_mask, -1)  # since in our case ,we only have one class, if multiple classes binary labels concate at the last dimension
     # print("aug_mask.shape:", aug_mask.shape)
-    return aug_image, box_data, myPolygon, aug_mask, annotation_line
+    return aug_image, box_data, my_poly_list, aug_mask, annotation_line
 
-def encode_polygone(img_path, contours, MAX_VERTICES =1000):
+def check_randomShape_cls(cls):
+    class_mapping = {'rectangle': 0,
+                     'triangle': 1,
+                     'circle': 2,
+                     'ellipse': 3
+                     }
+    if cls in class_mapping.keys():
+        return class_mapping[cls]
+    else:
+        return None
+
+
+def encode_polygone(img_path, contours, label, input_shape,MAX_VERTICES =1000):
     "give polygons and encode as angle, ditance , probability"
+    # print("random shape labels:", label)
     skipped = 0
     polygons_line = ''
     c = 0
     my_poly_list =[]
+
+    # Generate masks for each cls
+    GT_MASK0 = np.zeros([input_shape[0], input_shape[1]])
+    GT_MASK1 = np.zeros([input_shape[0], input_shape[1]])
+    GT_MASK2 = np.zeros([input_shape[0], input_shape[1]])
+    GT_MASK3 = np.zeros([input_shape[0], input_shape[1]])
+
+    # for i, each_polygons in enumerate(my_poly_list):
+    #     print("each_polygons.shape:", each_polygons.shape)
+    #
+    #     cv2.fillPoly(GT_MASK, np.int32([each_polygons]), color=(255))
+    #     cv2.imwrite(root + "/{}_input".format(image_name) + '.jpg', aug_image)
+    #     cv2.imwrite(root + "/{}_{}".format(image_name, i) + '.jpg', GT_MASK*255)
+    #     print("mask:range:",GT_MASK.min(), GT_MASK.max())
     for obj in contours:
+
         # print(obj.shape)
         myPolygon = obj.reshape([-1, 2])
         # print("mypolygon:", myPolygon.shape)
@@ -1811,12 +1851,53 @@ def encode_polygone(img_path, contours, MAX_VERTICES =1000):
         if max_x - min_x <= 1.0 or max_y - min_y <= 1.0:
             skipped += 1
             continue
+        for i, each in enumerate(label): # for each object search one time
+            str_cls = each[0]
+            bbox = each[1]
+            label_p1 =  bbox[0]
+            # label_p2 =  bbox[1]
+            # print(str_cls)
+            # print("label:", label_p1, label_p2)
+            # calculate distance of bbox
+            obj_p1 = (min_y, max_y)
+            # obj_p2 = (min_x, max_x)
+            # print("found:", obj_p1, obj_p2)
+            # pointx = (min_x, max_x)
+            # print(label_p1- obj_p1)
+            d1 = np.sqrt(np.power(label_p1[0]-obj_p1[0], 2) + np.power(label_p1[1]-obj_p1[1], 2))
+            # print(d1)
+            if d1 < 2:
+                c = str_cls
+                # print("found cls:", c)
 
+                # get cls number according to c
+                c =  check_randomShape_cls(c)
+                # print("final cls:", c)
+                if c==0:
+                    cv2.fillPoly(GT_MASK0, np.int32([myPolygon]), color=(255))
+                elif c==1:
+                    cv2.fillPoly(GT_MASK1, np.int32([myPolygon]), color=(255))
+                elif c==2:
+                    cv2.fillPoly(GT_MASK2, np.int32([myPolygon]), color=(255))
+                else :
+                    cv2.fillPoly(GT_MASK3, np.int32([myPolygon]), color=(255))
+
+            # d1 = np.sqrt
+            # print("d:", d)
+            # pointy= ()
+        # print("min_x, min_y, max_x, max_y:", min_x, min_y, max_x, max_y)
         polygons_line += ' {},{},{},{},{}'.format(min_x, min_y, max_x, max_y, c) + polygon_line
 
+
+    GT_MASK0 = np.expand_dims(GT_MASK0, -1)
+    GT_MASK1 = np.expand_dims(GT_MASK1, -1)
+    GT_MASK2 = np.expand_dims(GT_MASK2, -1)
+    GT_MASK3 = np.expand_dims(GT_MASK3, -1)
+    all_masks = np.concatenate([GT_MASK0, GT_MASK1, GT_MASK2, GT_MASK3], -1)
+    # print("all_masks shape:", all_masks.shape)
     annotation_line = img_path + polygons_line
 
-    return annotation_line, my_poly_list
+    return annotation_line, my_poly_list, all_masks
 
 def My_bilinear_decode_annotationlineNP_inter(encoded_annotationline, MAX_VERTICES=1000, max_boxes=80):
     """
@@ -1911,12 +1992,7 @@ if __name__ == "__main__":
 
 
     def _main():
-
-        # proj
-        # ect_name ="1"
-
-
-        project_name = 'PaperF2_FinaRedo_YoloFixedV2_WithoutMask_{}'.format(model_index)
+        project_name = 'PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives_{}'.format(model_index)
 
         phase = 1
         print("current working dir:", os.getcwd())
@@ -1949,6 +2025,7 @@ if __name__ == "__main__":
         classes_path = current_file_dir_path+'/yolo_classesTongue.txt'
         anchors_path = current_file_dir_path+'/yolo_anchorsTongue.txt'
         class_names = get_classes(classes_path)
+        print(classes_path)
         num_classes = len(class_names)
         anchors = get_anchors(anchors_path)  # shape [# of anchors, 2]
 
@@ -1979,8 +2056,8 @@ if __name__ == "__main__":
                                                              embeddings_freq=0, embeddings_layer_names=None,
                                                              embeddings_metadata=None)
 
-        # for my data generator
-        # # for train dataset
+        # # for my data generator
+        # # # # for train dataset
         # train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
         # train_mask_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
         # print("len of train imgs:", len(train_input_paths))
@@ -1990,7 +2067,8 @@ if __name__ == "__main__":
         # val_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
         # val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
         # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
-        #
+
+        # # # # # # # # # # for train dataset for the lab
         # # # # # # # # # # # for train dataset for the lab
         train_input_paths = glob('C:\\MyProjects\\data\\tonguePoly\\train\\input/*')
         train_mask_paths = glob('C:\\MyProjects\\data\\tonguePoly\\train\\label/*.jpg')
@@ -2071,8 +2149,9 @@ if __name__ == "__main__":
             "confidence_loss" : lambda y_true, y_pred: y_pred,
             "polar_diou_loss" : lambda y_true, y_pred: y_pred,
             "class_loss" : lambda y_true, y_pred: y_pred,
+            "mask_Diceloss": lambda y_true, y_pred: y_pred
         }
-        lossWeights = {"ciou_loss": 1, "confidence_loss": 1, "polar_diou_loss": 1, "class_loss": 1}
+        lossWeights = {"ciou_loss": 1, "confidence_loss": 1, "polar_diou_loss": 1, "class_loss": 1,  "mask_Diceloss": 1}
         model.compile(optimizer=Adadelta(0.5), loss=losses, loss_weights=lossWeights)
 
         epochs = 100
@@ -2112,9 +2191,9 @@ if __name__ == "__main__":
         y_true_mask = Input(shape=(256, 256, num_classes))
         print("anchors_per_level:", anchors_per_level)
         print("num_classes:", num_classes)
-        model_body= yolo_body(image_input, anchors_per_level, num_classes)
+        model_body, Model_mask = yolo_body(image_input, anchors_per_level, num_classes)
         print("model_body.output.shape",model_body.outputs)
-        # print("Model_mask.output.shape", Model_mask.outputs)
+        print("Model_mask.output.shape", Model_mask.outputs)
         print('Create Poly-YOLO model with {} anchors and {} classes.'.format(num_anchors, num_classes))
 
         if load_pretrained:
@@ -2122,9 +2201,9 @@ if __name__ == "__main__":
             print('Load weights {}.'.format(weights_path))
 
 
-        ciou_loss, confidence_loss, polar_diou_loss, class_loss = Lambda(yolo_loss, output_shape=(1,), name='yolo_loss',
+        ciou_loss, confidence_loss, polar_diou_loss, class_loss, mask_Diceloss = Lambda(yolo_loss, output_shape=(1,), name='yolo_loss',
                             arguments={'anchors': anchors, 'num_classes': num_classes, 'ignore_thresh': 0.5})(
-            [model_body.output, y_true])
+            [model_body.output, Model_mask.output, y_true, y_true_mask])
 
         # total_loss = Lambda(lambda x: x, name='total_loss')(loss)
         # xy_loss = Lambda(lambda x: x, name='xy_loss')(xy_loss)
@@ -2134,11 +2213,11 @@ if __name__ == "__main__":
         polar_diou_loss = Lambda(lambda x: x, name='polar_diou_loss')(polar_diou_loss)
         class_loss = Lambda(lambda x: x, name='class_loss')(class_loss)
         # polygon_dist_loss = Lambda(lambda x: x, name='polygon_dist_loss')(polygon_dist_loss)
-        # mask_Diceloss = Lambda(lambda x: x, name='mask_Diceloss')(mask_Diceloss)
-        # print("model_loss graph finished")
+        mask_Diceloss = Lambda(lambda x: x, name='mask_Diceloss')(mask_Diceloss)
+        print("model_loss graph finished")
 
 
-        model = Model([model_body.input, y_true, y_true_mask], [ciou_loss, confidence_loss, polar_diou_loss, class_loss])
+        model = Model([model_body.input, y_true, y_true_mask], [ciou_loss, confidence_loss, polar_diou_loss, class_loss, mask_Diceloss])
 
         # print(model.summary())
         return model

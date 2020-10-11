@@ -4,10 +4,10 @@ import os
 import time
 # need to change
 from glob import glob
-from TonguePlusData.PaperF2_FinaRedo_YoloFixedV2_Mish.PaperF2_FinaRedo_YoloFixedV2_Mish_Train import YOLO, \
-    get_anchors, my_get_random_data #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
+from TonguePlusData.PaperF5_FinalRedo_Xception_FixedV2_bestAug_MultiRegions.PaperF5_FinalRedo_Xception_FixedV2_bestAug_MultiRegions_Train import YOLO, \
+    get_anchors, my_get_random_data, NUM_ANGLES, max_boxes #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
 import sys
-
+import math
 
 saved_model_name =  sys.argv[1]
 best_h5_path =  sys.argv[2]
@@ -115,6 +115,7 @@ MAX_VERTICES = 1000 #that allows the labels to have 1000 vertices per polygon at
 classes_path = current_file_dir_path + '/yolo_classesTongue.txt'
 anchors_path = current_file_dir_path + '/yolo_anchorsTongue.txt'
 class_names = get_classes(classes_path)
+print("class names:", class_names)
 num_classes = len(class_names)
 anchors = get_anchors(anchors_path)
 
@@ -122,14 +123,14 @@ anchors = get_anchors(anchors_path)
 input_shape = (256, 256)  # multiple of 32, hw
 
 # # for validation dataset  # we need or label and masks are the same shape
-# test_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
-# test_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
+test_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
+test_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
 
-# # for validation dataset  # we need or label and masks are the same shape
-test_input_paths = glob('C:\\MyProjects\\data\\tonguePoly\\test\\input/*')
-test_mask_paths = glob('C:\\MyProjects\\data\\tonguePoly\\test\\label/*.jpg')
+# test_input_paths = glob('C:\\MyProjects\\data\\tonguePoly\\test\\input/*')
+# test_mask_paths = glob('C:\\MyProjects\\data\\tonguePoly\\test\\label/*.jpg')
 assert len(test_input_paths) == len(test_mask_paths), "test imgs and mask are not the same"
 print("total {} testsamples read".format(len(test_input_paths)))
+
 # create data_generator
 #
 # test_Gen = my_Gnearator(test_input_paths, test_mask_paths, batch_size=4, input_shape=[256, 256],
@@ -167,16 +168,27 @@ for test_path, mask_path in zip(test_input_paths,test_mask_paths):
     classes = []
 
     # realize prediciction using poly-yolo
+    # polygon_xy = np.zeros([polygons.shape[0], 2 * NUM_ANGLES])
+    # decode from polar to xy
+    polygon_xy = np.zeros([max_boxes, 2 * NUM_ANGLES])
     startx = time.perf_counter()
-    box, score, classs, polygons = trained_model.detect_image(input_img, input_shape)
+    box, score, classs, polygons = trained_model.detect_image(input_img,input_shape, polygon_xy)
+    # out_boxes, out_scores, out_classes, polygons  = trained_model.detect_image(input_img,input_shape, polygon_xy)
+    # get
+
     endtx = time.perf_counter()
     print("startx:", startx)
     print("endtx:", endtx)
+
     tmp_fps = 1.0 / (endtx - startx)
     print('Prediction speed: ', tmp_fps, 'fps')
     fps_list.append(tmp_fps)
-
     # example, hw to reshape reshape y1,x1,y2,x2 into x1,y1,x2,y2
+
+    # decode from polar to xy
+    polygon_xy = np.zeros([polygons.shape[0], 2 * NUM_ANGLES])
+
+
     if len(box)>0:
         print("there is a box prediction")
     for k in range(0, len(box)):
@@ -184,10 +196,42 @@ for test_path, mask_path in zip(test_input_paths,test_mask_paths):
         scores.append(score[k])
         classes.append(classs[k])
 
-        cv2.rectangle(background, (box[k][1], box[k][0]), (box[k][3], box[k][2]), translate_color(classes[k]), 3, 1)
-        cv2.putText(background, "{}:{:.2f}".format(class_names[classs[k]], score[k]), (int(box[k][1]), int(box[k][0])-3 ),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                    (255, 255, 255), 1)
+        cv2.rectangle(background, (box[k][1], box[k][0]), (box[k][3], box[k][2]), translate_color(classes[k]), 1, 1)
+
+        if class_names[classs[k]] =="Stomach":
+            # cv2.putText(background, "{}:{:.2f}".format(class_names[classs[k]], score[k]), (int(box[k][1]), int(box[k][0])-3 ),
+            #             cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+            #             (255, 255, 255), 1)
+            c_Stomach = (
+                int((box[k][1] + box[k][3])/ 2), int((box[k][0] + box[k][2])/ 2))
+            cv2.putText(background, "{}:".format("Stomach"),
+                        (c_Stomach[0] - 30, c_Stomach[1]),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                        translate_color(classes[k]), 2)
+            cv2.putText(background, "{:.2f}".format(1),
+                        (c_Stomach[0] - 15, c_Stomach[1] + 15),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                        translate_color(classes[k]), 2)
+        elif class_names[classs[k]] == "Lung":
+            cv2.putText(background, "{}:{:.2f}".format(class_names[classs[k]], score[k]),
+                        (int(box[k][1]), int(box[k][2]) + 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                        translate_color(classes[k]), 2)
+
+        elif "Liver" in class_names[classs[k]]:
+            cv2.putText(background, "{}:".format(class_names[classs[k]]),
+                        (int(box[k][1]) + 10, int(box[k][0]) + 20),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                        translate_color(classes[k]), 2)
+            cv2.putText(background, "{:.2f}".format(1),
+                        (int(box[k][1]) + 10, int(box[k][0]) + 35),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                        translate_color(classes[k]), 2)
+        else:
+            cv2.putText(background, "{}:{:.2f}".format(class_names[classs[k]], score[k]),
+                        (int(box[k][1]), int(box[k][0]) - 3),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                        translate_color(classes[k]), 2)
     total_boxes += len(boxes)
 
     if len(boxes) == 0:
