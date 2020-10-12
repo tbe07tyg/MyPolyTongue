@@ -211,27 +211,27 @@ for test_path, mask_path in zip(test_input_paths,test_mask_paths):
             cv2.putText(background, "{:.2f}".format(1),
                         (c_Stomach[0] - 15, c_Stomach[1] + 15),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                        translate_color(classes[k]), 2)
+                        translate_color(classes[k]),  2)
         elif class_names[classs[k]] == "Lung":
             cv2.putText(background, "{}:{:.2f}".format(class_names[classs[k]], score[k]),
                         (int(box[k][1]), int(box[k][2]) + 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                        translate_color(classes[k]), 2)
+                        translate_color(classes[k]),  2)
 
         elif "Liver" in class_names[classs[k]]:
             cv2.putText(background, "{}:".format(class_names[classs[k]]),
                         (int(box[k][1]) + 10, int(box[k][0]) + 20),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                        translate_color(classes[k]), 2)
+                        translate_color(classes[k]),  2)
             cv2.putText(background, "{:.2f}".format(1),
                         (int(box[k][1]) + 10, int(box[k][0]) + 35),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                        translate_color(classes[k]), 2)
+                        translate_color(classes[k]),  2)
         else:
             cv2.putText(background, "{}:{:.2f}".format(class_names[classs[k]], score[k]),
                         (int(box[k][1]), int(box[k][0]) - 3),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                        translate_color(classes[k]), 2)
+                        translate_color(classes[k]),  2)
     total_boxes += len(boxes)
 
     if len(boxes) == 0:

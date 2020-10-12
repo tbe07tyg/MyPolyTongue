@@ -1969,7 +1969,7 @@ if __name__ == "__main__":
         plotCallBack = TrainingPlotCallback(save_path= plot_folder)
         # delete old h5 cashes:
         deleteOldH5 =  DeleteEarlySavedH5models(modelSavedPath = log_dir)
-        TensorBoardcallback = tf.keras.callbacks.TensorBoard(log_dir=tf_folder,
+        TensorBoardcallback = keras.callbacks.TensorBoard(log_dir=tf_folder,
                                                              histogram_freq=0, write_graph=True, write_images=False,
                                                              embeddings_freq=0, embeddings_layer_names=None,
                                                              embeddings_metadata=None)
