@@ -2119,7 +2119,7 @@ if __name__ == "__main__":
             print('Load weights {}.'.format(weights_path))
 
 
-        ciou_loss, confidence_loss, polar_diou_loss, class_loss, mask_Diceloss = Lambda(yolo_loss, output_shape=(1,), name='yolo_loss',
+        ciou_loss, confidence_loss, polar_diou_loss, class_loss, mask_Diceloss = Lambda(yolo_loss, name='yolo_loss',
                             arguments={'anchors': anchors, 'num_classes': num_classes, 'ignore_thresh': 0.5})(
             [model_body.output, Model_mask.output, y_true, y_true_mask])
 
