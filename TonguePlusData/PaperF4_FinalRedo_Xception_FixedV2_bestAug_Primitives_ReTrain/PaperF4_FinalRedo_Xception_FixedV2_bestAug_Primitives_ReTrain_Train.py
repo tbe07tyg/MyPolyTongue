@@ -1911,9 +1911,9 @@ if __name__ == "__main__":
 
 
     def _main():
-        project_name = 'PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives_{}'.format(model_index)
+        project_name = 'PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives_ReTrain_{}'.format(model_index)
 
-        phase = 1
+        phase = 0
         print("current working dir:", os.getcwd())
         cwd =  os.getcwd()
         # os.chdir("E:\\Projects\\poly-yolo\\simulator_dataset")
@@ -1928,7 +1928,7 @@ if __name__ == "__main__":
 
         # log_dir = (current_file_dir_path + '/TongueModelsTang256x256_0.5lr_AngleStep{}_TonguePlus/').format(ANGLE_STEP)
         log_dir = current_file_dir_path + '/'+ project_name  +'/'
-
+        pre_trained_dir = current_file_dir_path + '/'+ "PretrainedModel/"
         plot_folder = log_dir + 'Plots/'
         tf_folder = os.path.join(current_file_dir_path, project_name, 'TF_logs')
 
@@ -1953,7 +1953,8 @@ if __name__ == "__main__":
         if phase == 1:
             model = create_model(input_shape, anchors, num_classes, load_pretrained=False)
         else:
-            model = create_model(input_shape, anchors, num_classes, load_pretrained=True, weights_path=log_dir+'poly_yolo.h5')
+            model = create_model(input_shape, anchors, num_classes, load_pretrained=True,
+                                 weights_path=pre_trained_dir+'ep086-loss22.376-val_loss19.156.h5')
 
         print(model.summary())
 
@@ -1976,27 +1977,27 @@ if __name__ == "__main__":
 
         # # for my data generator
         # # # for train dataset
-        # train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
-        # train_mask_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
-        # print("len of train imgs:", len(train_input_paths))
-        #
-        # assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
-        # # for validation dataset  # we need or label and masks are the same shape
-        # val_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
-        # val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
-        # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
-
-        # # # # # # # # # # for train dataset for the lab
-        # # # # # # # # # # for train dataset for the lab
-        train_input_paths = glob('C:\\MyProjects\\data\\tonguePoly\\train\\input/*')
-        train_mask_paths = glob('C:\\MyProjects\\data\\tonguePoly\\train\\label/*.jpg')
+        train_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
+        train_mask_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
         print("len of train imgs:", len(train_input_paths))
 
         assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
         # for validation dataset  # we need or label and masks are the same shape
-        val_input_paths = glob('C:\\MyProjects\\data\\tonguePoly\\test\\input/*')
-        val_mask_paths = glob('C:\\MyProjects\\data\\tonguePoly\\test\\label/*.jpg')
+        val_input_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\test_inputs/*')
+        val_mask_paths = glob('E:\\dataset\\Tongue\\mytonguePolyYolo\\test\\testLabel\\label512640/*.jpg')
         assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
+
+        # # # # # # # # # # for train dataset for the lab
+        # # # # # # # # # # # for train dataset for the lab
+        # train_input_paths = glob('C:\\MyProjects\\data\\tonguePoly\\train\\input/*')
+        # train_mask_paths = glob('C:\\MyProjects\\data\\tonguePoly\\train\\label/*.jpg')
+        # print("len of train imgs:", len(train_input_paths))
+        #
+        # assert len(train_input_paths) == len(train_mask_paths), "train imgs and mask are not the same"
+        # # for validation dataset  # we need or label and masks are the same shape
+        # val_input_paths = glob('C:\\MyProjects\\data\\tonguePoly\\test\\input/*')
+        # val_mask_paths = glob('C:\\MyProjects\\data\\tonguePoly\\test\\label/*.jpg')
+        # assert len(val_input_paths) == len(val_mask_paths), "val imgs and mask are not the same"
 
         print("total {} training samples read".format(len(train_input_paths)))
         print("total {} val samples read".format(len(val_input_paths)))
@@ -2115,11 +2116,13 @@ if __name__ == "__main__":
         print('Create Poly-YOLO model with {} anchors and {} classes.'.format(num_anchors, num_classes))
 
         if load_pretrained:
+            # model_body.load_weights(weights_path, by_name=True, skip_mismatch=True)
             model_body.load_weights(weights_path, by_name=True, skip_mismatch=True)
             print('Load weights {}.'.format(weights_path))
 
-
-        ciou_loss, confidence_loss, polar_diou_loss, class_loss, mask_Diceloss = Lambda(yolo_loss, output_shape=(1,), name='yolo_loss',
+        print("model_body.output:", model_body.output)
+        print("y_true", y_true)
+        ciou_loss, confidence_loss, polar_diou_loss, class_loss, mask_Diceloss = Lambda(yolo_loss, name='yolo_loss',
                             arguments={'anchors': anchors, 'num_classes': num_classes, 'ignore_thresh': 0.5})(
             [model_body.output, Model_mask.output, y_true, y_true_mask])
 

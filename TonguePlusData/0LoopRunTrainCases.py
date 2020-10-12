@@ -80,14 +80,14 @@ except Exception as e:
 # for each_case in case_list:
 #     run_case(each_case)
 
-# # My method cases:
-case_list = ['C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF2_FinaRedo_YoloFixedV2_WithoutMask']
+# # # My method cases:
+# case_list = ['C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF2_FinaRedo_YoloFixedV2_WithoutMask']
+#
+# for each_case in case_list:
+#     run_case(each_case)
 
-for each_case in case_list:
-    run_case(each_case)
-
- # Case11 EXP_11_E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAug
-# run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData/PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives_MultiClasses')
+#  Case11 EXP_11_E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAug
+run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData/PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives_ReTrain')
 
 # #     # # Case11 MISH NP INTERP
 # # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAug')

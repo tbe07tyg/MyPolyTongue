@@ -284,198 +284,94 @@ except Exception as e:
 
 if __name__ == '__main__':
 
-    # paper experiemtns starts ---------------------->
 
-
-    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\ModelSaved\\PaperExp_Part1_Backbone_Exp1_rawModel"
-    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp1_rawModel"
+    # remember to change the angles step to the fixed model before run it
+    # Saved_model_file_root = "F:\\AngleStepCheck\\SavedModels\\PaperF3_FinalRedo_Xception_FixedV2_bestAug_AngleStepCheck\\AS0"
+    # Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF3_FinalRedo_Xception_FixedV2_bestAug_AngleStepCheck"
     # #
-    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\Infer\\PaperExp1"
-    # infer_case(Inference_scripts_root=Inference_scripts_root,
-    #            Saved_model_file_root=Saved_model_file_root,
-    #            output_folder=output_folder)
-
-    # # backbone: exp 2 Xception
-    # # # paper experiemtns starts ---------------------->
-    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\ModelSaved\\PaperExp_Part1_Backbone_Exp2_Xception"
-    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp2_Xception"
-    # #
-    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\Infer\\PaperExp2"
-    # infer_case(Inference_scripts_root=Inference_scripts_root,
-    #            Saved_model_file_root=Saved_model_file_root,
-    #            output_folder=output_folder)
-
-    # backbone: exp 3 RESNET1010V2
-    # paper experiemtns starts ---------------------->
-
-    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\ModelSaved\\PaperExp_Part1_Backbone_Exp3_ResNet101V2"
-    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp3_ResNet101V2"
-    # #
-    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\Infer\\PaperExp3"
-    # infer_case(Inference_scripts_root=Inference_scripts_root,
-    #            Saved_model_file_root=Saved_model_file_root,
-    #            output_folder=output_folder)
-
-    # # backbone: exp 4 InceptionV3
-    # # # paper experiemtns starts ---------------------->
-    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\ModelSaved\\PaperExp_Part1_Backbone_Exp4_InceptionV3"
-    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp4_InceptionV3"
-    # #
-    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\Infer\\PaperExp4"
-    # infer_case(Inference_scripts_root=Inference_scripts_root,
-    #            Saved_model_file_root=Saved_model_file_root,
-    #            output_folder=output_folder)
-    # # backbone: exp 5 PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large
-    # # paper experiemtns starts ---------------------->
-    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\ModelSaved\\PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large"
-    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp5_MobileNetV3_Large"
-    # #
-    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\Infer\\PaperExp5"
-    # infer_case(Inference_scripts_root=Inference_scripts_root,
-    #            Saved_model_file_root=Saved_model_file_root,
-    #            output_folder=output_folder)
-
-    # # backbone: exp 6 PaperExp_Part1_Backbone_Exp6_EfficientNetB4
-    # # # paper experiemtns starts ---------------------->
-    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\ModelSaved\\PaperExp_Part1_Backbone_Exp6_EfficientNetB4"
-    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp6_EfficientNetB4"
-    # #
-    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\Infer\\PaperExp6"
-    # infer_case(Inference_scripts_root=Inference_scripts_root,
-    #            Saved_model_file_root=Saved_model_file_root,
-    #            output_folder=output_folder)
-
-    # # backbone: Method PaperExp_Part1_Backbone_Exp6_EfficientNetB4
-    # # # paper experiemtns starts ---------------------->
-    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\ModelSaved\\P_PartF_BK_FinalFull_CioUDMaskDicePolarDioU"
-    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_PartF_BK_FinalFull_CioUDMaskDicePolarDioU"
-    # #
-    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\Infer\\PaperMYmethodV4"
+    # output_folder = "F:\\AngleStepCheck\\output\\AS0"  # the name path can not be too long
     # infer_case(Inference_scripts_root=Inference_scripts_root,
     #            Saved_model_file_root=Saved_model_file_root,
     #            output_folder=output_folder)
 
 
-
-    # # # My method --- ----------------------> P_PartF_BK_FinalNoMask_CioUDPolarDioU
-    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\ModelSaved\\P_PartF_BK_FinalNoMask_CioUDPolarDioU"
-    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_PartF_BK_FinalNoMask_CioUDPolarDioU"
+    # # AS =1.8888888888888888
+    # Saved_model_file_root = "F:\\AngleStepCheck\\SavedModels\\PaperF3_FinalRedo_Xception_FixedV2_bestAug_AngleStepCheck\\AS1"
+    # Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF3_FinalRedo_Xception_FixedV2_bestAug_AngleStepCheck"
     # #
-    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\Infer\\P_PartF_BK_FinalNoMask_CioUDPolarDioU"
-    # infer_case(Inference_scripts_root=Inference_scripts_root,
-    #            Saved_model_file_root=Saved_model_file_root,
-    #            output_folder=output_folder)
-
-    # # P_PartF_BK_FinalNoMask_CioUDPolarDioUSAEBeforeAdd
-    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\ModelSaved\\P_PartF_BK_FinalNoMask_CioUDPolarDioUSAEBeforeAdd"
-    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_PartF_BK_FinalNoMask_CioUDPolarDioUSAEBeforeAdd"
-    # #
-    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\Infer\\P_PartF_BK_FinalNoMask_CioUDPolarDioUSAEBeforeAdd"
+    # output_folder = "F:\\AngleStepCheck\\output\\AS1"  # the name path can not be too long
     # infer_case(Inference_scripts_root=Inference_scripts_root,
     #            Saved_model_file_root=Saved_model_file_root,
     #            output_folder=output_folder)
     #
-    # # P_PartF_BK_FinalFull_CioUDMaskDicePolarDiouConfidence
-    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\ModelSaved\\P_PartF_BK_FinalFull_CioUDMaskDicePolarDiouConfidence"
-    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_PartF_BK_FinalFull_CioUDMaskDicePolarDiouConfidence"
+    # # AS =3.2777777777777777
+    # Saved_model_file_root = "F:\\AngleStepCheck\\SavedModels\\PaperF3_FinalRedo_Xception_FixedV2_bestAug_AngleStepCheck\\AS2"
+    # Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF3_FinalRedo_Xception_FixedV2_bestAug_AngleStepCheck"
     # #
-    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\Infer\\P_PartF_BK_FinalFull_Conf"
+    # output_folder = "F:\\AngleStepCheck\\output\\AS2"  # the name path can not be too long
     # infer_case(Inference_scripts_root=Inference_scripts_root,
     #            Saved_model_file_root=Saved_model_file_root,
     #            output_folder=output_folder)
+
+    # # AS4.666666666666666
+    # Saved_model_file_root = "F:\\AngleStepCheck\\SavedModels\\PaperF3_FinalRedo_Xception_FixedV2_bestAug_AngleStepCheck\\AS3"
+    # Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF3_FinalRedo_Xception_FixedV2_bestAug_AngleStepCheck"
+    # #
+    # output_folder = "F:\\AngleStepCheck\\output\\AS3"  # the name path can not be too long
+    # infer_case(Inference_scripts_root=Inference_scripts_root,
+    #            Saved_model_file_root=Saved_model_file_root,
+    #            output_folder=output_folder)
+
+    # # AS6.055555555555555
+    # Saved_model_file_root = "F:\\AngleStepCheck\\SavedModels\\PaperF3_FinalRedo_Xception_FixedV2_bestAug_AngleStepCheck\\AS4"
+    # Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF3_FinalRedo_Xception_FixedV2_bestAug_AngleStepCheck"
+    # #
+    # output_folder = "F:\\AngleStepCheck\\output\\AS4"  # the name path can not be too long
+    # infer_case(Inference_scripts_root=Inference_scripts_root,
+    #            Saved_model_file_root=Saved_model_file_root,
+    #            output_folder=output_folder)
+
+    # # AS7.444444444444445
+    # Saved_model_file_root = "F:\\AngleStepCheck\\SavedModels\\PaperF3_FinalRedo_Xception_FixedV2_bestAug_AngleStepCheck\\AS5"
+    # Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF3_FinalRedo_Xception_FixedV2_bestAug_AngleStepCheck"
+    # #
+    # output_folder = "F:\\AngleStepCheck\\output\\AS5"  # the name path can not be too long
+    # infer_case(Inference_scripts_root=Inference_scripts_root,
+    #            Saved_model_file_root=Saved_model_file_root,
+    #            output_folder=output_folder)
+
+    # # AS8.833333333333332
+    # Saved_model_file_root = "F:\\AngleStepCheck\\SavedModels\\PaperF3_FinalRedo_Xception_FixedV2_bestAug_AngleStepCheck\\AS6"
+    # Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF3_FinalRedo_Xception_FixedV2_bestAug_AngleStepCheck"
+    # #
+    # output_folder = "F:\\AngleStepCheck\\output\\AS6"  # the name path can not be too long
+    # infer_case(Inference_scripts_root=Inference_scripts_root,
+    #            Saved_model_file_root=Saved_model_file_root,
+    #            output_folder=output_folder)
+
+    # # AS10.222222222222221
+    # Saved_model_file_root = "F:\\AngleStepCheck\\SavedModels\\PaperF3_FinalRedo_Xception_FixedV2_bestAug_AngleStepCheck\\AS7"
+    # Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF3_FinalRedo_Xception_FixedV2_bestAug_AngleStepCheck"
+    # #
+    # output_folder = "F:\\AngleStepCheck\\output\\AS7"  # the name path can not be too long
+    # infer_case(Inference_scripts_root=Inference_scripts_root,
+    #            Saved_model_file_root=Saved_model_file_root,
+    #            output_folder=output_folder)
+
+    # # ASAS11.61111111111111
+    # Saved_model_file_root = "F:\\AngleStepCheck\\SavedModels\\PaperF3_FinalRedo_Xception_FixedV2_bestAug_AngleStepCheck\\AS8"
+    # Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF3_FinalRedo_Xception_FixedV2_bestAug_AngleStepCheck"
+    # #
+    # output_folder = "F:\\AngleStepCheck\\output\\AS8"  # the name path can not be too long
+    # infer_case(Inference_scripts_root=Inference_scripts_root,
+    #            Saved_model_file_root=Saved_model_file_root,
+    #            output_folder=output_folder)
+
+    # AS13.0
+    Saved_model_file_root = "F:\\AngleStepCheck\\SavedModels\\PaperF3_FinalRedo_Xception_FixedV2_bestAug_AngleStepCheck\\AS9"
+    Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF3_FinalRedo_Xception_FixedV2_bestAug_AngleStepCheck"
     #
-    # # P_PartF_BK_FinalFull_CioUDMaskDicePolarDiouConfidence
-    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\ModelSaved\\P_OurFinal_CioUDMaskDicePolarDioU"
-    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_OurFinal_CioUDMaskDicePolarDioU"
-    # #
-    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\P1_BK_redo\\Infer\\P_PartF_BK_Final"
-    # infer_case(Inference_scripts_root=Inference_scripts_root,
-    #            Saved_model_file_root=Saved_model_file_root,
-    #            output_folder=output_folder)
-
-    # # ReCheckMyMethod
-    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\MyMethodRedo\\ModeSaved\\P_PartF_BK_FinalFull_CioUDMaskDicePolarDioUFixedV2"
-    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_PartF_BK_FinalFull_CioUDMaskDicePolarDioUFixedV2"
-    # #
-    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\PaperResult\\MyMethodRedo\\Infer\\MyMethodAllDetect"
-    # infer_case(Inference_scripts_root=Inference_scripts_root,
-    #            Saved_model_file_root=Saved_model_file_root,
-    #            output_folder=output_folder)
-
-    #
-    # # backbone: exp 7 P_Part1_Backbone_Exp7_Xception_Our_DpolarIoU_L2_loss
-    # # paper experiemtns starts ---------------------->
-    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\FUllPolygonsFixedGen\\PaperExperiments\\P_Part1_Backbone_Exp7_Xception_Our_DpolarIoU_L2_loss"
-    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_Part1_Backbone_Exp7_Xception_Our_DpolarIoU_L2_loss"
-    # #
-    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\backbone\\Xception_Our_DpolarIoU_L2_loss" # the name path can not be too long
-    # infer_case(Inference_scripts_root=Inference_scripts_root,
-    #            Saved_model_file_root=Saved_model_file_root,
-    #            output_folder=output_folder)
-
-    # # backbone: exp 8 P_Part1_Backbone_Exp7_Xception_Our_DpolarIoU_L2_loss
-    # # paper experiemtns starts ---------------------->
-    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\FUllPolygonsFixedGen\\PaperExperiments\\P_Part1_Bk_Exp8_Xception_DpolarIoU_Ignore_L2_loss"
-    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_Part1_Backbone_Exp8_Xception_DpolarIoU_BoxScale_L2_loss"
-    # #
-    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\backbone\\XceptionDpolarIoUIgnoreL2_loss"  # the name path can not be too long
-    # infer_case(Inference_scripts_root=Inference_scripts_root,
-    #            Saved_model_file_root=Saved_model_file_root,
-    #            output_folder=output_folder)
-
-    # backbone: exp 9 P_Part1_Backbone_Exp7_Xception_Our_DpolarIoU_L2_loss
-    # # paper experiemtns starts ---------------------->
-    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\FUllPolygonsFixedGen\\PaperExperiments\\P_Part1_BK_Exp9_Xception_DpolarIoU_BoxScale_L2_Mask_loss"
-    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\P_Part1_BK_Exp9_Xception_DpolarIoU_BoxScale_L2_Mask_loss"
-    # #
-    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\backbone\\Exp9_Xception_DpolarIoU_BoxScale_L2_Mask_loss"  # the name path can not be too long
-    # infer_case(Inference_scripts_root=Inference_scripts_root,
-    #    Saved_model_file_root=Saved_model_file_root,
-    #    output_folder=output_folder)
-
-    # # backbone: exp 10 P_Part1_Backbone_Exp7_Xception_Our_DpolarIoU_L2_loss
-    # # paper experiemtns starts ---------------------->
-    # Saved_model_file_root = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\FUllPolygonsFixedGen\\PaperExperiments\\Exp10_Xception_DpolarIoU_BoxScale_L2_MaskIoU_loss"
-    # Inference_scripts_root = "C:\\myProjects\\MyPolyTongue\\TonguePlusData\\Exp10_Xception_DpolarIoU_BoxScale_L2_MaskIoU_loss"
-    # #
-    # output_folder = "F:\\TonguePolyYOLOLOGS\\MYAugGenerator\\paperresults\\backbone\\exp10"  # the name path can not be too long
-    # infer_case(Inference_scripts_root=Inference_scripts_root,
-    #            Saved_model_file_root=Saved_model_file_root,
-    #            output_folder=output_folder)
-
-    # backbone: for check their method ability
-    # paper experiemtns starts ---------------------->
-    # Saved_model_file_root = "E:\\MyWritings\\Tongue\\2020IEEE\\TMI\\ExperimentsResult\\Backbone\\check\\rd2"
-    # Inference_scripts_root = "E:\\Projects\\MyPolyTongue\\TonguePlusData\\PaperExp_Part1_Backbone_Exp2_Xception"
-    # #
-    # output_folder = "E:\\MyWritings\\Tongue\\2020IEEE\\TMI\\ExperimentsResult\\Backbone\\XceptionReCheck"  # the name path can not be too long
-    # infer_case(Inference_scripts_root=Inference_scripts_root,
-    #            Saved_model_file_root=Saved_model_file_root,
-    #            output_folder=output_folder)
-
-    #
-    # # redo fixed v2 backbone
-    # Saved_model_file_root = "F:\\backbone\\PaperF2_FinalRedo_Xception_FixedV2_bestAug"
-    # Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF2_FinalRedo_Xception_FixedV2_bestAug"
-    # #
-    # output_folder = "F:\\backbone\\outputs"  # the name path can not be too long
-    # infer_case(Inference_scripts_root=Inference_scripts_root,
-    #            Saved_model_file_root=Saved_model_file_root,
-    #            output_folder=output_folder)
-
-    # Saved_model_file_root = "F:\\backbone\\PaperF2_FinalRedo_ResNet101V2_FixedV2_bestAug"
-    # Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF2_FinalRedo_ResNet101V2_FixedV2_bestAug"
-    # #
-    # output_folder = "F:\\backbone\\outputs\\resnet101v2"  # the name path can not be too long
-    # infer_case(Inference_scripts_root=Inference_scripts_root,
-    #            Saved_model_file_root=Saved_model_file_root,
-    #            output_folder=output_folder)
-
-    Saved_model_file_root = "F:\\RandomShape\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives"
-    Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives"
-    #
-    output_folder = "F:\\RandomShape\\output\\AS1.8PreTrain"  # the name path can not be too long
+    output_folder = "F:\\AngleStepCheck\\output\\AS9"  # the name path can not be too long
     infer_case(Inference_scripts_root=Inference_scripts_root,
                Saved_model_file_root=Saved_model_file_root,
                output_folder=output_folder)
-

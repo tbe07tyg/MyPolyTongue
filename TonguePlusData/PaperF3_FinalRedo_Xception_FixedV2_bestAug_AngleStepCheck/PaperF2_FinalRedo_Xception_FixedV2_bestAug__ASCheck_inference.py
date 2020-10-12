@@ -4,8 +4,8 @@ import os
 import time
 # need to change
 from glob import glob
-from TonguePlusData.PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives.PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives_Train import YOLO, \
-    get_anchors, my_get_random_data, NUM_ANGLES, max_boxes #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
+from TonguePlusData.PaperF3_FinalRedo_Xception_FixedV2_bestAug_AngleStepCheck.PaperF2_FinalRedo_Xception_FixedV2_bestAug_ASCheck_Train import YOLO, \
+    get_anchors, my_get_random_data #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
 import sys
 
 
@@ -167,14 +167,9 @@ for test_path, mask_path in zip(test_input_paths,test_mask_paths):
     classes = []
 
     # realize prediciction using poly-yolo
-    # decode from polar to xy
-    polygon_xy = np.zeros([max_boxes, 2 * NUM_ANGLES])
+    # polygon_xy = np.zeros([polygons.shape[0], 2 * NUM_ANGLES])
     startx = time.perf_counter()
-    box, score, classs, polygons = trained_model.detect_image(input_img, input_shape, polygon_xy)
-    # out_boxes, out_scores, out_classes, polygons  = trained_model.detect_image(input_img,input_shape, polygon_xy)
-    # # get
-    # startx = time.perf_counter()
-    # box, score, classs, polygons = trained_model.detect_image(input_img,input_shape)
+    box, score, classs, polygons = trained_model.detect_image(input_img,input_shape)
     endtx = time.perf_counter()
     print("startx:", startx)
     print("endtx:", endtx)
