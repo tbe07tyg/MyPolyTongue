@@ -1,7 +1,7 @@
 import os
 from glob import glob
 try:
-    def run_case(file_dir, max_run=5, fileIdx=1):
+    def run_case(file_dir, max_run=5, fileIdx=4):
         """
         # rotation_range = 45
         # width_shift_range = 0.3

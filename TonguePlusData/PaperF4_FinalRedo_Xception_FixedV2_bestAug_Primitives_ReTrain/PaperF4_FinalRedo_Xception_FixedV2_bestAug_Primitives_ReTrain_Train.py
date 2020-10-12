@@ -1742,20 +1742,14 @@ def my_get_random_data(img_path, mask_path, input_shape, image_datagen, mask_dat
         aug_image = image
         copy_mask = mask.copy().astype(np.uint8)
 
-    img, label = random_shapes((256, 256), max_shapes=10, min_size=20,  max_size=180, intensity_range=((0, 255),))
-    # img, label = random_shapes((256, 256), min_size=40, intensity_range=((0, 255),), random_seed=pri_seed)
-
-    added_img = 255 - img
-    gray = cv2.cvtColor(added_img, cv2.COLOR_BGR2GRAY)
-    # print("labels:", label)
-
-    # aug_image =  added_img
-    aug_image = aug_image / 2 + added_img
-    ret, thresh = cv2.threshold(gray, 0.00001, 255, 0)  # this require the numpy array has to be the uint8 type
-    aug_mask = thresh
-
-
-    # ret, thresh = cv2.threshold(copy_mask, 127, 255, 0)  # this require the numpy array has to be the uint8 type
+    # print("mask shape after aug:", np.squeeze(aug_mask).shape)
+    # aug_image = krs_image.img_to_array(aug_image)
+    # aug_mask = krs_image.img_to_array(aug_mask)
+    # find polygons with augmask ------------------------------------>
+    # imgray = cv2.cvtColor(np.squeeze(copy_mask), cv2.COLOR_BGR2GRAY)
+    # print(copy_mask)
+    ret, thresh = cv2.threshold(copy_mask, 127, 255, 0)  # this require the numpy array has to be the uint8 type
+    aug_mask =thresh
     image, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     selected_coutours = []
     for x in range(len(contours)):
