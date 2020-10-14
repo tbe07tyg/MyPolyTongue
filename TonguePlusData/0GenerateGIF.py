@@ -3,8 +3,8 @@ import imageio
 from glob import glob
 
 # root_read = "E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\AugCompare"
-root_read = "E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\CountourCompare"
-root_write = "E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\AugCompare\\GIF"
+root_read = "E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\MultiRegions"
+root_write = "E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\MultiRegions\\GIFS"
 anim_file = root_write +'/AngleStep20_ALLPoly_our.gif'
 
 

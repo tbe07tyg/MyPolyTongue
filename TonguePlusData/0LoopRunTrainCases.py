@@ -83,12 +83,12 @@ except Exception as e:
 # # My method cases:
 # case_list = ['C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF2_FinaRedo_YoloFixedV2_Mish',
 #              'C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives']
-case_list = ['C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives']
-for each_case in case_list:
-    run_case(each_case)
+# case_list = ['C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives']
+# for each_case in case_list:
+#     run_case(each_case)
 
  # Case11 EXP_11_E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAug
-# run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData/PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives_MultiClasses')
+run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData/PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives_newDS')
 
 # #     # # Case11 MISH NP INTERP
 # # run_case('C:\\myProjects\\MyPolyTongue\\TonguePlusData\\EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAug')

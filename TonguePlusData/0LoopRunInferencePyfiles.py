@@ -32,92 +32,92 @@ try:
             os.remove(inferenc_summary_paper_need_txt)
             with open(inferenc_summary_paper_need_txt, 'w'):
                 pass
-
-
-        all_scripts_files = glob(Inference_scripts_root + '/*.py')
-        print("all_scripts_files:",all_scripts_files)
         class_file = glob(Inference_scripts_root + '/*classesTongue.txt')[0]
-        print("class_file:", class_file)
-        # start to parsing the inference-->
-        fileIdx =1
-        # model_saved_name_idx = os.path.basename(Saved_model_file_root)
+        #
+        # all_scripts_files = glob(Inference_scripts_root + '/*.py')
+        # print("all_scripts_files:",all_scripts_files)
 
-
-        all_files = glob(Saved_model_file_root + '/*')
-        all_dirs = [path for path in all_files if os.path.isdir(path)]
-        print("allfiles:", all_files)
-        print("all_dirs:", all_dirs)
-        print()
-        model_folder_names_list =[]
-        best_h5_list = []
-        # found saved_folder_name and h5 path ----------------->
-        for dir in all_dirs:
-            # model_saved_name_idx = os.path.basename(dir)
-            # print("model_saved_name:", model_saved_name_idx )
-            # # found the model saved path and the best h5 file
-            # if dir.endswith(model_saved_name_idx+"{}".format(fileIdx)):
-            print("model saved dir:", dir)
-            output_folder_name =  os.path.basename(dir)
-            print("output_foldername:", output_folder_name)
-            model_folder_names_list.append(output_folder_name)
-            fileIdx += 1
-
-            all_h5_files =  glob(dir + '/*.h5')
-            print()
-            print("all_h5_files:", all_h5_files)
-            if len(all_h5_files) > 1:
-                all_h5_files.sort(key=os.path.getctime)
-            best_h5 = all_h5_files[-1]
-            best_h5_list.append(best_h5)
-            print("best h5:", best_h5)
-
-                    # for root, dirs, _ in os.walk(file_dir):
-        print("found total {} cases need to be infrerence:".format(len(best_h5_list)))
-        # Running inference scripts and passing the vars: model_folder_name,    best_h5, output_folder --------------->
-        for model_folder_name, best_h5_path in zip(model_folder_names_list, best_h5_list):
-            print("start to run inference --------------->")
-            print("model_folder_name", model_folder_name)
-            id = model_folder_name[-1]
-            print("id:", id)
-            print("best_h5_path", best_h5_path)
-
-            for script in all_scripts_files:
-               if script.endswith("inference.py"):
-                   print("id:", id)
-                   print("script:", script)
-                   # model_folder_name,    best_h5, output_folder
-                   cmd = 'python ' + script + ' {} {} {} {}'.format(model_folder_name, best_h5_path,output_folder, inferenc_summary_txt)
-                   print("cmd:", cmd)
-
-                   os.system(cmd)
-
-        # return avg FPS value  ---------------->
-        with open(inferenc_summary_txt) as f:
-            lines = f.readlines()
-        print(lines)
-        for i in range (0, len(lines)):
-
-            lines[i] = lines[i].split(',')
-        print(lines)
-        Total_avg_fps_list = []
-        Total_std_fps_list = []
-        for each_case in lines:
-            avg_fps_element =  each_case[-2]
-            avg_fps_value =  float(avg_fps_element.split()[-1])
-            std_fps_element = each_case[-1]
-            std_fps_value = float(std_fps_element.split()[-1])
-            # print(type(fps_value))
-            Total_avg_fps_list.append(avg_fps_value)
-            Total_std_fps_list.append(std_fps_value)
-        Total_avg_fps = sum(Total_avg_fps_list)/len(Total_avg_fps_list)
-        Total_std_fps = sum(Total_std_fps_list) / len(Total_std_fps_list)
-        print("Total_avg_fps:", Total_avg_fps)
-        print("Total_std_fps:", Total_std_fps)
-        print("total_cases:", len(lines))
-        with open(inferenc_summary_txt, 'a') as f:
-            f.write("Total_avg_fps {}\n".format(Total_avg_fps))
-            f.write("Total_std_fps {}\n".format(Total_std_fps))
-        # search saved txt predictions and compared with text label with coco evaluation  ---------------->
+        # print("class_file:", class_file)
+        # # start to parsing the inference-->
+        # fileIdx =1
+        # # model_saved_name_idx = os.path.basename(Saved_model_file_root)
+        #
+        #
+        # all_files = glob(Saved_model_file_root + '/*')
+        # all_dirs = [path for path in all_files if os.path.isdir(path)]
+        # print("allfiles:", all_files)
+        # print("all_dirs:", all_dirs)
+        # print()
+        # model_folder_names_list =[]
+        # best_h5_list = []
+        # # found saved_folder_name and h5 path ----------------->
+        # for dir in all_dirs:
+        #     # model_saved_name_idx = os.path.basename(dir)
+        #     # print("model_saved_name:", model_saved_name_idx )
+        #     # # found the model saved path and the best h5 file
+        #     # if dir.endswith(model_saved_name_idx+"{}".format(fileIdx)):
+        #     print("model saved dir:", dir)
+        #     output_folder_name =  os.path.basename(dir)
+        #     print("output_foldername:", output_folder_name)
+        #     model_folder_names_list.append(output_folder_name)
+        #     fileIdx += 1
+        #
+        #     all_h5_files =  glob(dir + '/*.h5')
+        #     print()
+        #     print("all_h5_files:", all_h5_files)
+        #     if len(all_h5_files) > 1:
+        #         all_h5_files.sort(key=os.path.getctime)
+        #     best_h5 = all_h5_files[-1]
+        #     best_h5_list.append(best_h5)
+        #     print("best h5:", best_h5)
+        #
+        #             # for root, dirs, _ in os.walk(file_dir):
+        # print("found total {} cases need to be infrerence:".format(len(best_h5_list)))
+        # # Running inference scripts and passing the vars: model_folder_name,    best_h5, output_folder --------------->
+        # for model_folder_name, best_h5_path in zip(model_folder_names_list, best_h5_list):
+        #     print("start to run inference --------------->")
+        #     print("model_folder_name", model_folder_name)
+        #     id = model_folder_name[-1]
+        #     print("id:", id)
+        #     print("best_h5_path", best_h5_path)
+        #
+        #     for script in all_scripts_files:
+        #        if script.endswith("inference.py"):
+        #            print("id:", id)
+        #            print("script:", script)
+        #            # model_folder_name,    best_h5, output_folder
+        #            cmd = 'python ' + script + ' {} {} {} {}'.format(model_folder_name, best_h5_path,output_folder, inferenc_summary_txt)
+        #            print("cmd:", cmd)
+        #
+        #            os.system(cmd)
+        #
+        # # return avg FPS value  ---------------->
+        # with open(inferenc_summary_txt) as f:
+        #     lines = f.readlines()
+        # print(lines)
+        # for i in range (0, len(lines)):
+        #
+        #     lines[i] = lines[i].split(',')
+        # print(lines)
+        # Total_avg_fps_list = []
+        # Total_std_fps_list = []
+        # for each_case in lines:
+        #     avg_fps_element =  each_case[-2]
+        #     avg_fps_value =  float(avg_fps_element.split()[-1])
+        #     std_fps_element = each_case[-1]
+        #     std_fps_value = float(std_fps_element.split()[-1])
+        #     # print(type(fps_value))
+        #     Total_avg_fps_list.append(avg_fps_value)
+        #     Total_std_fps_list.append(std_fps_value)
+        # Total_avg_fps = sum(Total_avg_fps_list)/len(Total_avg_fps_list)
+        # Total_std_fps = sum(Total_std_fps_list) / len(Total_std_fps_list)
+        # print("Total_avg_fps:", Total_avg_fps)
+        # print("Total_std_fps:", Total_std_fps)
+        # print("total_cases:", len(lines))
+        # with open(inferenc_summary_txt, 'a') as f:
+        #     f.write("Total_avg_fps {}\n".format(Total_avg_fps))
+        #     f.write("Total_std_fps {}\n".format(Total_std_fps))
+        # # search saved txt predictions and compared with text label with coco evaluation  ---------------->
         pred_txt_list = []
         label_txt_list = []
         for root, dirs, files in os.walk(output_folder):
@@ -140,6 +140,7 @@ try:
             AP_5to95_list = []
             AP_5_list = []
             AP_75_list = []
+            avg_iou_list = []
             with open(inferenc_summary_txt, 'a') as f:
                 f.write("\n")
             for pred, gt in zip(pred_txt_list, label_txt_list):
@@ -149,7 +150,8 @@ try:
                 print("cwd", os.path.dirname(os.path.realpath(__file__)))
 
                 yolo_to_coco(pred, gt, class_file)
-                mean_s=coco_eval(type)
+                mean_s, my_avg_iou=coco_eval(type)
+                avg_iou_list.append(my_avg_iou)
                 print("tyep:", type)
                 print("mean_s:", mean_s)
 
@@ -166,7 +168,7 @@ try:
 
                 # write all the evaluations into  txt
                 with open(inferenc_summary_txt, 'a') as f:
-                    f.write("infer_path {}, type {}, AP_5to95|AP_5|AP_75 {}|{}|{}\n".format(pred, type, AP_5to95, AP_5, AP_75))
+                    f.write("infer_path {}, type {}, AP_5to95|AP_5|AP_75 {}|{}|{}, avgIoU {}\n".format(pred, type, AP_5to95, AP_5, AP_75, my_avg_iou))
 
             # write the summary for the paper needed --------------->
             with open(inferenc_summary_paper_need_txt, 'a') as f:
@@ -178,8 +180,12 @@ try:
 
                 m_AP_75 = np.array(AP_75_list).mean()
                 std_AP_75 = np.array(AP_75_list).std()
+
+                m_Avg_iou=  np.array(avg_iou_list).mean()
+                std_Avg_iou = np.array(avg_iou_list).std()
                 content= 'type {}, AP_5to95_m(AP_5to95_std)|AP_5_m(AP_5_std)|AP_75_m(AP_75_std) ' \
-                         '{:.3f} ({:.3f})|{:.3f} ({:.3f})|{:.3f} ({:.3f})\n'.format(type, m_AP_5to95, std_AP_5to95, m_AP_5, std_AP_5, m_AP_75, std_AP_75)
+                         '{:.3f} ({:.3f})|{:.3f} ({:.3f})|{:.3f} ({:.3f}), avgIoU(IoU std) {:.3f} ({:.3f})\n'\
+                    .format(type, m_AP_5to95, std_AP_5to95, m_AP_5, std_AP_5, m_AP_75, std_AP_75, m_Avg_iou,std_Avg_iou)
                 f.write(content)
 
         # print("total found and evaluated {} training models!".format(fileIdx-1))
@@ -269,11 +275,11 @@ try:
         cocoGt = COCO(current_file_dir_path+ '/tmp_coco_gt.json')
         cocoDt = cocoGt.loadRes(current_file_dir_path+ '/tmp_coco_pred.json')
         cocoEval = COCOeval(cocoGt, cocoDt, type)
-        cocoEval.evaluate()
+        my_avg_iou = cocoEval.evaluate()
         cocoEval.accumulate()
         mean_s = cocoEval.summarize()
 
-        return mean_s
+        return mean_s, my_avg_iou
 
     def str_list_to_float_list(string):
         return list(map(float, string.split(',')))
@@ -470,12 +476,29 @@ if __name__ == '__main__':
     # infer_case(Inference_scripts_root=Inference_scripts_root,
     #            Saved_model_file_root=Saved_model_file_root,
     #            output_folder=output_folder)
-
-    Saved_model_file_root = "F:\\RandomShape\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives"
+    #
+    Saved_model_file_root = "F:\\RandomShape\\newKeras\\AS1.8\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives"
     Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives"
     #
-    output_folder = "F:\\RandomShape\\output\\AS1.8PreTrain"  # the name path can not be too long
+    output_folder = "F:\\RandomShape\\output\\AS1.8PreTr"  # the name path can not be too long
     infer_case(Inference_scripts_root=Inference_scripts_root,
                Saved_model_file_root=Saved_model_file_root,
                output_folder=output_folder)
 
+    # Saved_model_file_root = "F:\\RandomShape\\newKeras\\AS10.2\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives"
+    # Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives"
+    # #
+    # output_folder = "F:\\RandomShape\\output\\AS10.2ReTrain"  # the name path can not be too long
+    # infer_case(Inference_scripts_root=Inference_scripts_root,
+    #            Saved_model_file_root=Saved_model_file_root,
+    #            output_folder=output_folder)
+
+
+
+    # Saved_model_file_root = "F:\\RandomShape\\newKeras\\AS10.2\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives_ReTrain"
+    # Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives_ReTrain"
+    # #
+    # output_folder = "F:\\RandomShape\\output\\AS10.2ReTrain"  # the name path can not be too long
+    # infer_case(Inference_scripts_root=Inference_scripts_root,
+    #            Saved_model_file_root=Saved_model_file_root,
+    #            output_folder=output_folder)
