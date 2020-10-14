@@ -1494,7 +1494,7 @@ def yolo_loss(args, anchors, num_classes, ignore_thresh=.4):
         # polygon_dist_loss =  tf.reduce_mean(tf.reduce_sum(polygon_loss_dist_L2, axis=[1, 2, 3, 4]))
         # #
         print("raw_true_polygon_distnace.shape:", raw_true_polygon_distnace.shape[-1])
-        dist_scale_weights = 1 +  -  K.mean(raw_true_polygon_distnace,-1,keepdims=True)
+        dist_scale_weights = 1 +  1- K.mean(raw_true_polygon_distnace,-1,keepdims=True)
         print("dist_scale_weights:", dist_scale_weights.shape)
         Polar_diou = polar_diou(pred_box, y_true[layer][..., 0:4], pred_dist,raw_true_polygon_distnace)
         # Polar_diou = K.print_tensor(Polar_diou, "Polar_diou")
