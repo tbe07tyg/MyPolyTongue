@@ -4,7 +4,7 @@ import os
 import time
 # need to change
 from glob import glob
-from TonguePlusData.PaperF4_FinalRedo_Xception_FixedV2_bestAug_P_DScheck.PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives_newDS10.PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives_newDS_Train import YOLO, \
+from TonguePlusData.PaperF4_FinalRedo_Xception_FixedV2_bestAug_P_DScheck.DS50.PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives_newDS_Train import YOLO, \
     get_anchors, my_get_random_data, NUM_ANGLES, max_boxes #or "import poly_yolo_lite as yolo" for the lite version  ### need to change for different model design
 import sys
 
