@@ -503,29 +503,39 @@ if __name__ == '__main__':
     #            Saved_model_file_root=Saved_model_file_root,
     #            output_folder=output_folder)
 
-    # for DS check ----------------------------------->
-    saved_model_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_P_DScheck/*"
-    infered_model_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_P_DScheck/*"
-    saved_models = sorted(glob(saved_model_root))
-    print("saved_models:", saved_models)
-    print(len(saved_models))
-    infer_folders =  sorted(glob(infered_model_root))
-    print("saved_models:", saved_models)
-    print(len(saved_models))
+    # # for DS check ----------------------------------->
+    # saved_model_root = "F:\\RandomShape\\newKeras\\AS1.8\PaperF4_FinalRedo_Xception_FixedV2_bestAug_P_DScheck/*"
+    # infered_model_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_P_DScheck/*"
+    # saved_models = sorted(glob(saved_model_root))
+    # print("saved_models:", saved_models)
+    # print(len(saved_models))
+    # infer_folders =  sorted(glob(infered_model_root))
+    # print("saved_models:", saved_models)
+    # print(len(saved_models))
+    #
+    # output_root = "F:\\RandomShape\\output\\AS1.8\\DS_CHECK/"
+    # # case_list = ['C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives_newDS']
+    # for i, each_save_model in enumerate(saved_models):
+    #     print("i:", i)
+    #     print(each_save_model)
+    #     saved_model_name =   os.path.basename(each_save_model)
+    #     Saved_model_file_root = each_save_model
+    #     Inference_scripts_root = infer_folders[i]
+    #     infer_model_name =  os.path.basename(infer_folders[i])
+    #
+    #     assert saved_model_name == infer_model_name
+    #
+    #
+    #     infer_case(Inference_scripts_root=Inference_scripts_root,
+    #                Saved_model_file_root=Saved_model_file_root,
+    #                output_folder=os.path.join(output_root, infer_model_name))
 
-    output_root = "F:\\RandomShape\\output\\AS1.8\\DS_CHECK/"
-    # case_list = ['C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives_newDS']
-    for i, each_save_model in enumerate(saved_models):
-        print("i:", i)
-        print(each_save_model)
-        saved_model_name =   os.path.basename(each_save_model)
-        Saved_model_file_root = each_save_model
-        Inference_scripts_root = infer_folders[i]
-        infer_model_name =  os.path.basename(infer_folders[i])
-
-        assert saved_model_name == infer_model_name
-
-
-        infer_case(Inference_scripts_root=Inference_scripts_root,
-                   Saved_model_file_root=Saved_model_file_root,
-                   output_folder=os.path.join(output_root, infer_model_name))
+        # ST190 DS35 RETRAIN
+    #ep042-loss11.430-val_loss3.604
+    Saved_model_file_root = "F:\\RandomShape\\newKeras\AS1.8\\retrainST190DS35BA"
+    Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives_ReTrain"
+    #
+    output_folder = "F:\\RandomShape\\output\\AS1.8\\ST190DS35ReTrain"  # the name path can not be too long
+    infer_case(Inference_scripts_root=Inference_scripts_root,
+               Saved_model_file_root=Saved_model_file_root,
+               output_folder=output_folder)

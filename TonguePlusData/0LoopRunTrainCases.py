@@ -72,34 +72,32 @@ except Exception as e:
 #     else:
 #         run_case(each_case)
 #
-# # My method cases:
-# case_list = ['C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF2_FinalRedo_Xception_FixedV2_bestAug',
-#              'C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF2_FinalRedo_ResNet101V2_FixedV2_bestAug'
-#              ]
-#
-# for each_case in case_list:
-#     run_case(each_case)
+# My method cases:
+case_list = ['C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives_ReTrain']
+
+for each_case in case_list:
+    run_case(each_case)
 
 # # My method cases:
 # case_list = ['C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF2_FinaRedo_YoloFixedV2_Mish',
 #              'C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives']
 
-cases_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_P_DScheck/*"
-
-case_list = sorted(glob(cases_root))
-print("case_list:", case_list)
-print(len(case_list))
-
-# case_list = ['C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives_newDS']
-for i, each_case in enumerate(case_list):
-    print("i:", i)
-    print(each_case)
-    if i < 10:
-        continue
-    elif i ==10:
-        run_case(each_case, fileIdx=2)
-    else:
-        run_case(each_case, fileIdx=1)
+# cases_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_P_DScheck/*"
+#
+# case_list = sorted(glob(cases_root))
+# print("case_list:", case_list)
+# print(len(case_list))
+#
+# # case_list = ['C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives_newDS']
+# for i, each_case in enumerate(case_list):
+#     print("i:", i)
+#     print(each_case)
+#     if i < 10:
+#         continue
+#     elif i ==10:
+#         run_case(each_case, fileIdx=2)
+#     else:
+#         run_case(each_case, fileIdx=1)
  # Case11 EXP_11_E:\\Projects\\MyPolyTongue\\TonguePlusData\\EXP_11_Mish_WithMyDataNpInterpDistRegL2CEOnly_PolarDIoULoss_bestAug
 # run_case('E:\\Projects\\MyPolyTongue\\TonguePlusData/PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives_newDS')
 
