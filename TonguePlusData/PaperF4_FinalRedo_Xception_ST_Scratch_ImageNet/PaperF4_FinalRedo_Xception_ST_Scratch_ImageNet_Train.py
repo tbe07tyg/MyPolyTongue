@@ -1906,8 +1906,8 @@ if __name__ == "__main__":
 
 
     def _main():
-        project_name = 'PaperF4_FinalRedo_Xception_SP190_RE_ImageNet_BA_DS{}_ReTrain_{}_{:.2f}'.format(Ds,model_index, ANGLE_STEP)
-        pretrained_model_name ='ep042-loss11.430-val_loss3.604.h5'
+        project_name = 'PaperF4_FinalRedo_Xception_ST190_Scratch_ImageNet_BA_DS{}_{}_{:.2f}'.format(Ds,model_index, ANGLE_STEP)
+        # pretrained_model_name ='ep042-loss11.430-val_loss3.604.h5'
         phase = 1
 
         print("current working dir:", os.getcwd())
