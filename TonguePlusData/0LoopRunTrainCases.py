@@ -73,13 +73,21 @@ except Exception as e:
 #         run_case(each_case)
 #
 # My method cases:
-case_list = ['C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives_ReTrain']
-
-for each_case in case_list:
-    run_case(each_case)
+case_list = ['C:\\MyProjects\\projectFiles\\TonguePlusData\\TrainSPBaseDS35_BA_MultiClasses_ImageNet']
+for i, each_case in enumerate(case_list):
+    print("i:", i)
+    print(each_case)
+    if i < 0:
+        continue
+    elif i ==0:
+        run_case(each_case, fileIdx=1)
+    else:
+        run_case(each_case, fileIdx=1)
+# for each_case in case_list:
+#     run_case(each_case)
 
 # # My method cases:
-# case_list = ['C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF2_FinaRedo_YoloFixedV2_Mish',
+# case_list = ['C:\\MyProjects\\projectFiles\\To#nguePlusData\\PaperF2_FinaRedo_YoloFixedV2_Mish',
 #              'C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives']
 
 # cases_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_P_DScheck/*"

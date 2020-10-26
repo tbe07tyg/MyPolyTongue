@@ -969,6 +969,27 @@ def get_iou_vector(A, B):
     metric /= batch_size
     return metric
 
+def translate_color(cls):
+    if cls == 0: return (230, 25, 75)
+    if cls == 1: return (60, 180, 75)
+    if cls == 2: return (255, 225, 25)
+    if cls == 3: return (0, 130, 200)
+    if cls == 4: return (245, 130, 48)
+    if cls == 5: return (145, 30, 180)
+    if cls == 7: return (70, 240, 240)
+    if cls == 8: return (240, 50, 230)
+    if cls == 9: return (210, 245, 60)
+    if cls == 10: return (250, 190, 190)
+    if cls == 11: return (0, 128, 128)
+    if cls == 12: return (230, 190, 255)
+    if cls == 13: return (170, 110, 40)
+    if cls == 14: return (255, 250, 200)
+    if cls == 15: return (128, 0, 128)
+    if cls == 16: return (170, 255, 195)
+    if cls == 17: return (128, 128, 0)
+    if cls == 18: return (255, 215, 180)
+    if cls == 19: return (80, 80, 128)
+
 if __name__ == '__main__':
     my_IoU_list= []
     their_IoU_list = []

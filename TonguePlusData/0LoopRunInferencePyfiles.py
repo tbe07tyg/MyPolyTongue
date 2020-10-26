@@ -529,13 +529,75 @@ if __name__ == '__main__':
     #     infer_case(Inference_scripts_root=Inference_scripts_root,
     #                Saved_model_file_root=Saved_model_file_root,
     #                output_folder=os.path.join(output_root, infer_model_name))
-
-        # ST190 DS35 RETRAIN
-    #ep042-loss11.430-val_loss3.604
-    Saved_model_file_root = "F:\\RandomShape\\newKeras\AS1.8\\retrainST190DS35BA"
-    Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives_ReTrain"
     #
-    output_folder = "F:\\RandomShape\\output\\AS1.8\\ST190DS35ReTrain"  # the name path can not be too long
+    #     # ST190 DS35 RETRAIN
+    # #ep042-loss11.430-val_loss3.604
+    # Saved_model_file_root = "F:\\RandomShape\\newKeras\AS1.8\\retrainST190DS35BA"
+    # Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_Xception_FixedV2_bestAug_Primitives_ReTrain"
+    # #
+    # output_folder = "F:\\RandomShape\\output\\AS1.8\\ST190DS35ReTrain"  # the name path can not be too long
+    # infer_case(Inference_scripts_root=Inference_scripts_root,
+    #            Saved_model_file_root=Saved_model_file_root,
+    #            output_folder=output_folder)
+    #
+    #     # ST190 DS35 imAGENET
+    # #ep042-loss11.430-val_loss3.604
+    # Saved_model_file_root = "F:\\RandomShape\\newKeras\AS1.8\\PaperF4_FinalRedo_Xception_ST_Scratch_ImageNet"
+    # Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_Xception_ST_Scratch_ImageNet"
+    # #
+    # output_folder = "F:\\RandomShape\\output\\AS1.8\\ST190_DS35_ImageNet"  # the name path can not be too long
+    # infer_case(Inference_scripts_root=Inference_scripts_root,
+    #            Saved_model_file_root=Saved_model_file_root,
+    #            output_folder=output_folder)
+
+        # PaperF4_FinalRedo_Xception_SP190DS35_ImageNet
+    #ep042-loss11.430-val_loss3.604
+    # Saved_model_file_root = "F:\\RandomShape\\newKeras\AS1.8\\\PaperF4_FinalRedo_ST190DS35_ReTrain"
+    # Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_ST190DS35_ReTrain"
+    # #
+    # output_folder = "F:\\RandomShape\\output\\AS1.8\\SP190_DS35_ImageNet_RetrainST"  # the name path can not be too long
+    # infer_case(Inference_scripts_root=Inference_scripts_root,
+    #            Saved_model_file_root=Saved_model_file_root,
+    #            output_folder=output_folder)
+
+    # # PaperF4_FinalRedo_Xception_SP190DS35_ImageNet
+    # # ep042-loss11.430-val_loss3.604
+    # Saved_model_file_root = "F:\\RandomShape\\newKeras\\AS1.8\\PaperF4_FinalRedo_Xception_SP190_DS35_BA_MultiClasses_ImageNet"
+    # Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF4_FinalRedo_Xception_SP190_DS35_BA_MultiClasses_ImageNet"
+    # #
+    # output_folder = "F:\\RandomShape\\output\\AS1.8\\SP190_DS35_ImageNet_MultiClass"  # the name path can not be too long
+    # infer_case(Inference_scripts_root=Inference_scripts_root,
+    #            Saved_model_file_root=Saved_model_file_root,
+    #            output_folder=output_folder)
+    #
+
+    #
+    # # # BASE SP: DS35 AS1.8
+    # # ep042-loss11.430-val_loss3.604
+    # Saved_model_file_root = "F:\\MULTIREGIONS\\TongueMultiRegions\\DS35\\AS1.8\\SAVED_MODELS\\BASE_BEST_SP\\BEST_SP_RETRAIN_MULTIREGION"
+    # Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF5_FinalRedo_Xception_SPImageNet190DS35Retrain_MultiRegions"
+    # #
+    # output_folder = "F:\\MULTIREGIONS\\TongueMultiRegions\\DS35\\AS1.8\\OUTPUTS\\BASE_SP_MultiRegFixed"  # the name path can not be too long
+    # infer_case(Inference_scripts_root=Inference_scripts_root,
+    #            Saved_model_file_root=Saved_model_file_root,
+    #            output_folder=output_folder)
+
+    # # BASE St: DS35 AS1.8
+    # ep042-loss11.430-val_loss3.604
+    Saved_model_file_root = "F:\\MULTIREGIONS\\TongueMultiRegions\\DS35\\AS1.8\\SAVED_MODELS\\BASE_BEST_ST\\PaperF5_FinalRedo_Xception_SPImageNet190DS35Retrain_MultiRegions"
+    Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF5_FinalRedo_Xception_SPImageNet190DS35Retrain_MultiRegions"
+    #
+    output_folder = "F:\\MULTIREGIONS\\TongueMultiRegions\\DS35\\AS1.8\\OUTPUTS\\BASE_ST_MultiRegFixed"  # the name path can not be too long
+    infer_case(Inference_scripts_root=Inference_scripts_root,
+               Saved_model_file_root=Saved_model_file_root,
+               output_folder=output_folder)
+
+    # # BASE ST: DS35 AS10.2
+    # ep042-loss11.430-val_loss3.604
+    Saved_model_file_root = "F:\\MULTIREGIONS\\TongueMultiRegions\\DS35\\AS1.8\\SAVED_MODELS\\BASE_BEST_ST\\PaperF5_FinalRedo_Xception_SPImageNet190DS35Retrain_MultiRegions"
+    Inference_scripts_root = "C:\\MyProjects\\projectFiles\\TonguePlusData\\PaperF5_FinalRedo_Xception_SPImageNet190DS35Retrain_MultiRegions"
+    #
+    output_folder = "F:\\MULTIREGIONS\\TongueMultiRegions\\DS35\\AS1.8\\OUTPUTS\\BASE_ST_MultiRegFixed"  # the name path can not be too long
     infer_case(Inference_scripts_root=Inference_scripts_root,
                Saved_model_file_root=Saved_model_file_root,
                output_folder=output_folder)

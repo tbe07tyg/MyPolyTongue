@@ -193,14 +193,42 @@ def my_Gnearator(images_list, masks_list, batch_size, input_shape, train_or_test
         # yield [image_data, *y_true], np.zeros(batch_size)
         yield  np.array(image_data), np.array(mask_data), np.array(mypolygon_data), np.array(depolygon_data), np.array(empty_count_data)
 
+def find_countours_and_encode(img_path, mask):
+    ret, thresh = cv2.threshold(mask, 127, 255, 0)  # this require the numpy array has to be the uint8 type
+    # image, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    image, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    # encode contours into annotation lines ---->
+    # if len(contours)>1:
+    #     cv2.imwrite(contours_compare_root + "batch{}_idx{}".format(i, idx) + 'image.jpg', aug_image)
+    #     cv2.imwrite(contours_compare_root + "batch{}_idx{}".format(i, idx) + 'mask.jpg', aug_mask)
+    #
+    #     cv2.drawContours(copy_mask,contours, 0, (60 , 180 , 75))
+    #     cv2.imshow(" ", copy_mask)
+    #     cv2.waitKey() # show on line need divided 255 save into folder should remove keep in 0 to 255
+    selected_coutours = []
+    for x in range(len(contours)):
+        print("countour x:", x, contours[x].shape)
+        if contours[x].shape[0] > 8:
+            selected_coutours.append(contours[x])
+
+    print("# selected_coutours:", len(selected_coutours))
+    annotation_line, myPolygon = encode_polygone(img_path, selected_coutours)
+    print("myPolygon:", myPolygon.shape)
+    if myPolygon.shape[0] > 1000:
+        print("number of polygons overr")
+    return annotation_line , myPolygon
+
 def get_random_data(img_path, mask_path, input_shape, image_datagen, mask_datagen, train_or_test, decode_method, ANGLE_STEP):
     # load data ------------------------>
     # image_name = os.path.basename(img_path).replace('.JPG', '')
     # mask_name = os.path.basename(mask_path).replace('.JPG', '')
     # print("img name:", image_name)
     # print("mask name:", mask_name)
-    image = krs_image.load_img(img_path, target_size=(input_shape[0], input_shape[1]))
-    mask = krs_image.load_img(mask_path, grayscale=True, target_size=(input_shape[0], input_shape[1]))
+    resize_factor =  1
+    image = krs_image.load_img(img_path, target_size=(input_shape[0]//resize_factor, input_shape[1]//resize_factor))
+    mask = krs_image.load_img(mask_path, grayscale=True, target_size=(input_shape[0]//resize_factor, input_shape[1]//resize_factor))
+
+
     image = krs_image.img_to_array(image)
     mask = krs_image.img_to_array(mask)
     if train_or_test == "Train":
@@ -219,28 +247,6 @@ def get_random_data(img_path, mask_path, input_shape, image_datagen, mask_datage
         copy_mask = mask.copy().astype(np.uint8)
 
 
-    ret, thresh = cv2.threshold(copy_mask, 127, 255, 0) # this require the numpy array has to be the uint8 type
-    # image, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    image, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-    # encode contours into annotation lines ---->
-    # if len(contours)>1:
-    #     cv2.imwrite(contours_compare_root + "batch{}_idx{}".format(i, idx) + 'image.jpg', aug_image)
-    #     cv2.imwrite(contours_compare_root + "batch{}_idx{}".format(i, idx) + 'mask.jpg', aug_mask)
-    #
-    #     cv2.drawContours(copy_mask,contours, 0, (60 , 180 , 75))
-    #     cv2.imshow(" ", copy_mask)
-    #     cv2.waitKey() # show on line need divided 255 save into folder should remove keep in 0 to 255
-    selected_coutours= []
-    for x in range(len(contours)):
-        print("countour x:", x, contours[x].shape)
-        if contours[x].shape[0]>8:
-            selected_coutours.append(contours[x])
-
-    print("# selected_coutours:", len(selected_coutours))
-    annotation_line, myPolygon = encode_polygone(img_path, selected_coutours)
-    print("myPolygon:", myPolygon.shape)
-    if myPolygon.shape[0] > 1000:
-        print("number of polygons overr")
 
     # decode annotation into angle, distance, probability and return the decoded actual polygones
     # decoded_polys, empty_sections = decode_annotationline(annotation_line)
@@ -248,8 +254,29 @@ def get_random_data(img_path, mask_path, input_shape, image_datagen, mask_datage
     # decoded_polys, empty_sections = My_bilinear_decode_annotationline1dInterpolate(annotation_line)
 
     if decode_method =="my":
+        annotation_line, myPolygon = find_countours_and_encode(img_path, copy_mask)
+
+        print("myPolygon:", myPolygon.shape)
+        if myPolygon.shape[0] > 1000:
+            print("number of polygons overr")
+
         decoded_polys, empty_sections = My_bilinear_decode_annotationlineNP_inter(annotation_line, ANGLE_STEP=ANGLE_STEP)
+    elif decode_method =="my_pyramid":
+
+        annotation_line, myPolygon = find_countours_and_encode(img_path, copy_mask)
+
+        print("f:", myPolygon.shape)
+        if myPolygon.shape[0] > 1000:
+            print("number of polygons overr")
+
+        decoded_polys, empty_sections = My_bilinear_decode_annotationlineNP_inter(annotation_line,
+                                                                                  ANGLE_STEP=ANGLE_STEP)
     else:
+        annotation_line, myPolygon = find_countours_and_encode(img_path, copy_mask)
+
+        print("myPolygon:", myPolygon.shape)
+        if myPolygon.shape[0] > 1000:
+            print("number of polygons overr")
         decoded_polys, empty_sections = decode_annotationline(annotation_line, ANGLE_STEP=ANGLE_STEP)
     return aug_image , aug_mask, myPolygon, decoded_polys, empty_sections
 
@@ -737,7 +764,7 @@ def My_bilinear_decode_annotationlineNP_inter(encoded_annotationline, MAX_VERTIC
             annotation_line[element] = annotation_line[element] + ',0,0'
     box = np.array([np.array(list(map(float, box.split(','))))
                     for box in annotation_line[1:]])
-    print("box:", box[0])
+    print("box:", box.shape)
 
     # correct boxes
     box_data = np.zeros((max_boxes, 5 + NUM_ANGLES))
@@ -944,19 +971,22 @@ if __name__ == '__main__':
     their_IoU_list = []
 
     # check train
-    raw_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
-    raw_binary_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
-    print("len of imgs:", len(raw_input_paths))
-
-    # # check test
-    # raw_input_paths = glob('E:\\dataset\\Tongue\\fromTangNewDataset\\testImg\data/*')
-    # raw_binary_paths = glob('E:\\dataset\\Tongue\\fromTangNewDataset\\testLabel\\datamadebymyself\label512640/*.jpg')
+    # raw_input_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\inputs\\Tongue/*')
+    # raw_binary_paths = glob('E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\binary_labels\\Tongue/*.jpg')
     # print("len of imgs:", len(raw_input_paths))
-    # path  to compare countour
-    contours_compare_root = "E:\\dataset\\Tongue\\tongue_dataset_tang_plus\\backup\\CountourCompare/"
 
-    decode_choice=["their"]
-    # decode_choice = ["my"]
+    # check test
+    raw_input_paths = glob('E:\\dataset\\Tongue\\fromTangNewDataset\\testImg\data/*')
+    raw_binary_paths = glob('E:\\dataset\\Tongue\\fromTangNewDataset\\testLabel\\datamadebymyself\label512640/*.jpg')
+    print("len of imgs:", len(raw_input_paths))
+    # path  to compare countour
+    # contours_compare_root = "E:\\MyWritings\\Tongue\\2020IEEE\\TMI\\imgs\\annoationRaw"
+    contours_compare_root = "E:\\MyWritings\\Tongue\\2020IEEE\\TMI\\imgs\\annoationMine"
+    # decode_choice=["their"]
+
+    # decode_choice = ["my_pyramid"]
+    decode_choice = ["my"]
+    # my_pyramid
     my_IoU_data = []
     their_IoU_data= []
 
@@ -964,13 +994,14 @@ if __name__ == '__main__':
     # print("angle_steps", angle_steps)
 
     for decode in decode_choice:
-        # for angle_step in np.linspace(0.1, 40, 100):
-        for angle_step in np.linspace(30, 30 , 1):
+        for angle_step in np.linspace(1, 1, 1):
+            print("angle_step:", angle_step)
+        # for angle_step in np.linspace(30, 30 , 1):
             IoU_list =[]
-            # my_data =  my_Gnearator(raw_input_paths, raw_binary_paths, batch_size=4, input_shape=[256, 256],
-            #                         train_or_test="Test",decode_method=decode, ANGLE_STEP=angle_step)
-            my_data = my_Gnearator(raw_input_paths, raw_binary_paths, batch_size=4, input_shape=[256, 256],
-                                   train_or_test="Train", decode_method=decode, ANGLE_STEP=angle_step)
+            my_data =  my_Gnearator(raw_input_paths, raw_binary_paths, batch_size=4, input_shape=[256, 256],
+                                    train_or_test="Test",decode_method=decode, ANGLE_STEP=angle_step)
+            # my_data = my_Gnearator(raw_input_paths, raw_binary_paths, batch_size=4, input_shape=[256, 256],
+            #                        train_or_test="Train", decode_method=decode, ANGLE_STEP=angle_step)
 
             print(my_data)
             empty_section_list = []
@@ -979,7 +1010,7 @@ if __name__ == '__main__':
             for aug_image , aug_mask, myPolygon, decoded_polys, empty_sections in my_data:
                 print("empty_sections:", empty_sections)
                 overlay = aug_image.copy()
-
+                print("decoded poly shape:", decoded_polys.shape)
                 for idx in range(aug_image.shape[0]):
 
 
@@ -1025,7 +1056,10 @@ if __name__ == '__main__':
                     # cv2.fillPoly(background_img_rgb, np.int32([myPolygon[0]]), color=(230, 25, 75))
                     # cv2.imshow(" ", background_img_rgb)
                     # cv2.waitKey() # show on line need divided 255 save into folder should remove keep in 0 to 255
-                    cv2.imwrite(contours_compare_root + "batch{}_idx{}".format(i, idx) + '.jpg', background_img_rgb)
+                    root = os.path.join(contours_compare_root, "{}".format(angle_step))
+                    if not os.path.exists(root):
+                        os.makedirs(root)
+                    cv2.imwrite(root + "/batch{}_idx{}".format(i, idx) + '.jpg', background_img_rgb)
 
                     print()
 
